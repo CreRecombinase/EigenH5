@@ -1,0 +1,13 @@
+Package: EigenH5
+Type: Package
+Title: What the package does (short line)
+Version: 1.0
+Date: 2017-08-03
+Author: Who wrote it
+Maintainer: Who to complain to <yourfault@somewhere.net>
+Description: More about what it does (maybe more than one line)
+License: What license is it under?
+Imports: Rcpp (>= 0.12.12), RcppEigen (>= 0.3.3.3.0),BH
+LinkingTo: Rcpp, RcppEigen,BH,Rhdf5lib
+Remotes: bioc::Rhdf5lib
+Suggests: testthat
