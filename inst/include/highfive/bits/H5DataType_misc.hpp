@@ -6,8 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5DATATYPE_MISC_HPP
-#define H5DATATYPE_MISC_HPP
+#pragma once
 
 #include <string>
 
@@ -109,12 +108,13 @@ inline AtomicType<bool>::AtomicType() {
 template <>
 inline AtomicType<std::string>::AtomicType() {
     _hid = H5Tcopy(H5T_C_S1);
-    if (H5Tset_size(_hid, H5T_VARIABLE) < 0) {
+        if (H5Tset_size(_hid, 255) < 0) {
         HDF5ErrMapper::ToException<DataTypeException>(
             "Unable to define datatype size to variable");
     }
+        H5Tset_strpad(_hid, H5T_STR_NULLTERM);
     // define encoding to UTF-8 by default
-    H5Tset_cset(_hid, H5T_CSET_UTF8);
+        //H5Tset_cset(_hid, H5T_CSET_UTF8);
 }
 
 
@@ -147,4 +147,3 @@ inline AtomicType<std::complex<double> >::AtomicType()
 
 
 
-#endif // H5DATATYPE_MISC_HPP

@@ -6,8 +6,8 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5DATASPACE_MISC_HPP
-#define H5DATASPACE_MISC_HPP
+#pragma once
+
 
 #include <vector>
 
@@ -20,9 +20,12 @@
 
 namespace HighFive {
 
-inline DataSpace::DataSpace(const std::vector<size_t>& dims) {
+    inline DataSpace::DataSpace(const std::vector<size_t> &dims, const bool doTranspose) {
     std::vector<hsize_t> real_dims(dims.size());
     std::copy(dims.begin(), dims.end(), real_dims.begin());
+        if (doTranspose) {
+            std::reverse(real_dims.begin(), real_dims.end());
+        }
 
     if ((_hid = H5Screate_simple(int(dims.size()), &(real_dims.at(0)), NULL)) <
         0) {
@@ -90,7 +93,6 @@ inline std::vector<size_t> DataSpace::getDimensions() const {
 template <typename ScalarValue>
 inline DataSpace DataSpace::From(const ScalarValue& scalar) {
     (void)scalar;
-#if H5_USE_CXX11
     static_assert(
         (std::is_arithmetic<ScalarValue>::value ||
          std::is_same<std::string, ScalarValue>::value),
@@ -106,7 +108,6 @@ inline DataSpace DataSpace::From(const ScalarValue& scalar) {
         "boost::multi_array<all_basic_types> \n"
         "  all_supported_types = all_basic_types | stl_container_types | "
         "boost_container_types");
-#endif
     return DataSpace(DataSpace::datascape_scalar);
 }
 
@@ -114,6 +115,38 @@ template <typename Value>
 inline DataSpace DataSpace::From(const std::vector<Value>& container) {
     return DataSpace(details::get_dim_vector<Value>(container));
 }
+
+#ifdef H5_USE_EIGEN
+
+    template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+    inline DataSpace
+    DataSpace::From(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> &mat,
+                    const bool doTranspose) {
+        auto retv = details::get_dim_vector<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>(mat);
+        return (DataSpace(retv, doTranspose));
+    }
+
+    template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+    inline DataSpace
+    DataSpace::From(const Eigen::Map<const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat,
+                    const bool doTranspose) {
+        auto retv = details::get_dim_vector<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>(mat);
+        return (DataSpace(retv, doTranspose));
+    }
+
+    template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+    inline DataSpace
+    DataSpace::From(const Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat,
+                    const bool doTranspose) {
+        auto retv = details::get_dim_vector<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>(mat);
+        return (DataSpace(retv, doTranspose));
+    }
+
+
+
+#endif
+
+
 
 #ifdef H5_USE_BOOST
 template <typename Value, std::size_t Dims>
@@ -177,4 +210,3 @@ inline bool checkDimensions(const DataSpace& mem_space, size_t input_dims) {
 }
 }
 
-#endif // H5DATASPACE_MISC_HPP

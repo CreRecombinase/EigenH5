@@ -6,19 +6,27 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5UTILS_HPP
-#define H5UTILS_HPP
+#pragma once
 
 // internal utilities functions
 #include <cstddef> // __GLIBCXX__
+#include <iostream>
 #include <exception>
 #include <string>
 #include <vector>
+#include <sys/stat.h>
 
 #ifdef H5_USE_BOOST
 #include <boost/multi_array.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #endif
+
+#ifdef H5_USE_EIGEN
+
+#include <eigen3/Eigen/Core>
+
+#endif
+
 
 #ifndef H5_USE_CXX11
 #if ___cplusplus >= 201103L
@@ -46,7 +54,8 @@
 
 namespace HighFive {
 
-namespace details {
+
+    namespace details {
 
 // determine at compile time number of dimensions of in memory datasets
 template <typename T>
@@ -68,6 +77,57 @@ template <typename T, std::size_t N>
 struct array_dims<T[N]> {
     static const size_t value = 1 + array_dims<T>::value;
 };
+
+
+
+#ifdef H5_USE_EIGEN
+        template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+        struct array_dims<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > {
+            static const size_t value = (RowsAtCompileTime != 1 ? 1 : 0) + (ColsAtCompileTime != 1 ? 1 : 0);
+        };
+        template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+        struct array_dims<Eigen::Map<const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > > {
+            static const size_t value = (RowsAtCompileTime != 1 ? 1 : 0) + (ColsAtCompileTime != 1 ? 1 : 0);
+        };
+        template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+        struct array_dims<const Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > > {
+            static const size_t value = (RowsAtCompileTime != 1 ? 1 : 0) + (ColsAtCompileTime != 1 ? 1 : 0);
+        };
+        template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+        struct array_dims<Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > > {
+            static const size_t value = (RowsAtCompileTime != 1 ? 1 : 0) + (ColsAtCompileTime != 1 ? 1 : 0);
+        };
+
+        template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+        std::vector<size_t>
+        get_dim_vector(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> &mat) {
+            const size_t dim_num = array_dims<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> >::value;
+            std::vector<size_t> dims(dim_num);
+            if (dim_num > 0) {
+                dims[0] = mat.rows();
+            }
+            if (dim_num > 1) {
+                dims[1] = mat.cols();
+            }
+            return dims;
+        }
+
+        template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+        std::vector<size_t>
+        get_dim_vector(const Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat) {
+            const size_t dim_num = array_dims<Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > >::value;
+            std::vector<size_t> dims(dim_num);
+            if (dim_num > 0) {
+                dims[0] = mat.rows();
+            }
+            if (dim_num > 1) {
+                dims[1] = mat.cols();
+            }
+            return dims;
+        }
+
+
+#endif
 
 #ifdef H5_USE_BOOST
 template <typename T, std::size_t Dims>
@@ -116,6 +176,29 @@ template <typename T>
 struct type_of_array<std::vector<T> > {
     typedef typename type_of_array<T>::type type;
 };
+
+#ifdef H5_USE_EIGEN
+        template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+        struct type_of_array<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > {
+            typedef typename type_of_array<Scalar>::type type;
+        };
+        template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+        struct type_of_array<Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > > {
+            typedef typename type_of_array<Scalar>::type type;
+        };
+        template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+        struct type_of_array<const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > {
+            typedef typename type_of_array<Scalar>::type type;
+        };
+        template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+        struct type_of_array<Eigen::Map<const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > > {
+            typedef typename type_of_array<Scalar>::type type;
+        };
+#endif
+
+
+
+
 
 #ifdef H5_USE_BOOST
 template <typename T, std::size_t Dims>
@@ -203,6 +286,9 @@ struct remove_const<Type const> {
     typedef Type type;
 };
 
+
+
+
 // shared ptr portability
 namespace Mem {
 
@@ -221,4 +307,3 @@ using namespace std;
 } // end details
 }
 
-#endif // H5UTILS_HPP

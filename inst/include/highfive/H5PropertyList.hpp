@@ -6,8 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5PROPERTY_LIST_HPP
-#define H5PROPERTY_LIST_HPP
+#pragma once
 
 #include "H5Object.hpp"
 
@@ -29,4 +28,3 @@ class Properties : public Object {
 
 #include "bits/H5PropertyList_misc.hpp"
 
-#endif // H5PROPERTY_LIST_HPP

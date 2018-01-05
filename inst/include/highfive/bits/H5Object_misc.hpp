@@ -6,8 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5OBJECT_MISC_HPP
-#define H5OBJECT_MISC_HPP
+#pragma once
 
 #include "../H5Exception.hpp"
 #include "../H5Object.hpp"
@@ -49,4 +48,3 @@ inline bool Object::isValid() const {
 inline hid_t Object::getId() const { return _hid; }
 }
 
-#endif // H5OBJECT_MISC_HPP

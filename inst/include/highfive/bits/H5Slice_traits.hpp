@@ -6,8 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5SLICE_TRAITS_HPP
-#define H5SLICE_TRAITS_HPP
+#pragma once
 
 #include <cstdlib>
 #include <vector>
@@ -54,6 +53,7 @@ class SliceTraits {
     /// select a set of columns in the last dimension of this dataset.
     /// The column indices must be smaller than the dimension size.
     ///
+    //Selection selectRows(const std::vector<size_t>& rows) const;
     Selection select(const std::vector<size_t>& columns) const;
 
     ///
@@ -61,26 +61,30 @@ class SliceTraits {
     ///
     Selection select(const ElementSet& elements) const;
 
+    Selection selectEigen(const std::vector<size_t> &offset,
+                          const std::vector<size_t> &count,
+                          const std::vector<size_t> &stride) const;
+
     ///
     /// Read the entire dataset into a buffer
     /// An exception is raised is if the numbers of dimension of the buffer and
     /// of the dataset are different
     ///
     /// The array type can be a N-pointer or a N-vector. For plain pointers
-    /// not dimensionality checking will be performed, it is the user's
-    /// reponsibility to ensure that the right amount of space has been
+    /// no dimensionality checking will be performed, it is the user's
+    /// responsibility to ensure that the right amount of space has been
     /// allocated.
     template <typename T>
-    void read(T& array);
+    void read(T &array);
 
     ///
     /// Read the entire dataset into a raw buffer
     ///
     /// No dimensionality checks will be performed, it is the user's
-    /// reponsibility to ensure that the right amount of space has been
+    /// responsibility to ensure that the right amount of space has been
     /// allocated.
     template <typename T>
-    void read(T* array);
+    void read(T *array);
 
     ///
     /// Write the integrality N-dimension buffer to this dataset
@@ -103,8 +107,8 @@ class SliceTraits {
     void write(const T* buffer);
 
   private:
+
     typedef Derivate derivate_type;
 };
 }
 
-#endif // H5SLICE_TRAITS_HPP

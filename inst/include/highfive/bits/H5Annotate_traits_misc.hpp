@@ -6,8 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5ANNOTATE_TRAITS_MISC_HPP
-#define H5ANNOTATE_TRAITS_MISC_HPP
+#pragma once
 
 #include "H5Annotate_traits.hpp"
 #include "H5Iterables_misc.hpp"
@@ -105,4 +104,3 @@ AnnotateTraits<Derivate>::hasAttribute(const std::string& attr_name) const {
 }
 }
 
-#endif // H5ANNOTATE_TRAITS_MISC_HPP

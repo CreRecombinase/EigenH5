@@ -6,8 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5PROPERTY_LIST_MISC_HPP
-#define H5PROPERTY_LIST_MISC_HPP
+#pragma once
 
 #include <H5Ppublic.h>
 
@@ -20,4 +19,3 @@ namespace {}
 inline Properties::Properties() {}
 }
 
-#endif // H5PROPERTY_LIST_HPP

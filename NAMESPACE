@@ -1,4 +1,5 @@
 useDynLib(EigenH5)
+import(libblosc)
 import(RcppEigen)
 importFrom(Rcpp, evalCpp)
 exportPattern("^[[:alpha:]]+")

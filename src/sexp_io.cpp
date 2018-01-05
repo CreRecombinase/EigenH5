@@ -1,222 +1,240 @@
-// #include "EigenH5.h"
-// -------------- Stage 1: Forward Declarations with `RcppCommon.h`
-
-// #define RCPP_DEBUG_LEVEL 1
-#include <RcppCommon.h>
-
-
-// [[Rcpp::depends(BH)]]
-// [[Rcpp::plugins(cpp17)]]                                        
-
-
-
-// Third party library includes that provide the template class of ublas
-// Before ublas #include, enable boost::numeric::ublas::shallow_array_adaptor<T>
-//#define BOOST_UBLAS_SHALLOW_ARRAY_ADAPTOR 1
-
-
-#include <boost/numeric/ublas/matrix_sparse.hpp>
-#include <boost/numeric/ublas/matrix.hpp>
-
-// Provide Forward Declarations
-namespace Rcpp {
-
-  namespace traits{
-
-    // Setup non-intrusive extension via template specialization for
-    // 'ublas' class boost::numeric::ublas
-
-    // Support for wrap
-    template <typename T> SEXP wrap(const boost::numeric::ublas::vector<T> & obj);
-    template <typename T,typename S> SEXP wrap(const boost::numeric::ublas::matrix<T,S> & obj);
+#include <EigenH5.h>
+//[[depends(RcppEigen)]]
+//[[Rcpp::plugins(cpp17)]]
+#include <highfive/H5DataSet.hpp>
+#include <highfive/H5Filter.hpp>
+#include <highfive/H5DataSpace.hpp>
+#include <highfive/H5File.hpp>
+#include <highfive/H5Attribute.hpp>
+#include <highfive/H5Utility.hpp>
+#include <highfive/H5DataType.hpp>
+#include <highfive/H5Group.hpp>
+#include <highfive/H5PropertyList.hpp>
+#include <highfive/H5FileDriver.hpp>
+#include <highfive/H5Object.hpp>
+#include <highfive/H5Selection.hpp>
+#include <blosc_filter.h>
+#include <optional>
+#include<H5Tpublic.h>
 
 
 
-    // Support for as<T>
-    template <typename T> class Exporter< boost::numeric::ublas::vector<T> >;
-    template <typename T,typename S> class Exporter< boost::numeric::ublas::matrix<T,S> >;
-  
+template<int RTYPE> struct r2cpp_t{
+  typedef std::false_type type;
+};
+template<> struct r2cpp_t<INTSXP>{
+  typedef int type;
+};
+template<> struct r2cpp_t<REALSXP>{
+  typedef double type;
+};
+template<> struct r2cpp_t<LGLSXP>{
+  typedef bool type;
+};
+template<> struct r2cpp_t<STRSXP>{
+  typedef std::string type;
+};
 
+SEXPTYPE h2r_T(hid_t htype){
+  auto ht = H5Tget_class(htype);
+  if(ht==H5T_INTEGER){
+    //Rcpp::Rcout<<"int"<<std::endl;
+    return(INTSXP);
   }
+  if(ht==H5T_FLOAT){
+    //Rcpp::Rcout<<"double"<<std::endl;
+    
+    return(REALSXP);
+  }
+  if(ht==H5T_NATIVE_HBOOL){
+    //Rcpp::Rcout<<"BOOL"<<std::endl;
+    return(LGLSXP);
+  }
+  if(ht==H5T_STRING){
+    //Rcpp::Rcout<<"string"<<std::endl;
+    return(STRSXP);
+  }
+  Rcpp::Rcout<<"NIL"<<std::endl;
+  
+  return(NILSXP);
 }
 
-// -------------- Stage 2: Including Rcpp.h
+using namespace Rcpp;
+namespace impl{
 
-// ------ Place <Rcpp.h> AFTER the Forward Declaration!!!!
+  template <typename T> void write_v_h5(std::vector<T> &data,
+					    const std::string &filename,
+					    const std::string &groupname, 
+					    const std::string &dataname){
 
-#include <Rcpp.h>
-
-// ------ Place Implementations of Forward Declarations AFTER <Rcpp.h>!
-
-
-// -------------- Stage 3: Implementation the Declarations
-
-// Define template specializations for as<> and wrap
-namespace Rcpp {
-
-  namespace traits{
-
-    template <typename T> SEXP wrap(const boost::numeric::ublas::vector<T> & obj){
-      RCPP_DEBUG_1("wrap_boost_numeric_ublas_thing<%s>(., false )", DEMANGLE(T))
-      const int RTYPE = Rcpp::traits::r_sexptype_traits<T>::rtype ;
-  
-      return Rcpp::Vector< RTYPE >(obj.begin(), obj.end());
-    };
+    using namespace HighFive;
+    HighFive::File file(filename, HighFive::File::ReadWrite | HighFive::File::Create);
+   
     
-
-    template <typename T,typename S> SEXP wrap(const boost::numeric::ublas::matrix<T,S> & obj){
-      RCPP_DEBUG_1("wrap_boost_numeric_ublas_matrix_thing<%s>(., false )", DEMANGLE(T))
-      static_assert(std::is_arithmetic<T>::value, "T is not an arithmetic type!");
-      const int RTYPE = Rcpp::traits::r_sexptype_traits<T>::rtype ;
-      Rcpp::Matrix<RTYPE> retmat(obj.size1(),obj.size2());
-      for(auto it=obj.begin1();it!=obj.end1();it++){
-        for(auto jt=it.begin();jt!=it.end();jt++){
-          retmat(jt.index1(),jt.index2())=*jt;
-        }
-      }
-      return Rcpp::Matrix<RTYPE>(retmat);
-    };
+    Group group = file.createOrGetGroup(groupname);
     
-
-
- 
-
-
-    // Defined as< > case
-    template<typename T,typename S> class Exporter< boost::numeric::ublas::matrix<T,S> > {
-      typedef typename boost::numeric::ublas::matrix<T,S> OUT ;
-      // Convert the type to a valid rtype. 
-      const static int RTYPE = Rcpp::traits::r_sexptype_traits<T>::rtype ;
-      Rcpp::Matrix<RTYPE> retmat;
-  
-    public:
-      Exporter(SEXP x) : retmat(x)  {
-	static_assert(std::is_arithmetic<T>::value, "T is not an arithmetic type!");
-	if (TYPEOF(x) != RTYPE)
-	  throw std::invalid_argument("Wrong R type for mapped 2D array");
-      }
-      OUT get() {
-	// Need to figure out a way to perhaps do a pointer pass?
-	OUT x(retmat.rows(),retmat.cols());
-	for(auto it=x.begin1();it!=x.end1();it++){
-	  for(auto jt=it.begin();jt!=it.end();jt++){
-	    x(jt.index1(),jt.index2())=retmat(jt.index1(),jt.index2());
-	  }
-	}
+    std::vector<size_t> vec_dims{data.size()};
+    int r = 0;
+    r = register_blosc(nullptr, nullptr);
     
-	return x;
-      }
-    };
+    // Create a new file using the default property lists.
+    Filter filter({1000}, vec_dims, FILTER_BLOSC, r);
+    // Create a dataset with double precision floating points
 
-  
 
-    // Defined as< > case
-    template<typename T> class Exporter< boost::numeric::ublas::vector<T> > {
-      typedef typename boost::numeric::ublas::vector<T> OUT ;
-  
-      // Convert the type to a valid rtype. 
-      const static int RTYPE = Rcpp::traits::r_sexptype_traits< T >::rtype ;
-      Rcpp::Vector<RTYPE> vec;
-  
-    public:
-      Exporter(SEXP x) : vec(x) {
-        if (TYPEOF(x) != RTYPE)
-          throw std::invalid_argument("Wrong R type for mapped 1D array");
-      }
-      OUT get() {
-        
-        // Need to figure out a way to perhaps do a pointer pass?
-        OUT x(vec.size());
-        
-        std::copy(vec.begin(), vec.end(), x.begin()); // have to copy data
-        
-        return x;
-      }
-    };
+    DataSpace ds = DataSpace(vec_dims);
     
-    
-    
+    DataSet dataset = group.createDataSet(dataname, ds, AtomicType<T>(), filter.getId());
+    dataset.write(data);
   }
+					    
+
+  
+template <SEXPTYPE RTYPE> Vector<RTYPE> read_v_h5(
+    const std::string &filename,
+    const std::string &groupname, 
+    const std::string &dataname,
+    const std::optional<size_t> offset=std::nullopt,
+    const std::optional<size_t> chunksize=std::nullopt){
+  
+  using T = typename r2cpp_t<RTYPE>::type;
+  std::vector<T> retvec;
+  //Rcpp::Vector<r2cpp_t<RTYPE>::type> retvec;
+  
+  using namespace HighFive;
+  File file(filename,File::ReadOnly);
+  auto grp = file.getGroup(groupname);
+  if(!offset.has_value()){
+    grp.getDataSet(dataname).read(retvec);
+  }else{
+    std::vector<size_t> off_v={offset.value()};
+    std::vector<size_t> ret_v={chunksize.value()};
+    grp.getDataSet(dataname).select(off_v,ret_v,{}).read(retvec);
+  }
+  return(Rcpp::wrap(retvec));
 }
 
-// -------------- Stage 4: Testing
+}
 
-// Here we define a shortcut to the Boost ublas class to enable multiple ublas
-// types via a template.
-// ublas::vector<T> => ublas::vector<double>, ... , ublas::vector<int>
-namespace ublas = ::boost::numeric::ublas;
+//[[Rcpp::export]]
+Rcpp::StringVector read_s_vec_h5(const std::string &filename,
+              const std::string &groupname, 
+              const std::string &dataname,
+              const int offset=0,
+              const int chunksize=-1){
+  
+  static_assert(std::is_same<r2cpp_t<STRSXP>::type,std::string >::value);
+  return(impl::read_v_h5<STRSXP>(filename,
+                                 groupname,
+                                 dataname,
+                                 chunksize > 0 ? std::optional<size_t>{offset} : std::nullopt,
+                                 chunksize > 0 ? std::optional<size_t>{chunksize} : std::nullopt));
+}
 
+//[[Rcpp::export]]
+Rcpp::IntegerVector read_i_vec_h5(const std::string &filename,
+                                 const std::string &groupname, 
+                                 const std::string &dataname,
+                                 const int offset=0,
+                                 const int chunksize=-1){
+  
+  static_assert(std::is_same<r2cpp_t<INTSXP>::type,int >::value);
+  return(impl::read_v_h5<INTSXP>(filename,
+                                 groupname,
+                                 dataname,
+                                 chunksize > 0 ? std::optional<size_t>{offset} : std::nullopt,
+                                 chunksize > 0 ? std::optional<size_t>{chunksize} : std::nullopt));
+}
 
-// [[Rcpp::export]]
-void containment_test(Rcpp::NumericMatrix m1) {  
+//[[Rcpp::export]]
+Rcpp::NumericVector read_d_vec_h5(const std::string &filename,
+                                  const std::string &groupname, 
+                                  const std::string &dataname,
+                                  const int offset=0,
+                                  const int chunksize=-1){
   
-  
-  Rcpp::Rcout << "Converting from Rcpp::NumericMatrix to ublas::matrix<double,row_major>" << std::endl;
-  
-  // initialize the vector to all zero
-  ublas::matrix<double,ublas::row_major> xrm = Rcpp::as< ublas::matrix<double,ublas::row_major> >(m1); 
-  
-  Rcpp::Rcout << "Running output test with ublas::matrix<double,row_major>" << std::endl;
-  
-  for (auto i = xrm.begin1(); i!=xrm.end1(); i++){
-    for(auto j= i.begin();j!=i.end();j++){
-      Rcpp::Rcout  << *j << " ";
-    }
-    Rcpp::Rcout<<std::endl;
-  }
-  
-  Rcpp::Rcout << "Converting from ublas::matrix<double,row_major> to Rcpp::NumericMatrix" << std::endl;
-
-  
-  Rcpp::NumericMatrix testm = Rcpp::traits::wrap(xrm);
-
-  Rcpp::Rcout << "Running output test with Rcpp::NumericMatrix" << std::endl;
-
-  for (unsigned i = 0; i < testm.rows(); ++ i){
-    for(unsigned j=0; j<testm.cols(); ++j){
-      Rcpp::Rcout  << testm(i,j) <<" ";
-    }
-    Rcpp::Rcout<< std::endl;
-  }
-
-
-
-
-  
-  Rcpp::Rcout << "Converting from Rcpp::NumericMatrix to ublas::matrix<double,col_major>" << std::endl;
-  
-  // initialize the vector to all zero
-  ublas::matrix<double,ublas::column_major> xcm = Rcpp::as< ublas::matrix<double,ublas::column_major> >(m1); 
-  
-  Rcpp::Rcout << "Running output test with ublas::matrix<double,col_major>" << std::endl;
-  
-  for (auto i = xcm.begin1(); i!=xcm.end1(); i++){
-    for(auto j= i.begin();j!=i.end();j++){
-      Rcpp::Rcout  << *j << " ";
-    }
-    Rcpp::Rcout<<std::endl;
-  }
-  
-  Rcpp::Rcout << "Converting from ublas::matrix<double,col_major> to Rcpp::NumericMatrix" << std::endl;
-  
-  Rcpp::NumericMatrix ctestm = Rcpp::traits::wrap(xcm);
-
-  Rcpp::Rcout << "Running output test with Rcpp::NumericVector" << std::endl;
-
-  for (unsigned i = 0; i < ctestm.rows(); ++ i){
-    for(unsigned j=0; j<ctestm.cols(); ++j){
-      Rcpp::Rcout  << ctestm(i,j) <<" ";
-    }
-    Rcpp::Rcout<< std::endl;
-  }
-
-
-
-  
-  
+  static_assert(std::is_same<r2cpp_t<REALSXP>::type,double >::value);
+  return(impl::read_v_h5<REALSXP>(filename,
+                                 groupname,
+                                 dataname,
+                                 chunksize > 0 ? std::optional<size_t>{offset} : std::nullopt,
+                                 chunksize > 0 ? std::optional<size_t>{chunksize} : std::nullopt));
 }
 
 
+//[[Rcpp::export]]
+SEXPTYPE check_dtype(const std::string &filename,
+                 const std::string &groupname, 
+                 const std::string &dataname){
+  
+  using namespace HighFive;
+  
+  File file(filename,File::ReadOnly);
+  return(h2r_T(file.getGroup(groupname).getDataSet(dataname).getDataType().getId()));
+}
+
+//[[Rcpp::export]]
+SEXP read_vec_h5(const std::string &filename,
+                    const std::string &groupname, 
+                    const std::string &dataname,
+                    const int offset=0,
+                    const int chunksize=-1){
+  using namespace Rcpp;
+  static_assert(std::is_same<r2cpp_t<STRSXP>::type,std::string >::value);
+  auto my_t = check_dtype(filename,groupname,dataname);
+  switch (my_t){
+  case INTSXP: {
+    return(read_i_vec_h5(filename,groupname,dataname,offset,chunksize));
+  }
+  case REALSXP: {
+    return(read_d_vec_h5(filename,groupname,dataname,offset,chunksize));
+  }
+  case STRSXP: {
+    return(read_s_vec_h5(filename,groupname,dataname,offset,chunksize));
+  }
+  default: {
+    warning(
+      "Invalid SEXPTYPE %d.\n",
+      my_t
+    );
+    return R_NilValue;
+  }
+  }
+}
+
+
+//[[Rcpp::export]]
+void write_vector_h5(const std::string &filename,
+                    const std::string &groupname, 
+                    const std::string &dataname,
+                    SEXP data){
+  using namespace Rcpp;
+
+  auto my_t = TYPEOF(data);
+  switch (my_t){
+  case INTSXP: {
+    auto d=Rcpp::as<std::vector<int> >(data);
+    impl::write_v_h5<int>(d,filename,groupname,dataname);
+    break;
+  }
+  case REALSXP: {
+    auto d=Rcpp::as<std::vector<double> >(data);
+    impl::write_v_h5<double>(d,filename,groupname,dataname);
+    break;
+  }
+  case STRSXP: {
+    auto d=Rcpp::as<std::vector<std::string> >(data);
+    impl::write_v_h5<std::string>(d,filename,groupname,dataname);
+    break;
+  }
+  default: {
+    warning(
+	    "Invalid SEXPTYPE %d.\n",
+	    my_t
+	    );
+  }
+  }
+}
 
 
 

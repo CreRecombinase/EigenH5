@@ -6,8 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5FILEDRIVER_HPP
-#define H5FILEDRIVER_HPP
+#pragma once
 
 #include "H5PropertyList.hpp"
 
@@ -42,4 +41,3 @@ inline FileDriver default_file_driver();
 
 #include "bits/H5FileDriver_misc.hpp"
 
-#endif // H5FILEDRIVER_HPP

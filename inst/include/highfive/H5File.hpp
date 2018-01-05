@@ -6,8 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5FILE_HPP
-#define H5FILE_HPP
+#pragma once
 
 #include <string>
 
@@ -67,4 +66,3 @@ class File : public Object,
 
 #include "bits/H5File_misc.hpp"
 
-#endif // H5FILE_HPP

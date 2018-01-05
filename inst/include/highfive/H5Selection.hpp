@@ -6,8 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5SELECTION_HPP
-#define H5SELECTION_HPP
+#pragma once
 
 #include "H5DataSet.hpp"
 #include "H5Object.hpp"
@@ -61,4 +60,3 @@ class Selection : public SliceTraits<Selection> {
 
 #include "bits/H5Selection_misc.hpp"
 
-#endif // H5SELECTION_HPP

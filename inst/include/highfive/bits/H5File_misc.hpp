@@ -6,8 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5FILE_MISC_HPP
-#define H5FILE_MISC_HPP
+#pragma once
 
 #include "../H5Exception.hpp"
 #include "../H5File.hpp"
@@ -35,12 +34,29 @@ inline int convert_open_flag(int openFlags) {
     return res_open;
 }
 }
+    inline bool file_exists(const std::string& name) {
+        struct stat buffer;
+        return (stat (name.c_str(), &buffer) == 0);
+    }
 
 inline File::File(const std::string& filename, int openFlags,
                   const FileDriver& driver)
     : _filename(filename) {
 
+    struct stat buffer;
+    const bool file_exists = stat(filename.c_str(), &buffer) == 0 ;
+    if(file_exists){
+        if(!(openFlags & File::Truncate)){
+            if(openFlags & File::Create) {
+                openFlags = openFlags & ~File::Create;
+            }
+        }
+
+    }
+
     openFlags = convert_open_flag(openFlags);
+
+
 
     if (openFlags & H5F_ACC_CREAT) {
         if ((_hid = H5Fcreate(_filename.c_str(), openFlags & (H5F_ACC_TRUNC),
@@ -69,4 +85,3 @@ inline void File::flush() {
 }
 }
 
-#endif // H5FILE_MISC_HPP

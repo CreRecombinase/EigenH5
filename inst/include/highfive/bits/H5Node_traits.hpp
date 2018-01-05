@@ -6,8 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5NODE_TRAITS_HPP
-#define H5NODE_TRAITS_HPP
+#pragma once
 
 #include <string>
 
@@ -19,9 +18,17 @@ class Group;
 class DataSpace;
 class DataType;
 
+    class Properties;
+
 template <typename Derivate>
 class NodeTraits {
   public:
+
+
+    DataSet createDataSet(const std::string &dataset_name,
+                          const DataSpace &space,
+                          const DataType &dtype,
+                          hid_t create_params, const bool doTranspose = false);
     ///
     /// \brief createDataSet Create a new dataset in the current file of
     /// datatype type and of size space
@@ -61,12 +68,16 @@ class NodeTraits {
     ///
     Group createGroup(const std::string& group_name);
 
+    Group createGroups(const std::vector<std::string> &group_names);
+
     ///
     /// \brief open an existing group with the name group_name
     /// \param group_name
     /// \return the group object
     ///
     Group getGroup(const std::string& group_name) const;
+
+    Group createOrGetGroup(const std::string &group_name);
 
     ///
     /// \brief return the number of leaf objects of the node / group
@@ -91,11 +102,12 @@ class NodeTraits {
     /// false
     bool exist(const std::string& node_name) const;
 
+    Group createGroups_rec(const std::vector<std::string> &group_names, const std::string &group_name);
   private:
+
     typedef Derivate derivate_type;
 };
 }
 
 #include "H5Node_traits_misc.hpp"
 
-#endif // H5NODE_TRAITS_HPP

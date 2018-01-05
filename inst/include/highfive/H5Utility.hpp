@@ -7,8 +7,7 @@
  *
  */
 
-#ifndef H5UTILITY_HPP
-#define H5UTILITY_HPP
+#pragma once
 
 #include <H5Epublic.h>
 
@@ -31,4 +30,3 @@ private:
 };
 }
 
-#endif // H5UTIL_HPP

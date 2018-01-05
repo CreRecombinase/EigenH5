@@ -6,8 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5FILEDRIVER_MISC_HPP
-#define H5FILEDRIVER_MISC_HPP
+#pragma once
 
 #include "../H5FileDriver.hpp"
 
@@ -41,4 +40,3 @@ inline MPIOFileDriver::MPIOFileDriver(Comm comm, Info info) {
 }
 }
 
-#endif // H5FILEDRIVER_MISC_HPP

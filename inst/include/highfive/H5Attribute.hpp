@@ -6,8 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5ATTRIBUTE_HPP
-#define H5ATTRIBUTE_HPP
+#pragma once
 
 #include <vector>
 
@@ -72,4 +71,4 @@ class Attribute : public Object {
 
 #include "bits/H5Attribute_misc.hpp"
 
-#endif // H5ATTRIBUTE_HPP
+

@@ -6,8 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5DATASET_HPP
-#define H5DATASET_HPP
+#pragma once
 
 #include <vector>
 
@@ -28,6 +27,7 @@ class DataSet : public Object,
                 public SliceTraits<DataSet>,
                 public AnnotateTraits<DataSet> {
   public:
+    void setTranspose(const bool doTranspose);
     size_t getStorageSize() const;
 
     ///
@@ -35,6 +35,8 @@ class DataSet : public Object,
     /// \return return the datatype associated with this dataset
     ///
     DataType getDataType() const;
+
+    std::vector<size_t> getDataDimensions() const;
 
     ///
     /// \brief getSpace
@@ -49,8 +51,12 @@ class DataSet : public Object,
     ///
     DataSpace getMemSpace() const;
 
+    bool isTransposed() const;
+
   private:
     DataSet();
+
+    bool doTranspose;
     template <typename Derivate>
     friend class ::HighFive::NodeTraits;
 };
@@ -58,4 +64,3 @@ class DataSet : public Object,
 
 #include "bits/H5DataSet_misc.hpp"
 
-#endif // H5DATASET_HPP

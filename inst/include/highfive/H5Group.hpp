@@ -6,8 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef HIGHFIVE_H5GROUP_HPP
-#define HIGHFIVE_H5GROUP_HPP
+#pragma once
 
 #include "H5Object.hpp"
 #include "bits/H5Annotate_traits.hpp"
@@ -23,10 +22,10 @@ class Group : public Object,
   public:
     Group();
 
+
     friend class File;
 };
 }
 
 #include "bits/H5Group_misc.hpp"
 
-#endif // HIGHFIVE_H5GROUP_HPP

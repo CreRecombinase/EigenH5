@@ -6,8 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5ANNOTATE_TRAITS_HPP
-#define H5ANNOTATE_TRAITS_HPP
+#pragma once
 
 #include <string>
 
@@ -73,4 +72,3 @@ class AnnotateTraits {
 
 #include "H5Annotate_traits_misc.hpp"
 
-#endif // H5ANNOTATE_TRAITS_HPP

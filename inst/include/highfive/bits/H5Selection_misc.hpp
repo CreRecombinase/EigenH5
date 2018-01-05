@@ -6,8 +6,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  *
  */
-#ifndef H5SELECTION_MISC_HPP
-#define H5SELECTION_MISC_HPP
+#pragma once
 
 #include "../H5Selection.hpp"
 #include "H5Slice_traits_misc.hpp"
@@ -27,4 +26,3 @@ inline DataSet& Selection::getDataset() { return _set; }
 inline const DataSet& Selection::getDataset() const { return _set; }
 }
 
-#endif // H5SELECTION_MISC_HPP
