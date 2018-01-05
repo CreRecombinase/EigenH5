@@ -9,7 +9,7 @@
 
 #ifdef H5_USE_EIGEN
 
-#include <eigen3/Eigen/Core>
+#include <Eigen/Core>
 
 #endif
 
