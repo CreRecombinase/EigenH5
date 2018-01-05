@@ -33,7 +33,7 @@ write_vec_chunk_h5 <- function(filename, groupname, dataname, data, offsets = as
     invisible(.Call('_EigenH5_write_vec_chunk_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data, offsets, chunksizes))
 }
 
-read_s_vec_h5 <- function(filename, groupname, dataname, offset = 0L, chunksize = -1L) {
+read_s_vec_h5 <- function(filename, groupname, dataname, offset = 0L, chunksize = 0L) {
     .Call('_EigenH5_read_s_vec_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, offset, chunksize)
 }
 

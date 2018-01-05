@@ -1,4 +1,4 @@
-CXX_STD = CXX17
+CXX_STD = CXX14
 RHDF5_LIBS=`echo 'Rhdf5lib::pkgconfig("PKG_C_LIBS")'|\
     "${R_HOME}/bin/R" --vanilla --slave`
 BLOSC_CFLAGS+=$(shell echo 'libblosc::pkgconfig("PKG_CFLAGS")'|\
