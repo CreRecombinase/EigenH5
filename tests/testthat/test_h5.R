@@ -48,11 +48,15 @@ test_that("can read string vector",{
 
 test_that("writing a matrix works as in RcppEigenH5",{
   
-  tmat <- matrix(runif(9*3),9,3)
+  tmat <- matrix(runif(9*10),9,10)
   tempf <- tempfile()
-  write_mat_h5(tempf,groupname = "testg",dataname = "testd",data = tmat)  
-  rmat <- RcppEigenH5::read_2d_mat_h5(tempf,"testg","testd")  
-  expect_equal(rmat,tmat)  
+  write_mat_h5(tempf,groupname = "testg",dataname = "testd",data = tmat,doTranspose = T)  
+  sub_t <- tmat[,c(1,3,5)]
+  rmat <- read_mat_cols_h5(tempf,"testg","testd",c(1L,3L,5L))
+  expect_equal(rmat,sub_t)  
+  write_mat_h5(tempf,groupname = "testg",dataname = "testd2",data = tmat,doTranspose = F)  
+  rmat <- read_mat_cols_h5(tempf,"testg","testd2",c(1L,3L,5L))
+  expect_equal(rmat,sub_t)
 })
 
 test_that("doTranspose is respected in reading",{

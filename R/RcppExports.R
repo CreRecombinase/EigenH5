@@ -21,6 +21,10 @@ read_mat_h5 <- function(filename, groupname, dataname, offsets = as.integer( c()
     .Call('_EigenH5_read_mat_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, offsets, chunksizes)
 }
 
+read_mat_cols_h5 <- function(filename, groupname, dataname, cols = as.integer( c())) {
+    .Call('_EigenH5_read_mat_cols_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, cols)
+}
+
 write_mat_h5 <- function(filename, groupname, dataname, data, doTranspose = FALSE) {
     invisible(.Call('_EigenH5_write_mat_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data, doTranspose))
 }

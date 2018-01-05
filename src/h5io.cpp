@@ -98,7 +98,26 @@ Eigen::MatrixXd read_mat_h5(std::string filename,
   return(retmat);
   
 }
+//[[Rcpp::export]]
+Eigen::MatrixXd read_mat_cols_h5(std::string filename,
+                            std::string groupname,
+                            std::string dataname,
+                            const Rcpp::IntegerVector cols= Rcpp::IntegerVector::create()){
+  
+  std::vector<size_t> columns_local(cols.size());
+  std::transform(cols.begin(), cols.end(), columns_local.begin(),
+                 [](int c) -> size_t { return (c-1); });
 
+  HighFive::File file(filename, HighFive::File::ReadOnly);
+  
+  
+  auto group = file.getGroup(groupname);
+  
+  Eigen::MatrixXd retmat;
+  group.getDataSet(dataname).select(columns_local).read(retmat);
+  return(retmat);
+
+}
 
 
 //[[Rcpp::export]]

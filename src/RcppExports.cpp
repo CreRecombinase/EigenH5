@@ -77,6 +77,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// read_mat_cols_h5
+Eigen::MatrixXd read_mat_cols_h5(std::string filename, std::string groupname, std::string dataname, const Rcpp::IntegerVector cols);
+RcppExport SEXP _EigenH5_read_mat_cols_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP colsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type filename(filenameSEXP);
+    Rcpp::traits::input_parameter< std::string >::type groupname(groupnameSEXP);
+    Rcpp::traits::input_parameter< std::string >::type dataname(datanameSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type cols(colsSEXP);
+    rcpp_result_gen = Rcpp::wrap(read_mat_cols_h5(filename, groupname, dataname, cols));
+    return rcpp_result_gen;
+END_RCPP
+}
 // write_mat_h5
 void write_mat_h5(std::string filename, std::string groupname, std::string dataname, Eigen::MatrixXd& data, const bool doTranspose);
 RcppExport SEXP _EigenH5_write_mat_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dataSEXP, SEXP doTransposeSEXP) {
@@ -214,6 +228,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_EigenH5_create_vector_h5", (DL_FUNC) &_EigenH5_create_vector_h5, 4},
     {"_EigenH5_write_vector", (DL_FUNC) &_EigenH5_write_vector, 4},
     {"_EigenH5_read_mat_h5", (DL_FUNC) &_EigenH5_read_mat_h5, 5},
+    {"_EigenH5_read_mat_cols_h5", (DL_FUNC) &_EigenH5_read_mat_cols_h5, 4},
     {"_EigenH5_write_mat_h5", (DL_FUNC) &_EigenH5_write_mat_h5, 5},
     {"_EigenH5_write_mat_chunk_h5", (DL_FUNC) &_EigenH5_write_mat_chunk_h5, 6},
     {"_EigenH5_write_vec_chunk_h5", (DL_FUNC) &_EigenH5_write_vec_chunk_h5, 6},
