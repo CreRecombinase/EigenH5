@@ -57,13 +57,7 @@ inline DataType DataSet::getDataType() const {
         doTranspose = transpose;
     }
 
-    inline std::vector<size_t> DataSet::getDataDimensions() const {
-        std::vector<size_t> dims = this->getSpace().getDimensions();
-        if (doTranspose) {
-            std::reverse(dims.begin(), dims.end());
-        }
-        return (dims);
-    }
+
 
 inline DataSpace DataSet::getSpace() const {
     DataSpace space;

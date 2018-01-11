@@ -36,7 +36,7 @@ class DataSet : public Object,
     ///
     DataType getDataType() const;
 
-    std::vector<size_t> getDataDimensions() const;
+    //std::vector<size_t> getDataDimensions() const;
 
     ///
     /// \brief getSpace

@@ -68,11 +68,8 @@ namespace HighFive {
             const std::string &group_path,
             const std::string &data_name,
             const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> &matrix,
-            const bool doTranspose = false) {
-
-
-        std::vector<Eigen::Index> map_dims(2, 0);
-        assert(map_dims.size() == 2);
+            const bool doTranspose = false,
+            std::vector<size_t> chunk_vec={}) {
 
 
         HighFive::File file(file_name, HighFive::File::ReadWrite | HighFive::File::Create);
@@ -84,11 +81,13 @@ namespace HighFive {
         auto plist = H5Pcreate(H5P_DATASET_CREATE);
 
 #ifdef USE_BLOSC
-        int r = 0;
-        r = register_blosc(nullptr, nullptr);
 
+        //r = //register_blosc(nullptr, nullptr);
+        if(chunk_vec.empty()){
+            chunk_vec={static_cast<size_t>(matrix.rows()),1000};
+        }
         // Create a new file using the default property lists.
-        Filter filter({1000, 1000}, matrix, FILTER_BLOSC, doTranspose);
+        Filter filter(chunk_vec, matrix, FILTER_BLOSC, doTranspose);
         // Create a dataset with double precision floating points
         plist = filter.getId();
 #endif
@@ -101,8 +100,9 @@ namespace HighFive {
     void write_vector_h5(const std::string &file_name,
                          const std::string &group_path,
                          const std::string &data_name,
-                         const std::vector<std::string> &vector) {
-        const bool doTranspose = false;
+                         const std::vector<std::string> &vector,
+                         const size_t chunksize = 1000) {
+
         std::vector<Eigen::Index> map_dims(2, 0);
         assert(map_dims.size() == 2);
 
@@ -117,13 +117,13 @@ namespace HighFive {
 
 #ifdef USE_BLOSC
         int r = 0;
-        r = register_blosc(nullptr, nullptr);
-        size_t chunksize = 1000;
+      //  r = //register_blosc(nullptr, nullptr);
+        std::vector<size_t> cshape = {chunksize};
         auto vsize = vector.size();
         if(vsize<=chunksize){
-            chunksize=vsize;
+            cshape[0]=vsize;
         }
-        auto cshape = {chunksize};
+
         // Create a new file using the default property lists.
         Filter filter(cshape, FILTER_BLOSC,r);
         // Create a dataset with double precision floating points
@@ -142,7 +142,8 @@ namespace HighFive {
             const std::string &file_name,
             const std::string &group_path,
             const std::string &data_name,
-            const Eigen::Matrix<Scalar,Eigen::Dynamic,1> &vector) {
+            const Eigen::Matrix<Scalar,Eigen::Dynamic,1> &vector,
+            const size_t chunksize = 1000) {
 
         const bool doTranspose = false;
         std::vector<Eigen::Index> map_dims(2, 0);
@@ -159,10 +160,14 @@ namespace HighFive {
 
 #ifdef USE_BLOSC
         int r = 0;
-        r = register_blosc(nullptr, nullptr);
-
+        //r = register_blosc(nullptr, nullptr);
+        std::vector<size_t> cshape = {chunksize};
+        auto vsize = vector.size();
+        if(vsize<=chunksize){
+            cshape[0]=vsize;
+        }
         // Create a new file using the default property lists.
-        Filter filter({1000}, vector, FILTER_BLOSC, doTranspose);
+        Filter filter(cshape, vector, FILTER_BLOSC, doTranspose);
         // Create a dataset with double precision floating points
         plist = filter.getId();
 #endif
@@ -171,7 +176,15 @@ namespace HighFive {
         DataSet dataset = group.createDataSet(data_name, ds, AtomicType<Scalar>(), plist, doTranspose);
         dataset.write(vector);
     }
-    template<typename Scalar> void create_matrix_h5(const std::string &filename,const std::string &groupname,const std::string &dataname,const std::vector<size_t> &dimensions,const bool doTranspose=false){
+
+
+
+    template<typename Scalar> void create_matrix_h5(const std::string &filename,
+                                                    const std::string &groupname,
+                                                    const std::string &dataname,
+                                                    const std::vector<size_t> &dimensions,
+                                                    bool doTranspose=false,
+                                                    std::vector<size_t> chunk_vec={}){
 
 
 
@@ -185,10 +198,12 @@ namespace HighFive {
         auto plist = H5Pcreate(H5P_DATASET_CREATE);
 
 #ifdef USE_BLOSC
-        int r = 0;
-        r = register_blosc(nullptr, nullptr);
+        if(chunk_vec.empty()){
+            chunk_vec={mat_dims[0],1000};
+        }
+        //r = register_blosc(nullptr, nullptr);
         // Create a new file using the default property lists.
-        Filter filter({1000, 1000}, fake_mat, FILTER_BLOSC, doTranspose);
+        Filter filter(chunk_vec, fake_mat, FILTER_BLOSC, doTranspose);
         // Create a dataset with double precision floating points
         plist = filter.getId();
 #endif
@@ -196,7 +211,10 @@ namespace HighFive {
 
     }
 
-    template<typename Scalar> void create_vector_h5(const std::string &filename,const std::string &groupname,const std::string &dataname,const size_t length){
+    template<typename Scalar> void create_vector_h5(const std::string &filename,
+                                                    const std::string &groupname,
+                                                    const std::string &dataname,
+                                                    const size_t length,const size_t chunksize=1000){
 
         std::vector<size_t> mat_dims={length};
 
@@ -207,9 +225,9 @@ namespace HighFive {
 
 #ifdef USE_BLOSC
         int r = 0;
-        r = register_blosc(nullptr, nullptr);
+        //r = register_blosc(nullptr, nullptr);
         // Create a new file using the default property lists.
-        Filter filter({100},mat_dims,FILTER_BLOSC,r);
+        Filter filter({chunksize},mat_dims,FILTER_BLOSC,r);
         // Create a dataset with double precision floating points
         plist = filter.getId();
 #endif
@@ -244,7 +262,18 @@ namespace HighFive {
         auto sel = dataset.selectEigen(offsets, chunk_size, std::vector<size_t>());
         sel.write(retmat);
     }
+/*template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+class DataMat{
+    using Matrix = Eigen::Matrix<Scalar,RowsAtCompileTime,ColsAtCompileTime,Options>
+public:
+    Matrix mat;
+    Selection dataset;
 
+    constexpr size_t rank=details::array_dims<Matrix>::value;
+    const size_t chunksize;
+    const size_t other_size;
+    DataMat()
+};*/
 
 
 

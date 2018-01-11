@@ -21,9 +21,9 @@ class DataType : public Object {
   public:
     DataType();
 
-    bool operator==(const DataType& other) const;
+    bool operator == (const DataType& other) const;
 
-    bool operator!=(const DataType& other) const;
+    bool operator != (const DataType& other) const;
 
   protected:
     friend class Attribute;
@@ -44,6 +44,12 @@ class AtomicType : public DataType {
     typedef T basic_type;
 };
 }
+/*
+template<hid_t HT,is>
+struct CppType {
+    typedef HT type;
+}*/
+
 
 #include "bits/H5DataType_misc.hpp"
 

@@ -23,7 +23,7 @@
 
 #ifdef H5_USE_EIGEN
 
-#include <eigen3/Eigen/Core>
+#include <Eigen/Core>
 
 #endif
 
@@ -211,7 +211,7 @@ struct type_of_array<boost::numeric::ublas::matrix<T,boost::numeric::ublas::row_
     typedef typename type_of_array<T>::type type;
 };
 
-  template <typename T>
+template <typename T>
 struct type_of_array<boost::numeric::ublas::matrix<T,boost::numeric::ublas::column_major> > {
     typedef typename type_of_array<T>::type type;
 };

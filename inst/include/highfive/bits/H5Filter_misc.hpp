@@ -5,6 +5,7 @@
 #pragma once
 
 #include "../H5Filter.hpp"
+#include <functional>
 
 namespace HighFive {
 
@@ -41,6 +42,46 @@ namespace HighFive {
     inline hid_t Filter::getId() const {
         return _hid;
     }
+
+inline std::vector<size_t> Filter::guess_chunk(const std::vector<size_t> data_shape, const size_t typesize){
+
+
+    const size_t ndims= data_shape.size();
+    assert(ndims!=0);
+    std::vector<double> chunks(ndims);
+    std::copy(data_shape.begin(),data_shape.end(),chunks.begin());
+    const double dset_size = std::accumulate(chunks.begin(),chunks.end(), static_cast<double>(typesize),std::multiplies<double>());
+    double target_size = static_cast<double>(CHUNK_BASE)*(std::pow(2.0,std::log10(dset_size/(1024*1024))));
+    if(target_size > static_cast<double>(CHUNK_MAX)){
+        target_size = static_cast<double>(CHUNK_MAX);
+    }else{
+        if(target_size < static_cast<double>(CHUNK_MIN)){
+            target_size = static_cast<double>(CHUNK_MIN);
+        }
+    }
+
+
+
+    auto lambda_check = [](auto &chunks,auto target_size,auto CHUNK_MAX,auto typesize) -> bool{
+        auto chunk_bytes =std::accumulate(chunks.begin(),chunks.end(), static_cast<double>(typesize),std::multiplies<double>());
+        if(chunk_bytes < target_size){
+            return false;
+        }
+        if(abs(chunk_bytes-target_size)/target_size < 0.5 ){
+            if(chunk_bytes < CHUNK_MAX){
+                return false;
+            }
+        }
+        return std::accumulate(chunks.begin(), chunks.end(), 1, std::multiplies<double>()) != 1;
+
+    };
+    for(int idx=0;lambda_check(chunks,target_size,CHUNK_MAX,typesize);idx++){
+        chunks[(idx % ndims)]=std::ceil(chunks[idx]/2.0);
+    }
+    std::vector<size_t> ret_chunks(ndims);
+    std::copy(chunks.begin(),chunks.end(),ret_chunks.begin());
+    return(ret_chunks);
+}
 
 
     inline std::vector<size_t> Filter::reset_chunks_vec(const std::vector<size_t> &chunk_dims,

@@ -5,12 +5,16 @@ read_vector <- function(filename, groupname, dataname, offsets = as.integer( c()
     .Call('_EigenH5_read_vector', PACKAGE = 'EigenH5', filename, groupname, dataname, offsets, chunksizes)
 }
 
-create_matrix_h5 <- function(filename, groupname, dataname, dimensions, doTranspose = FALSE) {
-    invisible(.Call('_EigenH5_create_matrix_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, dimensions, doTranspose))
+guess_chunks <- function(dimensions) {
+    .Call('_EigenH5_guess_chunks', PACKAGE = 'EigenH5', dimensions)
 }
 
-create_vector_h5 <- function(filename, groupname, dataname, dimension) {
-    invisible(.Call('_EigenH5_create_vector_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, dimension))
+create_matrix_h5 <- function(filename, groupname, dataname, dimensions, doTranspose = FALSE, chunksizes = as.integer( c())) {
+    invisible(.Call('_EigenH5_create_matrix_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, dimensions, doTranspose, chunksizes))
+}
+
+create_vector_h5 <- function(filename, groupname, dataname, dimension, chunksize = 1000L) {
+    invisible(.Call('_EigenH5_create_vector_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, dimension, chunksize))
 }
 
 write_vector <- function(filename, groupname, dataname, data) {
@@ -21,12 +25,24 @@ read_mat_h5 <- function(filename, groupname, dataname, offsets = as.integer( c()
     .Call('_EigenH5_read_mat_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, offsets, chunksizes)
 }
 
+is_transposed <- function(filename, groupname, dataname) {
+    .Call('_EigenH5_is_transposed', PACKAGE = 'EigenH5', filename, groupname, dataname)
+}
+
+copy_mat_h5 <- function(infilename, outfilename, groupname, dataname, offsets = as.integer( c()), chunksizes = as.integer( c())) {
+    invisible(.Call('_EigenH5_copy_mat_h5', PACKAGE = 'EigenH5', infilename, outfilename, groupname, dataname, offsets, chunksizes))
+}
+
 read_mat_cols_h5 <- function(filename, groupname, dataname, cols = as.integer( c())) {
     .Call('_EigenH5_read_mat_cols_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, cols)
 }
 
-write_mat_h5 <- function(filename, groupname, dataname, data, doTranspose = FALSE) {
-    invisible(.Call('_EigenH5_write_mat_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data, doTranspose))
+read_mat_rows_h5 <- function(filename, groupname, dataname, rows = as.integer( c()), read_transpose = FALSE) {
+    .Call('_EigenH5_read_mat_rows_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, rows, read_transpose)
+}
+
+write_mat_h5 <- function(filename, groupname, dataname, data, doTranspose = FALSE, chunksizes = as.integer( c())) {
+    invisible(.Call('_EigenH5_write_mat_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data, doTranspose, chunksizes))
 }
 
 write_mat_chunk_h5 <- function(filename, groupname, dataname, data, offsets = as.integer( c()), chunksizes = as.integer( c())) {
@@ -59,5 +75,13 @@ read_vec_h5 <- function(filename, groupname, dataname, offset = 0L, chunksize = 
 
 write_vector_h5 <- function(filename, groupname, dataname, data) {
     invisible(.Call('_EigenH5_write_vector_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data))
+}
+
+map_eQTL_h5 <- function(SNP_path, EXP_path, out_path, SNP_chunksize = 20000L, EXP_chunksize = -1L) {
+    invisible(.Call('_EigenH5_map_eQTL_h5', PACKAGE = 'EigenH5', SNP_path, EXP_path, out_path, SNP_chunksize, EXP_chunksize))
+}
+
+split_ldd <- function(region_ids) {
+    .Call('_EigenH5_split_ldd', PACKAGE = 'EigenH5', region_ids)
 }
 

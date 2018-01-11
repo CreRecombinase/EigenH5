@@ -53,7 +53,7 @@ class SliceTraits {
     /// select a set of columns in the last dimension of this dataset.
     /// The column indices must be smaller than the dimension size.
     ///
-    //Selection selectRows(const std::vector<size_t>& rows) const;
+    Selection selectRows(const std::vector<size_t>& rows) const;
     Selection select(const std::vector<size_t>& columns) const;
 
     ///
@@ -64,6 +64,7 @@ class SliceTraits {
     Selection selectEigen(const std::vector<size_t> &offset,
                           const std::vector<size_t> &count,
                           const std::vector<size_t> &stride) const;
+    std::vector<size_t> getDataDimensions() const;
 
     ///
     /// Read the entire dataset into a buffer
