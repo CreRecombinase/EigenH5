@@ -8,7 +8,7 @@ Maintainer: Who to complain to <yourfault@somewhere.net>
 Description: More about what it does (maybe more than one line)
 License: What license is it under?
 Imports: Rcpp (>= 0.12.12), RcppEigen (>= 0.3.3.3.0),BH
-LinkingTo: Rcpp, RcppEigen,BH,Rhdf5lib,libblosc
+LinkingTo: Rcpp, RcppEigen,BH,Rhdf5lib,libblosc,RcppProgress
 Remotes: bioc::Rhdf5lib
 Suggests: testthat,
     knitr,

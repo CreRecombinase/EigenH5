@@ -7,18 +7,22 @@
 
 using namespace Rcpp;
 
-// read_vector
-Eigen::ArrayXd read_vector(const std::string& filename, const std::string& groupname, const std::string& dataname, const Rcpp::IntegerVector offsets, const Rcpp::IntegerVector chunksizes);
-RcppExport SEXP _EigenH5_read_vector(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP offsetsSEXP, SEXP chunksizesSEXP) {
+// start_blosc
+void start_blosc();
+RcppExport SEXP _EigenH5_start_blosc() {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    start_blosc();
+    return R_NilValue;
+END_RCPP
+}
+// check_blosc
+bool check_blosc();
+RcppExport SEXP _EigenH5_check_blosc() {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type groupname(groupnameSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type dataname(datanameSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type offsets(offsetsSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type chunksizes(chunksizesSEXP);
-    rcpp_result_gen = Rcpp::wrap(read_vector(filename, groupname, dataname, offsets, chunksizes));
+    rcpp_result_gen = Rcpp::wrap(check_blosc());
     return rcpp_result_gen;
 END_RCPP
 }
@@ -33,21 +37,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// create_matrix_h5
-void create_matrix_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, const std::vector<int>& dimensions, const bool doTranspose, const Rcpp::IntegerVector chunksizes);
-RcppExport SEXP _EigenH5_create_matrix_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dimensionsSEXP, SEXP doTransposeSEXP, SEXP chunksizesSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type groupname(groupnameSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type dataname(datanameSEXP);
-    Rcpp::traits::input_parameter< const std::vector<int>& >::type dimensions(dimensionsSEXP);
-    Rcpp::traits::input_parameter< const bool >::type doTranspose(doTransposeSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type chunksizes(chunksizesSEXP);
-    create_matrix_h5(filename, groupname, dataname, dimensions, doTranspose, chunksizes);
-    return R_NilValue;
-END_RCPP
-}
 // create_vector_h5
 void create_vector_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, const int dimension, const int chunksize);
 RcppExport SEXP _EigenH5_create_vector_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dimensionSEXP, SEXP chunksizeSEXP) {
@@ -60,34 +49,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type chunksize(chunksizeSEXP);
     create_vector_h5(filename, groupname, dataname, dimension, chunksize);
     return R_NilValue;
-END_RCPP
-}
-// write_vector
-void write_vector(const std::string& filename, const std::string& groupname, const std::string& dataname, Eigen::VectorXd& data);
-RcppExport SEXP _EigenH5_write_vector(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dataSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type groupname(groupnameSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type dataname(datanameSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd& >::type data(dataSEXP);
-    write_vector(filename, groupname, dataname, data);
-    return R_NilValue;
-END_RCPP
-}
-// read_mat_h5
-Eigen::MatrixXd read_mat_h5(std::string filename, std::string groupname, std::string dataname, const Rcpp::IntegerVector offsets, const Rcpp::IntegerVector chunksizes);
-RcppExport SEXP _EigenH5_read_mat_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP offsetsSEXP, SEXP chunksizesSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type filename(filenameSEXP);
-    Rcpp::traits::input_parameter< std::string >::type groupname(groupnameSEXP);
-    Rcpp::traits::input_parameter< std::string >::type dataname(datanameSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type offsets(offsetsSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type chunksizes(chunksizesSEXP);
-    rcpp_result_gen = Rcpp::wrap(read_mat_h5(filename, groupname, dataname, offsets, chunksizes));
-    return rcpp_result_gen;
 END_RCPP
 }
 // is_transposed
@@ -115,50 +76,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type offsets(offsetsSEXP);
     Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type chunksizes(chunksizesSEXP);
     copy_mat_h5(infilename, outfilename, groupname, dataname, offsets, chunksizes);
-    return R_NilValue;
-END_RCPP
-}
-// read_mat_cols_h5
-Eigen::MatrixXd read_mat_cols_h5(std::string filename, std::string groupname, std::string dataname, const Rcpp::IntegerVector cols);
-RcppExport SEXP _EigenH5_read_mat_cols_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP colsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type filename(filenameSEXP);
-    Rcpp::traits::input_parameter< std::string >::type groupname(groupnameSEXP);
-    Rcpp::traits::input_parameter< std::string >::type dataname(datanameSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type cols(colsSEXP);
-    rcpp_result_gen = Rcpp::wrap(read_mat_cols_h5(filename, groupname, dataname, cols));
-    return rcpp_result_gen;
-END_RCPP
-}
-// read_mat_rows_h5
-Eigen::MatrixXd read_mat_rows_h5(std::string filename, std::string groupname, std::string dataname, const Rcpp::IntegerVector rows, const bool read_transpose);
-RcppExport SEXP _EigenH5_read_mat_rows_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP rowsSEXP, SEXP read_transposeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type filename(filenameSEXP);
-    Rcpp::traits::input_parameter< std::string >::type groupname(groupnameSEXP);
-    Rcpp::traits::input_parameter< std::string >::type dataname(datanameSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type rows(rowsSEXP);
-    Rcpp::traits::input_parameter< const bool >::type read_transpose(read_transposeSEXP);
-    rcpp_result_gen = Rcpp::wrap(read_mat_rows_h5(filename, groupname, dataname, rows, read_transpose));
-    return rcpp_result_gen;
-END_RCPP
-}
-// write_mat_h5
-void write_mat_h5(std::string filename, std::string groupname, std::string dataname, Eigen::MatrixXd& data, const bool doTranspose, const Rcpp::IntegerVector chunksizes);
-RcppExport SEXP _EigenH5_write_mat_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dataSEXP, SEXP doTransposeSEXP, SEXP chunksizesSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type filename(filenameSEXP);
-    Rcpp::traits::input_parameter< std::string >::type groupname(groupnameSEXP);
-    Rcpp::traits::input_parameter< std::string >::type dataname(datanameSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd& >::type data(dataSEXP);
-    Rcpp::traits::input_parameter< const bool >::type doTranspose(doTransposeSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type chunksizes(chunksizesSEXP);
-    write_mat_h5(filename, groupname, dataname, data, doTranspose, chunksizes);
     return R_NilValue;
 END_RCPP
 }
@@ -192,51 +109,6 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
-// read_s_vec_h5
-Rcpp::StringVector read_s_vec_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, const int offset, const int chunksize);
-RcppExport SEXP _EigenH5_read_s_vec_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP offsetSEXP, SEXP chunksizeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type groupname(groupnameSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type dataname(datanameSEXP);
-    Rcpp::traits::input_parameter< const int >::type offset(offsetSEXP);
-    Rcpp::traits::input_parameter< const int >::type chunksize(chunksizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(read_s_vec_h5(filename, groupname, dataname, offset, chunksize));
-    return rcpp_result_gen;
-END_RCPP
-}
-// read_i_vec_h5
-Rcpp::IntegerVector read_i_vec_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, const int offset, const int chunksize);
-RcppExport SEXP _EigenH5_read_i_vec_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP offsetSEXP, SEXP chunksizeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type groupname(groupnameSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type dataname(datanameSEXP);
-    Rcpp::traits::input_parameter< const int >::type offset(offsetSEXP);
-    Rcpp::traits::input_parameter< const int >::type chunksize(chunksizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(read_i_vec_h5(filename, groupname, dataname, offset, chunksize));
-    return rcpp_result_gen;
-END_RCPP
-}
-// read_d_vec_h5
-Rcpp::NumericVector read_d_vec_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, const int offset, const int chunksize);
-RcppExport SEXP _EigenH5_read_d_vec_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP offsetSEXP, SEXP chunksizeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type groupname(groupnameSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type dataname(datanameSEXP);
-    Rcpp::traits::input_parameter< const int >::type offset(offsetSEXP);
-    Rcpp::traits::input_parameter< const int >::type chunksize(chunksizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(read_d_vec_h5(filename, groupname, dataname, offset, chunksize));
-    return rcpp_result_gen;
-END_RCPP
-}
 // check_dtype
 SEXPTYPE check_dtype(const std::string& filename, const std::string& groupname, const std::string& dataname);
 RcppExport SEXP _EigenH5_check_dtype(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP) {
@@ -250,18 +122,49 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// read_vec_h5
-SEXP read_vec_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, const int offset, const int chunksize);
-RcppExport SEXP _EigenH5_read_vec_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP offsetSEXP, SEXP chunksizeSEXP) {
+// read_vector_h5
+SEXP read_vector_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, Rcpp::IntegerVector offset, Rcpp::IntegerVector chunksize, Rcpp::IntegerVector filtervec);
+RcppExport SEXP _EigenH5_read_vector_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP offsetSEXP, SEXP chunksizeSEXP, SEXP filtervecSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type groupname(groupnameSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type dataname(datanameSEXP);
-    Rcpp::traits::input_parameter< const int >::type offset(offsetSEXP);
-    Rcpp::traits::input_parameter< const int >::type chunksize(chunksizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(read_vec_h5(filename, groupname, dataname, offset, chunksize));
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type offset(offsetSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type chunksize(chunksizeSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type filtervec(filtervecSEXP);
+    rcpp_result_gen = Rcpp::wrap(read_vector_h5(filename, groupname, dataname, offset, chunksize, filtervec));
+    return rcpp_result_gen;
+END_RCPP
+}
+// get_dims_h5
+Rcpp::IntegerVector get_dims_h5(const std::string& filename, const std::string& groupname, const std::string& dataname);
+RcppExport SEXP _EigenH5_get_dims_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type groupname(groupnameSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type dataname(datanameSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_dims_h5(filename, groupname, dataname));
+    return rcpp_result_gen;
+END_RCPP
+}
+// read_matrix_h5
+SEXP read_matrix_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, Rcpp::IntegerVector offset, Rcpp::IntegerVector chunksize, Rcpp::IntegerVector subset_rows, Rcpp::IntegerVector subset_cols);
+RcppExport SEXP _EigenH5_read_matrix_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP offsetSEXP, SEXP chunksizeSEXP, SEXP subset_rowsSEXP, SEXP subset_colsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type groupname(groupnameSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type dataname(datanameSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type offset(offsetSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type chunksize(chunksizeSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type subset_rows(subset_rowsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type subset_cols(subset_colsSEXP);
+    rcpp_result_gen = Rcpp::wrap(read_matrix_h5(filename, groupname, dataname, offset, chunksize, subset_rows, subset_cols));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -278,18 +181,77 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
-// map_eQTL_h5
-void map_eQTL_h5(const Rcpp::StringVector SNP_path, const Rcpp::StringVector EXP_path, const Rcpp::StringVector out_path, int SNP_chunksize, int EXP_chunksize);
-RcppExport SEXP _EigenH5_map_eQTL_h5(SEXP SNP_pathSEXP, SEXP EXP_pathSEXP, SEXP out_pathSEXP, SEXP SNP_chunksizeSEXP, SEXP EXP_chunksizeSEXP) {
+// create_matrix_h5
+void create_matrix_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, SEXP data, const bool doTranspose, const Rcpp::IntegerVector dims, const Rcpp::IntegerVector chunksizes);
+RcppExport SEXP _EigenH5_create_matrix_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dataSEXP, SEXP doTransposeSEXP, SEXP dimsSEXP, SEXP chunksizesSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Rcpp::StringVector >::type SNP_path(SNP_pathSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::StringVector >::type EXP_path(EXP_pathSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::StringVector >::type out_path(out_pathSEXP);
-    Rcpp::traits::input_parameter< int >::type SNP_chunksize(SNP_chunksizeSEXP);
-    Rcpp::traits::input_parameter< int >::type EXP_chunksize(EXP_chunksizeSEXP);
-    map_eQTL_h5(SNP_path, EXP_path, out_path, SNP_chunksize, EXP_chunksize);
+    Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type groupname(groupnameSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type dataname(datanameSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< const bool >::type doTranspose(doTransposeSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type dims(dimsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type chunksizes(chunksizesSEXP);
+    create_matrix_h5(filename, groupname, dataname, data, doTranspose, dims, chunksizes);
     return R_NilValue;
+END_RCPP
+}
+// write_matrix_h5
+void write_matrix_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, SEXP data, const bool doTranspose, const Rcpp::IntegerVector offsets, const Rcpp::IntegerVector chunksizes);
+RcppExport SEXP _EigenH5_write_matrix_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dataSEXP, SEXP doTransposeSEXP, SEXP offsetsSEXP, SEXP chunksizesSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type groupname(groupnameSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type dataname(datanameSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< const bool >::type doTranspose(doTransposeSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type offsets(offsetsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type chunksizes(chunksizesSEXP);
+    write_matrix_h5(filename, groupname, dataname, data, doTranspose, offsets, chunksizes);
+    return R_NilValue;
+END_RCPP
+}
+// write_df_h5
+bool write_df_h5(Rcpp::DataFrame& df, const std::string groupname, const std::string outfile, Rcpp::IntegerVector deflate_level);
+RcppExport SEXP _EigenH5_write_df_h5(SEXP dfSEXP, SEXP groupnameSEXP, SEXP outfileSEXP, SEXP deflate_levelSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::DataFrame& >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< const std::string >::type groupname(groupnameSEXP);
+    Rcpp::traits::input_parameter< const std::string >::type outfile(outfileSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type deflate_level(deflate_levelSEXP);
+    rcpp_result_gen = Rcpp::wrap(write_df_h5(df, groupname, outfile, deflate_level));
+    return rcpp_result_gen;
+END_RCPP
+}
+// read_l_h5
+Rcpp::List read_l_h5(const std::string h5filepath, const std::string groupname, Rcpp::CharacterVector subcols, Rcpp::IntegerVector offset, Rcpp::IntegerVector chunksize, Rcpp::IntegerVector filtervec);
+RcppExport SEXP _EigenH5_read_l_h5(SEXP h5filepathSEXP, SEXP groupnameSEXP, SEXP subcolsSEXP, SEXP offsetSEXP, SEXP chunksizeSEXP, SEXP filtervecSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string >::type h5filepath(h5filepathSEXP);
+    Rcpp::traits::input_parameter< const std::string >::type groupname(groupnameSEXP);
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type subcols(subcolsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type offset(offsetSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type chunksize(chunksizeSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type filtervec(filtervecSEXP);
+    rcpp_result_gen = Rcpp::wrap(read_l_h5(h5filepath, groupname, subcols, offset, chunksize, filtervec));
+    return rcpp_result_gen;
+END_RCPP
+}
+// intersect_snpinfo_h5
+Rcpp::ListOf<Rcpp::IntegerVector> intersect_snpinfo_h5(std::vector<std::string> h5files);
+RcppExport SEXP _EigenH5_intersect_snpinfo_h5(SEXP h5filesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type h5files(h5filesSEXP);
+    rcpp_result_gen = Rcpp::wrap(intersect_snpinfo_h5(h5files));
+    return rcpp_result_gen;
 END_RCPP
 }
 // split_ldd
@@ -305,26 +267,24 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_EigenH5_read_vector", (DL_FUNC) &_EigenH5_read_vector, 5},
+    {"_EigenH5_start_blosc", (DL_FUNC) &_EigenH5_start_blosc, 0},
+    {"_EigenH5_check_blosc", (DL_FUNC) &_EigenH5_check_blosc, 0},
     {"_EigenH5_guess_chunks", (DL_FUNC) &_EigenH5_guess_chunks, 1},
-    {"_EigenH5_create_matrix_h5", (DL_FUNC) &_EigenH5_create_matrix_h5, 6},
     {"_EigenH5_create_vector_h5", (DL_FUNC) &_EigenH5_create_vector_h5, 5},
-    {"_EigenH5_write_vector", (DL_FUNC) &_EigenH5_write_vector, 4},
-    {"_EigenH5_read_mat_h5", (DL_FUNC) &_EigenH5_read_mat_h5, 5},
     {"_EigenH5_is_transposed", (DL_FUNC) &_EigenH5_is_transposed, 3},
     {"_EigenH5_copy_mat_h5", (DL_FUNC) &_EigenH5_copy_mat_h5, 6},
-    {"_EigenH5_read_mat_cols_h5", (DL_FUNC) &_EigenH5_read_mat_cols_h5, 4},
-    {"_EigenH5_read_mat_rows_h5", (DL_FUNC) &_EigenH5_read_mat_rows_h5, 5},
-    {"_EigenH5_write_mat_h5", (DL_FUNC) &_EigenH5_write_mat_h5, 6},
     {"_EigenH5_write_mat_chunk_h5", (DL_FUNC) &_EigenH5_write_mat_chunk_h5, 6},
     {"_EigenH5_write_vec_chunk_h5", (DL_FUNC) &_EigenH5_write_vec_chunk_h5, 6},
-    {"_EigenH5_read_s_vec_h5", (DL_FUNC) &_EigenH5_read_s_vec_h5, 5},
-    {"_EigenH5_read_i_vec_h5", (DL_FUNC) &_EigenH5_read_i_vec_h5, 5},
-    {"_EigenH5_read_d_vec_h5", (DL_FUNC) &_EigenH5_read_d_vec_h5, 5},
     {"_EigenH5_check_dtype", (DL_FUNC) &_EigenH5_check_dtype, 3},
-    {"_EigenH5_read_vec_h5", (DL_FUNC) &_EigenH5_read_vec_h5, 5},
+    {"_EigenH5_read_vector_h5", (DL_FUNC) &_EigenH5_read_vector_h5, 6},
+    {"_EigenH5_get_dims_h5", (DL_FUNC) &_EigenH5_get_dims_h5, 3},
+    {"_EigenH5_read_matrix_h5", (DL_FUNC) &_EigenH5_read_matrix_h5, 7},
     {"_EigenH5_write_vector_h5", (DL_FUNC) &_EigenH5_write_vector_h5, 4},
-    {"_EigenH5_map_eQTL_h5", (DL_FUNC) &_EigenH5_map_eQTL_h5, 5},
+    {"_EigenH5_create_matrix_h5", (DL_FUNC) &_EigenH5_create_matrix_h5, 7},
+    {"_EigenH5_write_matrix_h5", (DL_FUNC) &_EigenH5_write_matrix_h5, 7},
+    {"_EigenH5_write_df_h5", (DL_FUNC) &_EigenH5_write_df_h5, 4},
+    {"_EigenH5_read_l_h5", (DL_FUNC) &_EigenH5_read_l_h5, 6},
+    {"_EigenH5_intersect_snpinfo_h5", (DL_FUNC) &_EigenH5_intersect_snpinfo_h5, 1},
     {"_EigenH5_split_ldd", (DL_FUNC) &_EigenH5_split_ldd, 1},
     {NULL, NULL, 0}
 };

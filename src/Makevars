@@ -6,4 +6,4 @@ BLOSC_CFLAGS+=$(shell echo 'libblosc::pkgconfig("PKG_CFLAGS")'|\
 PKG_LIBS+=$(shell echo 'libblosc::pkgconfig("PKG_LIBS_shared")' |\
 "${R_HOME}/bin/R" --vanilla --slave)    
 PKG_LIBS += $(RHDF5_LIBS)
-PKG_CPPFLAGS += -I../inst/include  ${BLOSC_CFLAGS} -DUSE_BLOSC -DH5_USE_EIGEN
+PKG_CPPFLAGS += -I../inst/include  ${BLOSC_CFLAGS} -DUSE_BLOSC -DH5_USE_EIGEN -DDEBUG

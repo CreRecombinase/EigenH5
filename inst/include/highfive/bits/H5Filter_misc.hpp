@@ -27,6 +27,7 @@ namespace HighFive {
         if (doTranspose) {
             std::reverse(nchunk_dims.begin(), nchunk_dims.end());
         }
+        //std::cout<<"Final Chunk Dims: "<<nchunk_dims[0]<<" "<<nchunk_dims[1]<<std::endl;
         auto rr = H5Pset_chunk(_hid, c_size, nchunk_dims.data());
         if (rr < 0) {
             HDF5ErrMapper::ToException<FilterException>(

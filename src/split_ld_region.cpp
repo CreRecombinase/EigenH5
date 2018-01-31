@@ -1,6 +1,21 @@
 #include <EigenH5.h>
 //[[depends(RcppEigen)]]
 //[[Rcpp::plugins(cpp14)]]
+#include <highfive/H5DataSet.hpp>
+#include <highfive/H5Filter.hpp>
+#include <highfive/H5DataSpace.hpp>
+#include <highfive/H5File.hpp>
+#include <highfive/H5Attribute.hpp>
+#include <highfive/H5Utility.hpp>
+#include <highfive/H5DataType.hpp>
+#include <highfive/H5Group.hpp>
+#include <highfive/H5PropertyList.hpp>
+#include <highfive/H5FileDriver.hpp>
+#include <highfive/H5Object.hpp>
+#include <highfive/H5Selection.hpp>
+#include <blosc_filter.h>
+#include <array>
+#include<H5Tpublic.h>
 
 
 using selection_tup=std::tuple<std::vector<size_t>,std::vector<size_t>,std::vector<size_t> >;
@@ -54,13 +69,78 @@ template<typename T,size_t D> std::map<T,selection_tup> split_LD(const std::arra
     return(retmap);
 }
 
+Rcpp::ListOf<Rcpp::NumericMatrix> read_split(const Rcpp::StringVector &matrix_path,const Rcpp::StringVector &region_path, const Rcpp::IntegerVector sub_regions=Rcpp::IntegerVector::create()){
+  
+  using namespace HighFive;
+  using namespace Rcpp;
+    std::vector<int> region_id_l;
+    {
+      File file(as<std::string>(region_path[0]),File::ReadOnly);
+      file.getGroup(as<std::string>(region_path[1])).getDataSet(as<std::string>(region_path[2])).read(region_id_l);
+    }
+    File mat_file(as<std::string>(matrix_path[0]),File::ReadOnly);
+    auto mat_dataset = mat_file.getGroup(as<std::string>(matrix_path[1])).getDataSet(as<std::string>(matrix_path[2]));
+    auto dim_v = mat_dataset.getDataDimensions();
+    std::array<size_t,2> mat_dims;
+    mat_dims[0]=dim_v[0];
+    mat_dims[1]=dim_v[1];
+    auto map_t = split_LD(mat_dims,region_id_l);
+    std::vector<int> check_regions(sub_regions.begin(),sub_regions.end());
+    if(check_regions.empty()){
+      size_t num_reg=map_t.size();
+      Rcpp::ListOf<Rcpp::NumericMatrix> matlist;
+      int idx=0;
+      for(auto ldi = map_t.begin(); ldi!=map_t.end();ldi++){
+        
+        //retmat(idx,0)=ldi->first;
+        auto val= ldi->second;
+        auto offsetvec = std::get<0>(val);
+        auto sizevec = std::get<1>(val);
+        const size_t trows=sizevec[0];
+        const size_t tcols=sizevec[1];
+        
+        auto ncvec = std::get<2>(val);
+        matlist[idx]=Rcpp::NumericMatrix(trows,tcols);
+        Eigen::Map<Eigen::MatrixXd> readmap(&(matlist[idx])(0,0),trows,tcols);
+        mat_dataset.selectEigen(offsetvec,sizevec,ncvec).read(readmap);
+        idx++;
+      }
+      return(matlist);
+    }else{
+      size_t num_reg=check_regions.size();
+      Rcpp::ListOf<Rcpp::NumericMatrix> matlist(num_reg);
+      int idx=0;
+      for(auto val:check_regions){
+        
+        auto ldi = map_t.find(val);
+        if(ldi!=map_t.end()){
+        //retmat(idx,0)=ldi->first;
+          auto valvec= ldi->second;
+          auto offsetvec = std::get<0>(valvec);
+          auto sizevec = std::get<1>(valvec);
+          auto ncvec = std::get<2>(valvec);
+          const size_t trows=sizevec[0];
+          const size_t tcols=sizevec[1];
+          
+          matlist[idx]=Rcpp::NumericMatrix(trows,tcols);
+          Eigen::Map<Eigen::MatrixXd> readmap(&(matlist[idx])(0,0),trows,tcols);
+          mat_dataset.selectEigen(offsetvec,sizevec,ncvec).read(readmap);
+        }else{
+          Rcpp::stop("ld_region not found:"+std::to_string(val));
+        }
+        idx++;
+      }
+      return(matlist);
+    }
+  
+}
 
 //[[Rcpp::export]]
 Rcpp::IntegerMatrix split_ldd(const std::vector<int> &region_ids){
   
   const size_t num_SNPs=region_ids.size();
   std::array<size_t,1> dims={num_SNPs};
-  auto ldres = split_LD(dims,std::vector<size_t>(region_ids.begin(),region_ids.end()));
+  auto ldres = split_LD(dims,region_ids);
   Rcpp::IntegerMatrix retmat(ldres.size(),3);
   size_t idx=0;
   for(auto ldi = ldres.begin(); ldi!=ldres.end();ldi++){

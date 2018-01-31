@@ -20,17 +20,17 @@
 
 namespace HighFive {
 
-    inline DataSpace::DataSpace(const std::vector<size_t> &dims, const bool doTranspose) {
-    std::vector<hsize_t> real_dims(dims.size());
-    std::copy(dims.begin(), dims.end(), real_dims.begin());
-        if (doTranspose) {
-            std::reverse(real_dims.begin(), real_dims.end());
-        }
-
-    if ((_hid = H5Screate_simple(int(dims.size()), &(real_dims.at(0)), NULL)) <
-        0) {
-        throw DataSpaceException("Impossible to create dataspace");
-    }
+inline DataSpace::DataSpace(const std::vector<size_t> &dims, const bool doTranspose) {
+  std::vector<hsize_t> real_dims(dims.size());
+  std::copy(dims.begin(), dims.end(), real_dims.begin());
+  if (doTranspose) {
+    std::reverse(real_dims.begin(), real_dims.end());
+  }
+  
+  if ((_hid = H5Screate_simple(int(dims.size()), &(real_dims.at(0)), NULL)) <
+    0) {
+    throw DataSpaceException("Impossible to create dataspace");
+  }
 }
 
 inline DataSpace::DataSpace(const size_t dim1) {
