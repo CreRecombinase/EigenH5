@@ -6,6 +6,16 @@ read_df_h5 <- function(h5filepath,groupname,subcols = character(),filtervec = in
   return(tibble::as_data_frame(read_l_h5(h5filepath = h5filepath,groupname = groupname,subcols = subcols,offset = offset,chunksize = chunksize,filtervec = filtervec)))
 }
 
+read_mat_h5 <- function(filename,groupname,dataname,offsets=integer(),chunksizes=integer(),subset_rows=integer(),subset_cols=integer()){
+  return(read_matrix_h5(filename = filename,
+                        groupname = groupname,
+                        dataname = dataname,
+                        offsets = offsets,
+                        chunksizes = chunksizes,
+                        subset_rows = subset_rows,
+                        subset_cols = subset_cols))
+}
+
 
 datatype_h5 <- function(h5filename,groupname,dataname){
   dt <- check_dtype(input_filenames[1],groupname,dataname)

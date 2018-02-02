@@ -152,19 +152,19 @@ BEGIN_RCPP
 END_RCPP
 }
 // read_matrix_h5
-SEXP read_matrix_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, Rcpp::IntegerVector offset, Rcpp::IntegerVector chunksize, Rcpp::IntegerVector subset_rows, Rcpp::IntegerVector subset_cols);
-RcppExport SEXP _EigenH5_read_matrix_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP offsetSEXP, SEXP chunksizeSEXP, SEXP subset_rowsSEXP, SEXP subset_colsSEXP) {
+SEXP read_matrix_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, const Rcpp::IntegerVector offsets, const Rcpp::IntegerVector chunksizes, const Rcpp::IntegerVector subset_rows, const Rcpp::IntegerVector subset_cols);
+RcppExport SEXP _EigenH5_read_matrix_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP offsetsSEXP, SEXP chunksizesSEXP, SEXP subset_rowsSEXP, SEXP subset_colsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type groupname(groupnameSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type dataname(datanameSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type offset(offsetSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type chunksize(chunksizeSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type subset_rows(subset_rowsSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type subset_cols(subset_colsSEXP);
-    rcpp_result_gen = Rcpp::wrap(read_matrix_h5(filename, groupname, dataname, offset, chunksize, subset_rows, subset_cols));
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type offsets(offsetsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type chunksizes(chunksizesSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type subset_rows(subset_rowsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type subset_cols(subset_colsSEXP);
+    rcpp_result_gen = Rcpp::wrap(read_matrix_h5(filename, groupname, dataname, offsets, chunksizes, subset_rows, subset_cols));
     return rcpp_result_gen;
 END_RCPP
 }

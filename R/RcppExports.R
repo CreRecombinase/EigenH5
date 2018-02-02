@@ -45,8 +45,8 @@ get_dims_h5 <- function(filename, groupname, dataname) {
     .Call('_EigenH5_get_dims_h5', PACKAGE = 'EigenH5', filename, groupname, dataname)
 }
 
-read_matrix_h5 <- function(filename, groupname, dataname, offset = as.integer( c()), chunksize = as.integer( c()), subset_rows = as.integer( c()), subset_cols = as.integer( c())) {
-    .Call('_EigenH5_read_matrix_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, offset, chunksize, subset_rows, subset_cols)
+read_matrix_h5 <- function(filename, groupname, dataname, offsets = as.integer( c()), chunksizes = as.integer( c()), subset_rows = as.integer( c()), subset_cols = as.integer( c())) {
+    .Call('_EigenH5_read_matrix_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, offsets, chunksizes, subset_rows, subset_cols)
 }
 
 write_vector_h5 <- function(filename, groupname, dataname, data) {

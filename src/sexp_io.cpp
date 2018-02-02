@@ -546,30 +546,34 @@ std::vector<std::pair<std::array<int,2>,std::array<int,2> > > find_cont(It itb, 
 SEXP read_matrix_h5(const std::string &filename,
                     const std::string &groupname,
                     const std::string &dataname,
-                    Rcpp::IntegerVector offset = Rcpp::IntegerVector::create(),
-                    Rcpp::IntegerVector chunksize = Rcpp::IntegerVector::create(),
-                    Rcpp::IntegerVector subset_rows = Rcpp::IntegerVector::create(),
-                    Rcpp::IntegerVector subset_cols = Rcpp::IntegerVector::create()){
+                    const Rcpp::IntegerVector offsets = Rcpp::IntegerVector::create(),
+                    const Rcpp::IntegerVector chunksizes = Rcpp::IntegerVector::create(),
+                    const Rcpp::IntegerVector subset_rows = Rcpp::IntegerVector::create(),
+                    const Rcpp::IntegerVector subset_cols = Rcpp::IntegerVector::create()){
   using namespace Rcpp;
   using iarray = std::array<int,2>;
   using piarray = std::pair<iarray,iarray>;
   HighFive::File file(filename,HighFive::File::ReadOnly);
   auto grp = file.getGroup(groupname);
   
+  std::vector<int> local_offsets=Rcpp::as<std::vector<int> >(offsets);
+  std::vector<int> local_chunksizes=Rcpp::as<std::vector<int> >(chunksizes);
+  std::vector<int> local_subset_rows=Rcpp::as<std::vector<int> >(subset_rows);
+  std::vector<int> local_subset_cols=Rcpp::as<std::vector<int> >(subset_cols);
   
-  const bool read_subset_rows = (subset_rows.size()!=0);
-  const bool read_subset_cols = (subset_cols.size()!=0);
-  std::vector<piarray> row_chunks= find_cont(subset_rows.begin(),subset_rows.end());
-  std::vector<piarray> col_chunks= find_cont(subset_cols.begin(),subset_cols.end());
+  const bool read_subset_rows = (local_subset_rows.size()!=0);
+  const bool read_subset_cols = (local_subset_cols.size()!=0);
+  std::vector<piarray> row_chunks= find_cont(local_subset_rows.begin(),local_subset_rows.end());
+  std::vector<piarray> col_chunks= find_cont(local_subset_cols.begin(),local_subset_cols.end());
   
-  bool read_chunk = (offset.size()!=0) && (chunksize.size()!=0);
+  bool read_chunk = (local_offsets.size()!=0) && (local_chunksizes.size()!=0);
   if(read_subset_rows && read_chunk){
     Rcpp::stop("subset_rows and chunking can't both be specified");
   }
   if(read_subset_cols && read_chunk){
     Rcpp::stop("subset_rows and chunking can't both be specified");
   }
-  if(read_chunk && ((offset.size()!=2) && (chunksize.size()!=2))){
+  if(read_chunk && ((local_offsets.size()!=2) && (local_chunksizes.size()!=2))){
     Rcpp::stop("offset and chunksize must both be empty or must both be length two vectors");
   }
   if(!read_chunk){
@@ -577,21 +581,21 @@ SEXP read_matrix_h5(const std::string &filename,
   auto dset = file.getGroup(groupname).getDataSet(dataname);
   auto dims = dset.getDataDimensions();
   
-  if((offset.size()!=0) ^ (chunksize.size()!=0)){
+  if((local_offsets.size()!=0) ^ (local_chunksizes.size()!=0)){
     Rcpp::stop("offset and chunksize must both be specified or neither can be specified ");
   }
 
   if(!read_chunk){
-    offset = Rcpp::wrap(std::vector<int>{0,0});
-    chunksize = Rcpp::wrap(std::vector<int>{static_cast<int>(dims[0]),static_cast<int>(dims[1])});
+    local_offsets = std::vector<int>{0,0};
+    local_chunksizes = std::vector<int>{static_cast<int>(dims[0]),static_cast<int>(dims[1])};
   }
-  std::array<int,2> start_r = {offset[0],offset[1]};
-  std::array<int,2> stop_r  = {offset[0]+chunksize[0]-1,offset[1]+chunksize[1]-1};
+  std::array<int,2> start_r = {local_offsets[0],local_offsets[1]};
+  std::array<int,2> stop_r  = {local_offsets[0]+local_chunksizes[0]-1,local_offsets[1]+local_chunksizes[1]-1};
   if(row_chunks.empty()){
-    row_chunks.push_back(piarray{{{offset[0],offset[0]+chunksize[0]-1}},{{0,chunksize[0]-1}}});
+    row_chunks.push_back(piarray{{{local_offsets[0],local_offsets[0]+local_chunksizes[0]-1}},{{0,local_chunksizes[0]-1}}});
   }
   if(col_chunks.empty()){
-    col_chunks.push_back(piarray{{{offset[1],offset[1]+chunksize[1]-1}},{{0,chunksize[1]-1}}});
+    col_chunks.push_back(piarray{{{local_offsets[1],local_offsets[1]+local_chunksizes[1]-1}},{{0,local_chunksizes[1]-1}}});
   }
   
   

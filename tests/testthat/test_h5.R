@@ -40,10 +40,12 @@ test_that("can read int matrix rows",{
   ind <- c(1,3,5)
   ttmat <- tmat[ind,]
   rd <- read_matrix_h5(tempf,"grp","tmat",subset_rows = ind)
+  expect_equal(ind,c(1,3,5))
   expect_equal(ttmat,rd)
   ind <- c(1,2,3,2,100,4)
   ttmat <- tmat[ind,]
   rd <- read_matrix_h5(tempf,"grp","tmat",subset_rows = ind)
+  expect_equal(ind,c(1,2,3,2,100,4))
   expect_equal(ttmat,rd)
 })
 test_that("can read int matrix cols",{
@@ -218,6 +220,8 @@ test_that("concat matrix along rows",{
   dataname <- "dosage"
   output_filename <- tempfile()
   purrr::walk2(input_filenames,matl,~write_matrix_h5(.x,groupname,dataname,.y))
+  to <- HDF5Array(input_filenames[1],"/dosage")
+  
   all_mats <- do.call("cbind",matl)
   cmat <- read_matrix_h5(output_filename,groupname,dataname)
   expect_equal(cmat,all_mats)  
