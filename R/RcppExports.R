@@ -9,10 +9,6 @@ check_blosc <- function() {
     .Call('_EigenH5_check_blosc', PACKAGE = 'EigenH5')
 }
 
-guess_chunks <- function(dimensions) {
-    .Call('_EigenH5_guess_chunks', PACKAGE = 'EigenH5', dimensions)
-}
-
 create_vector_h5 <- function(filename, groupname, dataname, dimension, chunksize = 1000L) {
     invisible(.Call('_EigenH5_create_vector_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, dimension, chunksize))
 }

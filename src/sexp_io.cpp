@@ -76,7 +76,7 @@ template <typename T> void write_v_h5(std::vector<T> &data,
 }
 
 
-template <typename T> void create_m_h5(typename Eigen::Map<typename Eigen::Matrix<std::enable_if_t<std::is_arithmetic<T>::value,T>,Eigen::Dynamic,Eigen::Dynamic> > &data,
+template <typename T> void create_m_h5(typename Eigen::Map<typename Eigen::Matrix<enable_if_t<std::is_arithmetic<T>::value,T>,Eigen::Dynamic,Eigen::Dynamic> > &data,
                                       HighFive::Group &grp, 
                                       const std::string &dataname,
                                       const bool doTranspose=false,
@@ -144,7 +144,7 @@ void fix_set_ss(std::array<int,2> &starts,std::array<int,2> &stops,bool &sorted_
   }
 }
 
-template <SEXPTYPE RTYPE,int RM =Eigen::ColMajor,typename T= std::enable_if_t<std::is_arithmetic<typename r2cpp_t<RTYPE>::type >::value,typename r2cpp_t<RTYPE>::type> >
+template <SEXPTYPE RTYPE,int RM =Eigen::ColMajor,typename T= enable_if_t<std::is_arithmetic<typename r2cpp_t<RTYPE>::type >::value,typename r2cpp_t<RTYPE>::type> >
 void read_m_h5(
     HighFive::DataSet &dset,
     Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,RM> > &retmat,
@@ -176,7 +176,7 @@ void read_m_h5(
   }
 }
 
-template <typename T> void write_m_h5(typename Eigen::Map<typename Eigen::Matrix<std::enable_if_t<std::is_arithmetic<T>::value,T>,Eigen::Dynamic,Eigen::Dynamic> > &data,
+template <typename T> void write_m_h5(typename Eigen::Map<typename Eigen::Matrix<enable_if_t<std::is_arithmetic<T>::value,T>,Eigen::Dynamic,Eigen::Dynamic> > &data,
                                       HighFive::DataSet &dset,
                                       std::array<int,2> starts={{0,0}},
                                       std::array<int,2> stops={{0,0}}){
@@ -249,7 +249,7 @@ template <SEXPTYPE RTYPE> Vector<RTYPE> read_elem_v_h5(
 
 
 
-template <SEXPTYPE RTYPE,typename T= std::enable_if_t<std::is_arithmetic<typename r2cpp_t<RTYPE>::type >::value,typename r2cpp_t<RTYPE>::type>,
+template <SEXPTYPE RTYPE,typename T= enable_if_t<std::is_arithmetic<typename r2cpp_t<RTYPE>::type >::value,typename r2cpp_t<RTYPE>::type>,
           typename RR,typename CR>
 Matrix<RTYPE> read_elem_m_h5(
     HighFive::DataSet &dset,
@@ -314,7 +314,7 @@ Matrix<RTYPE> read_elem_m_h5(
 // 
 // template <SEXPTYPE RTYPE,
 //           bool doTranspose=false,
-//           typename T= std::enable_if_t<std::is_arithmetic<typename r2cpp_t<RTYPE>::type >::value,typename r2cpp_t<RTYPE>::type>,
+//           typename T= enable_if_t<std::is_arithmetic<typename r2cpp_t<RTYPE>::type >::value,typename r2cpp_t<RTYPE>::type>,
 //           typename IRR,
 //           typename IRC,
 //           typename ORR,
@@ -420,7 +420,7 @@ SEXP read_vector_h5(const std::string &filename,
   auto grp = file.getGroup(groupname);
   
   std::vector<size_t> elem(filtervec.size());
-  std::transform(filtervec.begin(),filtervec.end(),elem.begin(),[](auto f) -> size_t{return f-1;}); 
+  std::transform(filtervec.begin(),filtervec.end(),elem.begin(),[](int f) -> size_t{return f-1;}); 
   
   const bool read_subset = !elem.empty();
   const bool read_chunk = (offset.size()!=0) && (chunksize.size()!=0);
@@ -945,7 +945,7 @@ Rcpp::List read_l_h5(const std::string h5filepath,
   std::vector<std::string> df_cols;
   std::vector<size_t> col_sizes;
   std::vector<size_t> elem(filtervec.size());
-  std::transform(filtervec.begin(),filtervec.end(),elem.begin(),[](auto f) -> size_t{return f-1;}); 
+  std::transform(filtervec.begin(),filtervec.end(),elem.begin(),[](int f) -> size_t{return f-1;}); 
   
   if((offset.size()!=0) ^ (chunksize.size()!=0)){
     Rcpp::Rcerr<<"with offset size: "<<offset.size()<<" and chunksize size: "<<chunksize.size()<<std::endl;

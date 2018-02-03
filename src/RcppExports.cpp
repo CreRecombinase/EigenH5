@@ -26,17 +26,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// guess_chunks
-Rcpp::IntegerVector guess_chunks(std::vector<int> dimensions);
-RcppExport SEXP _EigenH5_guess_chunks(SEXP dimensionsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<int> >::type dimensions(dimensionsSEXP);
-    rcpp_result_gen = Rcpp::wrap(guess_chunks(dimensions));
-    return rcpp_result_gen;
-END_RCPP
-}
 // create_vector_h5
 void create_vector_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, const int dimension, const int chunksize);
 RcppExport SEXP _EigenH5_create_vector_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dimensionSEXP, SEXP chunksizeSEXP) {
@@ -269,7 +258,6 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_EigenH5_start_blosc", (DL_FUNC) &_EigenH5_start_blosc, 0},
     {"_EigenH5_check_blosc", (DL_FUNC) &_EigenH5_check_blosc, 0},
-    {"_EigenH5_guess_chunks", (DL_FUNC) &_EigenH5_guess_chunks, 1},
     {"_EigenH5_create_vector_h5", (DL_FUNC) &_EigenH5_create_vector_h5, 5},
     {"_EigenH5_is_transposed", (DL_FUNC) &_EigenH5_is_transposed, 3},
     {"_EigenH5_copy_mat_h5", (DL_FUNC) &_EigenH5_copy_mat_h5, 6},

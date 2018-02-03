@@ -9,6 +9,7 @@ Description: Read and write R objects using blosc+HDF5. Also contains a C++ inte
 License: What license is it under?
 Imports: Rcpp (>= 0.12.12), RcppEigen (>= 0.3.3.3.0),BH
 LinkingTo: Rcpp, RcppEigen,BH,Rhdf5lib,libblosc,RcppProgress
+SystemRequirements: C++11
 Remotes: CreRecombinase/Rhdf5lib,CreRecombinase/libblosc
 Suggests: testthat,
     knitr,

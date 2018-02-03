@@ -1,7 +1,7 @@
 #include <EigenH5.h>
 
 //[[depends(RcppEigen)]]
-//[[Rcpp::plugins(cpp17)]]
+//[[Rcpp::plugins(cpp11)]]
 
 #include <highfive/EigenUtils.hpp>
 #include <blosc_filter.h>
@@ -51,12 +51,12 @@ bool check_blosc(){
 //   return(retvec);
 // }
 
-//[[Rcpp::export]]
-Rcpp::IntegerVector guess_chunks(std::vector<int> dimensions){
-  std::vector<size_t> l_dimensions(dimensions.size());
-  std::copy(dimensions.begin(),dimensions.end(),l_dimensions.begin());
-  return(Rcpp::wrap(HighFive::Filter::guess_chunk(l_dimensions,8)));
-} 
+
+// Rcpp::IntegerVector guess_chunks(std::vector<int> dimensions){
+//   std::vector<size_t> l_dimensions(dimensions.size());
+//   std::copy(dimensions.begin(),dimensions.end(),l_dimensions.begin());
+//   return(Rcpp::wrap(HighFive::Filter::guess_chunk(l_dimensions,8)));
+// } 
 
 
 // void create_matrix_h5(const std::string &filename,

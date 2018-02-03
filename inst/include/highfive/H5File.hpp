@@ -16,6 +16,11 @@
 #include "bits/H5Annotate_traits.hpp"
 #include "bits/H5Node_traits.hpp"
 
+template <bool B, typename T = void>
+using enable_if_t = typename std::enable_if<B, T>::type;
+
+
+
 namespace HighFive {
 
 ///
