@@ -1,6 +1,4 @@
 #include <EigenH5.h>
-
-
 //[[depends(RcppEigen)]]
 //[[Rcpp::plugins(cpp17)]]
 
