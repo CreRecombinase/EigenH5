@@ -10,14 +10,17 @@
 #include <highfive/H5Attribute.hpp>
 #include <highfive/H5Utility.hpp>
 #include <highfive/H5DataType.hpp>
+#include <range/v3/all.hpp>
 #include <highfive/H5Group.hpp>
 #include <highfive/H5PropertyList.hpp>
 #include <highfive/H5FileDriver.hpp>
 #include <highfive/H5Object.hpp>
 #include <highfive/H5Selection.hpp>
+#include <EigenH5_RcppExports.h>
 #include <blosc_filter.h>
+#include <lzf/lzf_filter.h>
 #include<H5Tpublic.h>
-
+#include <eigenh5/MatSlices.hpp>
 #include <RcppEigen.h>
 
 

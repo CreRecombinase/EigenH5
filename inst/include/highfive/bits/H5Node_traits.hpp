@@ -68,7 +68,7 @@ class NodeTraits {
     ///
     Group createGroup(const std::string& group_name);
 
-    Group createGroups(const std::vector<std::string> &group_names);
+    Group createOrGetGroups(const std::string &group_name);
 
     ///
     /// \brief open an existing group with the name group_name

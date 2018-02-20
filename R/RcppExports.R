@@ -21,12 +21,20 @@ copy_mat_h5 <- function(infilename, outfilename, groupname, dataname, offsets = 
     invisible(.Call('_EigenH5_copy_mat_h5', PACKAGE = 'EigenH5', infilename, outfilename, groupname, dataname, offsets, chunksizes))
 }
 
+parse_mat <- function(inp) {
+    .Call('_EigenH5_parse_mat', PACKAGE = 'EigenH5', inp)
+}
+
 write_mat_chunk_h5 <- function(filename, groupname, dataname, data, offsets = as.integer( c()), chunksizes = as.integer( c())) {
     invisible(.Call('_EigenH5_write_mat_chunk_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data, offsets, chunksizes))
 }
 
 write_vec_chunk_h5 <- function(filename, groupname, dataname, data, offsets = as.integer( c()), chunksizes = as.integer( c())) {
     invisible(.Call('_EigenH5_write_vec_chunk_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data, offsets, chunksizes))
+}
+
+data_exists <- function(filename, groupname, dataname) {
+    .Call('_EigenH5_data_exists', PACKAGE = 'EigenH5', filename, groupname, dataname)
 }
 
 check_dtype <- function(filename, groupname, dataname) {
@@ -45,6 +53,10 @@ read_matrix_h5 <- function(filename, groupname, dataname, offsets = as.integer( 
     .Call('_EigenH5_read_matrix_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, offsets, chunksizes, subset_rows, subset_cols)
 }
 
+read_array_h5 <- function(filename, groupname, dataname, offsets = as.integer( c()), chunksizes = as.integer( c())) {
+    .Call('_EigenH5_read_array_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, offsets, chunksizes)
+}
+
 write_vector_h5 <- function(filename, groupname, dataname, data) {
     invisible(.Call('_EigenH5_write_vector_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data))
 }
@@ -61,6 +73,10 @@ write_df_h5 <- function(df, groupname, outfile, deflate_level = as.integer( c(4)
     .Call('_EigenH5_write_df_h5', PACKAGE = 'EigenH5', df, groupname, outfile, deflate_level)
 }
 
+get_objs_h5 <- function(h5filepath, groupname = as.character( c("/"))) {
+    .Call('_EigenH5_get_objs_h5', PACKAGE = 'EigenH5', h5filepath, groupname)
+}
+
 read_l_h5 <- function(h5filepath, groupname, subcols = as.character( c()), offset = as.integer( c()), chunksize = as.integer( c()), filtervec = as.integer( c())) {
     .Call('_EigenH5_read_l_h5', PACKAGE = 'EigenH5', h5filepath, groupname, subcols, offset, chunksize, filtervec)
 }
@@ -73,3 +89,7 @@ split_ldd <- function(region_ids) {
     .Call('_EigenH5_split_ldd', PACKAGE = 'EigenH5', region_ids)
 }
 
+# Register entry points for exported C++ functions
+methods::setLoadAction(function(ns) {
+    .Call('_EigenH5_RcppExport_registerCCallable', PACKAGE = 'EigenH5')
+})

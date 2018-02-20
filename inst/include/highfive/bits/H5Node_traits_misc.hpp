@@ -13,6 +13,8 @@
 #include "../H5PropertyList.hpp"
 #include <string>
 #include <vector>
+#include <boost/algorithm/string.hpp>
+
 
 #include "../H5Attribute.hpp"
 #include "../H5DataSet.hpp"
@@ -84,17 +86,17 @@ NodeTraits<Derivate>::getDataSet(const std::string& dataset_name) const {
     return set;
 }
 
-template <typename Derivate>
-inline Group NodeTraits<Derivate>::createGroup(const std::string& group_name) {
-    Group group;
-    if ((group._hid = H5Gcreate2(static_cast<Derivate*>(this)->getId(),
-                                 group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT,
-                                 H5P_DEFAULT)) < 0) {
-        HDF5ErrMapper::ToException<GroupException>(
-                std::string("Unable to create the group \"") + group_name + "\":");
+    template <typename Derivate>
+    inline Group NodeTraits<Derivate>::createGroup(const std::string& group_name) {
+        Group group;
+        if ((group._hid = H5Gcreate2(static_cast<Derivate*>(this)->getId(),
+                                     group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT,
+                                     H5P_DEFAULT)) < 0) {
+            HDF5ErrMapper::ToException<GroupException>(
+                                                       std::string("Unable to create the group \"") + group_name + "\":");
+        }
+        return group;
     }
-    return group;
-}
 
     template<typename Derivate>
     inline Group NodeTraits<Derivate>::createOrGetGroup(const std::string &group_name) {
@@ -106,14 +108,13 @@ inline Group NodeTraits<Derivate>::createGroup(const std::string& group_name) {
         } else {
             return (this->createGroup(group_name));
         }
-
     }
 
 
     template<typename Derivate>
     inline Group
     NodeTraits<Derivate>::createGroups_rec(const std::vector<std::string> &group_names, const std::string &group_name) {
-        Group group = this->createGroup(group_name);
+        Group group = this->createOrGetGroup(group_name);
         if (group_names.empty()) {
             return (group);
         } else {
@@ -126,7 +127,14 @@ inline Group NodeTraits<Derivate>::createGroup(const std::string& group_name) {
 
 
     template<typename Derivate>
-    inline Group NodeTraits<Derivate>::createGroups(const std::vector<std::string> &group_names) {
+    inline Group NodeTraits<Derivate>::createOrGetGroups(const std::string &group_name) {
+        if(group_name=="/"){
+            return(this->getGroup("/"));
+        }
+
+        std::vector<std::string> group_names;
+        boost::split( group_names,group_name , boost::is_any_of( "/" ) );
+
         if (group_names.empty()) {
             Group group;
             auto id = static_cast<const Derivate *>(this)->getId();
