@@ -62,9 +62,9 @@
 #include <range/v3/utility/concepts.hpp>
 #include <range/v3/utility/functional.hpp>
 #include <range/v3/utility/iterator_concepts.hpp>
-
-#if RANGES_CXX_THREAD >= RANGES_CXX_THREAD_11
 #include <thread>
+#if RANGES_CXX_THREAD >= RANGES_CXX_THREAD_11
+
 #endif
 
 // Ugly platform-specific code for auto_seeded
