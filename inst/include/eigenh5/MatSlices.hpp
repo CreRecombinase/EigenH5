@@ -3,11 +3,11 @@
 
 
 //[[depends(RcppEigen)]]
-//[[Rcpp::plugins(cpp17)]]
+//[[Rcpp::plugins(cpp14)]]
 // [[Rcpp::depends(RcppProgress)]]
 #include <progress.hpp>
 #include <array>
-#include<optional>
+
 
 
 class MatSlices{

@@ -4,11 +4,6 @@
 #include <complex>
 #include <iostream>
 #include <range/v3/core.hpp>
-#include <range/v3/view/iota.hpp>
-#include <range/v3/view/take.hpp>
-#include <range/v3/view/reverse.hpp>
-#include <range/v3/view/any_view.hpp>
-#include <range/v3/utility/copy.hpp>
 #include <highfive/H5DataSet.hpp>
 #include <highfive/H5Filter.hpp>
 #include <highfive/H5DataSpace.hpp>

@@ -40,7 +40,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
     }
 
     inline bool check_blosc() {
@@ -58,7 +58,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
@@ -77,7 +77,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
     }
 
     inline bool is_transposed(const std::string filename, const std::string groupname, const std::string dataname) {
@@ -95,7 +95,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
@@ -114,7 +114,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
     }
 
     inline Rcpp::IntegerMatrix parse_mat(Rcpp::CharacterVector inp) {
@@ -132,7 +132,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<Rcpp::IntegerMatrix >(rcpp_result_gen);
     }
 
@@ -151,7 +151,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
     }
 
     inline void write_vec_chunk_h5(std::string filename, std::string groupname, std::string dataname, Eigen::VectorXd& data, const Rcpp::IntegerVector offsets = Rcpp::IntegerVector::create(), const Rcpp::IntegerVector chunksizes = Rcpp::IntegerVector::create()) {
@@ -169,7 +169,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
     }
 
     inline bool data_exists(const std::string& filename, const std::string& groupname, const std::string& dataname) {
@@ -187,7 +187,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
@@ -206,7 +206,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<SEXPTYPE >(rcpp_result_gen);
     }
 
@@ -225,7 +225,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<SEXP >(rcpp_result_gen);
     }
 
@@ -244,7 +244,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<Rcpp::IntegerVector >(rcpp_result_gen);
     }
 
@@ -263,7 +263,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<SEXP >(rcpp_result_gen);
     }
 
@@ -282,7 +282,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<SEXP >(rcpp_result_gen);
     }
 
@@ -301,7 +301,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
     }
 
     inline void create_matrix_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, SEXP data, const bool doTranspose = false, const Rcpp::IntegerVector dims = Rcpp::IntegerVector::create(), const Rcpp::IntegerVector chunksizes = Rcpp::IntegerVector::create()) {
@@ -319,7 +319,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
     }
 
     inline void write_matrix_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, SEXP data, const bool doTranspose = false, const Rcpp::IntegerVector offsets = Rcpp::IntegerVector::create(0,0), const Rcpp::IntegerVector chunksizes = Rcpp::IntegerVector::create()) {
@@ -337,7 +337,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
     }
 
     inline bool write_df_h5(Rcpp::DataFrame& df, const std::string groupname, const std::string outfile, Rcpp::IntegerVector deflate_level = Rcpp::IntegerVector::create(4)) {
@@ -355,7 +355,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
@@ -374,7 +374,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<Rcpp::StringVector >(rcpp_result_gen);
     }
 
@@ -393,7 +393,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<Rcpp::List >(rcpp_result_gen);
     }
 
@@ -412,7 +412,7 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
         if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+            throw Rcpp::exception(as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<Rcpp::ListOf<Rcpp::IntegerVector> >(rcpp_result_gen);
     }
 
