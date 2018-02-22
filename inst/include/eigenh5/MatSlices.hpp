@@ -35,6 +35,59 @@ private:
     }
     return(false);
   }
+  int chunk_map_i(int i, const std::string dataname){
+    auto chunk_r=chunk_map.find(i);
+    if(chunk_r==chunk_map.end()){
+      Rcpp::Rcerr<<"In chunk_group: "<<i<<std::endl;
+      Rcpp::stop("chunk_map i not found!");
+    }
+    auto dnr = chunk_r->second.find(dataname);
+    if(dnr==chunk_r->second.end()){
+      Rcpp::Rcerr<<"In chunk_group: "<<i<<std::endl;
+      Rcpp::Rcerr<<"Can't find dataname: "<<dataname<<std::endl;
+      Rcpp::stop("Can't perform read!");
+    }
+    return(dnr->second);
+  }
+  HighFive::Selection get_slice(int i){
+    if(i>num_reg || i<0){
+      Rcpp::Rcerr<<"In function get_slice"<<std::endl;
+      Rcpp::Rcerr<<"i: "<<i<<" is larger than "<<num_reg<<std::endl;
+      Rcpp::stop("invalid selection!");
+    }
+    std::string data_arr=Rcpp::as<std::string>(filenames(i))+Rcpp::as<std::string>(groupnames(i))+Rcpp::as<std::string>(datanames(i));
+    auto mtd = m_dataset_map.find(data_arr);
+    if(mtd==m_dataset_map.end()){
+      Rcpp::Rcerr<<"In chunk_group: "<<i<<std::endl;
+      Rcpp::Rcerr<<"Path: "<<data_arr<<std::endl;
+      Rcpp::stop("dataset_map i not found!");
+    }
+    if(row_offsets(i)<0){
+      Rcpp::Rcerr<<"In chunk_group: "<<i<<std::endl;
+      Rcpp::Rcerr<<"Path: "<<data_arr<<std::endl;
+      Rcpp::Rcerr<<"Invalid row_offset: "<<row_offsets(i)<<"!"<<std::endl;
+      Rcpp::stop("row_offset(i) must be non-negative!");
+    }
+    if(col_offsets(i)<0){
+      Rcpp::Rcerr<<"In chunk_group: "<<i<<std::endl;
+      Rcpp::Rcerr<<"Path: "<<data_arr<<std::endl;
+      Rcpp::Rcerr<<"Invalid col_offset: !"<<col_offsets(i)<<std::endl;
+      Rcpp::stop("col_offset(i) must be non-negative!");
+    }
+    if(col_chunksizes(i)<0){
+      Rcpp::Rcerr<<"In chunk_group: "<<i<<std::endl;
+      Rcpp::Rcerr<<"Path: "<<data_arr<<std::endl;
+      Rcpp::Rcerr<<"Invalid col_chunksizes: !"<<col_chunksizes(i)<<std::endl;
+      Rcpp::stop("col_chunksizes(i) must be non-negative!");
+    }
+    if(row_chunksizes(i)<0){
+      Rcpp::Rcerr<<"In chunk_group: "<<i<<std::endl;
+      Rcpp::Rcerr<<"Path: "<<data_arr<<std::endl;
+      Rcpp::Rcerr<<"Invalid row_chunksizes: !"<<row_chunksizes(i)<<std::endl;
+      Rcpp::stop("row_chunksizes(i) must be non-negative!");
+    }
+  return(mtd->second->selectEigen({static_cast<size_t>(row_offsets(i)),static_cast<size_t>(col_offsets(i))},{static_cast<size_t>(row_chunksizes(i)),static_cast<size_t>(col_chunksizes(i))},{}));
+  }
 public:
   MatSlices(const Rcpp::DataFrame dff,
             std::unordered_map<std::string,std::shared_ptr<HighFive::File> >&m_file_map_,
@@ -78,7 +131,7 @@ public:
       }
       num_chunks=tcset.size();
     }
-    chunk_map.reserve(num_chunks);
+    //chunk_map.reserve(num_chunks);
     row_offsets = has_col(colnames,"row_offsets") ? dff["row_offsets"] : Rcpp::IntegerVector(num_reg,0);
     col_offsets = has_col(colnames,"col_offsets") ? dff["col_offsets"] : Rcpp::IntegerVector(num_reg,0);
     row_chunksizes = has_col(colnames,"row_chunksizes") ? dff["row_chunksizes"] : Rcpp::IntegerVector(num_reg,-1);
@@ -134,50 +187,41 @@ public:
         data_dimv.push_back(1);
       }
       if(col_chunksizes(i)<0){
-        col_chunksizes(i)=data_dimv[1]-col_offsets(i);
+        if(data_dimv.size()==1){
+          col_chunksizes(i)=1;
+        }else{
+          col_chunksizes(i)=data_dimv[1]-col_offsets(i);
+        }
       }
     }
   }
   template<typename T, int RAC, int CAC, int Options> void write(const int i,Eigen::Matrix<T,RAC,CAC,Options>& b){
-    std::string data_arr=Rcpp::as<std::string>(filenames(i))+Rcpp::as<std::string>(groupnames(i))+Rcpp::as<std::string>(datanames(i));
+    get_slice(i).write(b);
+  }
 
-    auto mtd = m_dataset_map.find(data_arr);
-    mtd->second->selectEigen({static_cast<size_t>(row_offsets(i)),static_cast<size_t>(col_offsets(i))},{static_cast<size_t>(row_chunksizes(i)),static_cast<size_t>(col_chunksizes(i))},{}).write(b);
-  }
-  template<typename T, int RAC, int CAC, int Options> void write_chunk(const int i,const std::string& dataname,Eigen::Matrix<T,RAC,CAC,Options>& b){
-    write(chunk_map.at(i).at(dataname),b);
-  }
   template<typename T, int RAC, int CAC, int Options> void read(const int i,Eigen::Matrix<T,RAC,CAC,Options>& b){
-    std::string data_arr=Rcpp::as<std::string>(filenames(i))+Rcpp::as<std::string>(groupnames(i))+Rcpp::as<std::string>(datanames(i));
-    auto mtd = m_dataset_map.find(data_arr);
-    mtd->second->selectEigen({static_cast<size_t>(row_offsets(i)),static_cast<size_t>(col_offsets(i))},{static_cast<size_t>(row_chunksizes(i)),static_cast<size_t>(col_chunksizes(i))},{}).read(b);
+    get_slice(i).read(b);
   }
   template<typename T,typename A> void read_vector(const int i, std::vector<T,A> &b){
     b.resize(row_chunksizes(i));
     Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > tb(b.data(),row_chunksizes(i),1);
-    std::string data_arr=Rcpp::as<std::string>(filenames(i))+Rcpp::as<std::string>(groupnames(i))+Rcpp::as<std::string>(datanames(i));
-    auto mtd = m_dataset_map.find(data_arr);
-    mtd->second->selectEigen({static_cast<size_t>(row_offsets(i)),static_cast<size_t>(col_offsets(i))},{static_cast<size_t>(row_chunksizes(i)),static_cast<size_t>(col_chunksizes(i))},{}).read(tb);
+    get_slice(i).read(tb);
   }
   template<typename T,typename A> void write_vector(const int i, std::vector<T,A> &b){
-    //b.resize(row_chunksizes(i));
     Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > tb(b.data(),row_chunksizes(i),1);
-    std::string data_arr=Rcpp::as<std::string>(filenames(i))+Rcpp::as<std::string>(groupnames(i))+Rcpp::as<std::string>(datanames(i));
-    auto mtd = m_dataset_map.find(data_arr);
-    mtd->second->selectEigen({static_cast<size_t>(row_offsets(i)),static_cast<size_t>(col_offsets(i))},{static_cast<size_t>(row_chunksizes(i)),static_cast<size_t>(col_chunksizes(i))},{}).write(tb);
+    get_slice(i).write(tb);
   }
-
-
   template<typename T,typename A> void read_chunk_vector(const int i,const std::string& dataname, std::vector<T,A> &b){
-    read_vector(chunk_map.at(i).at(dataname),b);
+    read_vector(chunk_map_i(i,dataname),b);
   }
   template<typename T,typename A> void write_chunk_vector(const int i,const std::string& dataname, std::vector<T,A> &b){
-    write_vector(chunk_map.at(i).at(dataname),b);
+    write_vector(chunk_map_i(i,dataname),b);
   }
-
-
   template<typename T, int RAC, int CAC, int Options> void read_chunk(const int i,const std::string& dataname,Eigen::Matrix<T,RAC,CAC,Options>& b){
-    read(chunk_map.at(i).at(dataname),b);
+    read(chunk_map_i(i,dataname),b);
+  }
+  template<typename T, int RAC, int CAC, int Options> void write_chunk(const int i,const std::string& dataname,Eigen::Matrix<T,RAC,CAC,Options>& b){
+    write(chunk_map_i(i,dataname),b);
   }
 
   std::vector<int> dims(const int i){

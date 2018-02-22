@@ -77,6 +77,24 @@ read_mat_h5 <- function(filename,groupname,dataname,offset_rows=0,offset_cols=0,
 }
 
 
+read_h5 <- function(filename,groupname,dataname,subset_rows=NULL,subset_cols=NULL){
+  obj_dim <- get_dims_h5(filename,groupname,dataname)
+  isvec <- length(obj_dim)==1
+  if(isvec){
+    stopifnot(is.null(subset_cols))
+    return(read_vector_h5(filename,groupname,dataname,filtervec=subset_rows))
+  }else{
+    if(is.null(subset_rows)){
+      subset_rows <- integer()
+    }
+    if(is.null(subset_cols)){
+      subset_cols <- integer()
+    }
+    return(read_matrix_h5(filename,groupname,dataname,subset_rows = subset_rows,subset_cols=subset_cols))
+  }
+}
+
+
 read_mat_l <- function(dff){
   return(purrr::pmap(dff,function(filenames,
                                   groupnames,

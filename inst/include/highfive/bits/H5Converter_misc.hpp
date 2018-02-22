@@ -621,8 +621,8 @@ struct data_converter<std::string, void> {
 
         template<>
         struct data_converter<std::vector<std::string>, void> {
-            inline data_converter(std::vector<std::string> &vec, DataSpace &space, const bool doTranspose = false)
-                    : _space(space) {
+            inline data_converter(std::vector<std::string> &vec, DataSpace &space,const size_t dim=0, const bool doTranspose = false)
+                : _space(space),dim_(dim==0 ? 255 : dim) {
                 (void) vec;
             }
 
@@ -630,7 +630,8 @@ struct data_converter<std::string, void> {
             // fill last element with NULL to identify end
             inline char *transform_read(std::vector<std::string> &vec) {
                 (void) vec;
-                _c_vec.resize(255 * _space.getDimensions()[0]);
+
+                _c_vec.resize(dim_ * _space.getDimensions()[0]);
 
                 //_c_vec.resize(_space.getDimensions()[0], NULL);
                 return (_c_vec.data());
@@ -641,14 +642,14 @@ struct data_converter<std::string, void> {
             }
 
             inline char *transform_write(std::vector<std::string> &vec) {
-                _c_vec.resize(255 * _space.getDimensions()[0]);
+                _c_vec.resize(dim_ * _space.getDimensions()[0]);
                 std::vector<char>::iterator it = _c_vec.begin();
                 const size_t vs = vec.size();
                 for (size_t i = 0; i < vs; i++) {
                     auto tb = vec[i].begin();
                     auto te = vec[i].end();
                     std::copy(tb, te, it);
-                    it += 255;
+                    it += dim_;
                 }
 
                 return (_c_vec.data());
@@ -659,7 +660,7 @@ struct data_converter<std::string, void> {
                 const size_t vs = _space.getDimensions()[0];
                 vec.resize(vs);
                 for (size_t i = 0; i < vs; ++i) {
-                    vec[i] = std::string(&_c_vec[i * 255]);
+                    vec[i] = std::string(&_c_vec[i * dim_]);
                 }
                 /*   if (_c_vec.empty() == false && _c_vec[0] != NULL) {
                     AtomicType<std::string> str_type;
@@ -669,6 +670,7 @@ struct data_converter<std::string, void> {
             }
 
             std::vector<char> _c_vec;
+            const size_t dim_;
             DataSpace &_space;
         };
     }

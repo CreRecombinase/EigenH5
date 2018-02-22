@@ -43,7 +43,7 @@ SEXPTYPE h2r_T(hid_t htype){
     //Rcpp::Rcout<<"string"<<std::endl;
     return(STRSXP);
   }
-  Rcpp::Rcout<<"NIL"<<std::endl;
+  // Rcpp::Rcout<<"NIL"<<std::endl;
 
   return(NILSXP);
 }
