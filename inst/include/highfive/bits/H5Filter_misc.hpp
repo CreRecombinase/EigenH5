@@ -23,8 +23,7 @@ namespace HighFive {
         size_t chunk_size = std::accumulate(chunk_dims.begin(), chunk_dims.end(), 1, std::multiplies<size_t>());
         if(chunk_size>CHUNK_MAX){
             HDF5ErrMapper::ToException<FilterException>(
-                                                        "Chunk size:"+std::to_string(chunk_size)+" is larger than max chunksize:  "+std::to_string(CHUNK_MAX);
-                                                        );
+                                                        "Chunk size:"+std::to_string(chunk_size)+" is larger than max chunksize:  "+std::to_string(CHUNK_MAX));
         }
 
 
