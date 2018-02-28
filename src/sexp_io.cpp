@@ -1,9 +1,8 @@
 
 #include <EigenH5.h>
 //[[depends(RcppEigen)]]
-//[[Rcpp::plugins(cpp14)]]
+//[[Rcpp::plugins(cpp11)]]
 // [[Rcpp::depends(RcppProgress)]]
-//#include <Eigen/CXX11/Tensor>
 #include <progress.hpp>
 #include <array>
 

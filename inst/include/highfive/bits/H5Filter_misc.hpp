@@ -18,8 +18,16 @@ namespace HighFive {
         _hid = H5Pcreate(H5P_DATASET_CREATE);
         if (_hid < 0) {
             HDF5ErrMapper::ToException<FilterException>(
-                    "Unable to get create PropertyList");
+                                                        "Unable to get create PropertyList");
         }
+        size_t chunk_size = std::accumulate(chunk_dims.begin(), chunk_dims.end(), 1, std::multiplies<size_t>());
+        if(chunk_size>CHUNK_MAX){
+            HDF5ErrMapper::ToException<FilterException>(
+                                                        "Chunk size:"+std::to_string(chunk_size)+" is larger than max chunksize:  "+std::to_string(CHUNK_MAX);
+                                                        );
+        }
+
+
 
         const size_t c_size = chunk_dims.size();
         std::vector<hsize_t> nchunk_dims(c_size);

@@ -3,7 +3,7 @@
 
 
 //[[depends(RcppEigen)]]
-//[[Rcpp::plugins(cpp14)]]
+//[[Rcpp::plugins(cpp11)]]
 // [[Rcpp::depends(RcppProgress)]]
 #include <progress.hpp>
 #include <array>
@@ -282,6 +282,7 @@ public:
   // }
 
   template<typename T, int RAC, int CAC, int Options> void read(const int i,Eigen::Matrix<T,RAC,CAC,Options>& b){
+    // 2147483631
     get_slice(i).read(b);
   }
   template<typename T,typename A> void read_vector(const int i, std::vector<T,A> &b){
@@ -299,7 +300,7 @@ public:
       auto mtg = get_slice_group(i);
       std::vector<size_t> vec_dims={static_cast<size_t>(b.size())};
       std::vector<size_t> chunk_dims(1);
-      const size_t MAX_CHUNK = 1024*1024;
+      const size_t MAX_CHUNK = (1024*1024)/2;
       const size_t chunk_rows = static_cast<size_t>(std::min(static_cast<double>(b.size()),std::ceil(static_cast<double>(MAX_CHUNK))));
       chunk_dims = {chunk_rows};
       Filter filter(chunk_dims, FILTER_BLOSC, 0,false);
