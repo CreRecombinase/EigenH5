@@ -169,45 +169,7 @@ inline ElementSet::ElementSet(const std::vector<std::size_t>& element_ids)
         dims[dims.size() - woffset] = columns.size();
         return Selection(DataSpace(dims,isTranspose), space, dataset);
     }
-   /* template <typename Derivate>
-    inline std::vector<Selection>
-    SliceTraits<Derivate>::splitSelectionRows(const std::vector<size_t>& rows) const {
-const DataSpace& space = static_cast<const Derivate*>(this)->getSpace();
-        const DataSet& dataset =
-                details::get_dataset(static_cast<const Derivate*>(this));
-        const bool isTranspose = details::get_dataset(static_cast<const Derivate *>(this)).isTransposed();
-        *//* if(isTranspose){
-             HDF5ErrMapper::ToException<DataSpaceException>(
-                     "Unable to select columns when ");
-         }*//*
 
-        std::vector<size_t> dims = space.getDimensions();
-        std::vector<hsize_t> counts(dims.size());
-        std::copy(dims.begin(), dims.end(), counts.begin());
-        const int woffset = isTranspose ? 1 : dims.size();
-        counts[dims.size() - woffset] = 1;
-        std::vector<hsize_t> offsets(dims.size(), 0);
-
-        H5Sselect_none(space.getId());
-        for (std::vector<size_t>::const_iterator i = rows.begin();
-             i != rows.end(); ++i) {
-
-            offsets[offsets.size() - woffset] = *i;
-
-            if (H5Sselect_hyperslab(space.getId(),
-                                    H5S_SELECT_OR,
-                                    offsets.data(),
-                                    0, counts.data(), 0) < 0) {
-                HDF5ErrMapper::ToException<DataSpaceException>(
-                        "Unable to select hyperslap");
-            }
-        }
-
-        dims[dims.size() - woffset] = rows.size();
-        return Selection(DataSpace(dims,isTranspose), space, dataset);
-
-
-    }*/
     template <typename Derivate>
     inline Selection
     SliceTraits<Derivate>::selectRows(const std::vector<size_t>& rows) const {
@@ -286,12 +248,13 @@ inline std::vector<size_t> SliceTraits<Derivate>::getDataDimensions() const {
         return (dims);
     }
 
+
+
+
 template <typename Derivate>
 template <typename T>
 inline void SliceTraits<Derivate>::read(T &array) {
-    // typedef typename details::remove_const<T>::type type_no_const;
 
-    // type_no_const& nocv_array = const_cast<type_no_const&>(array);
 
     bool isTranspose = details::get_dataset(static_cast<const Derivate *>(this)).isTransposed();
     const size_t dim_array = details::array_dims<T>::value;
@@ -305,9 +268,10 @@ inline void SliceTraits<Derivate>::read(T &array) {
            << dim_array;
         throw DataSpaceException(ss.str());
     }
+    
 
-    // Apply pre read convertions (these will depend on the dataset, unfortunately)
-
+    // Apply pre read convertions (these will depend on the dataset, unfortunately
+    H5T_class_t dtype_class = H5Tget_class(dtype_id);
 
     details::data_converter<T> converter(array, mem_space, isTranspose);
     // Create mem datatype
@@ -331,6 +295,42 @@ inline void SliceTraits<Derivate>::read(T &array) {
     // re-arrange results
     converter.process_result(array);
 }
+template <typename Derivate>
+template<typename Derived>
+inline void SliceTraits<Derivate>::read(Eigen::DenseBase<Derived> &array){
+
+    typedef typename Derived::Scalar Scalar;
+    std::cout<<"This one was called!"<<std::endl;
+    const bool isRowMajor=Eigen::internal::traits<Derived>::Flags & Eigen::RowMajorBit;
+    const bool isTranspose = details::get_dataset(static_cast<const Derivate *>(this)).isTransposed();
+    const bool dtip = (isRowMajor && isTranspose) || (!isRowMajor && !isTranspose);
+
+
+    const size_t dim_array = (Eigen::internal::traits< Derived >::RowsAtCompileTime != 1 ? 1 : 0) +
+        (Eigen::internal::traits< Derived >::ColsAtCompileTime != 1 ? 1 : 0);
+    DataSpace space = static_cast<const Derivate*>(this)->getSpace();
+    DataSpace mem_space = static_cast<const Derivate*>(this)->getMemSpace();
+
+    // Create mem datatype
+    const AtomicType<Scalar> array_datatype;
+
+   
+    if (H5Dread(
+                details::get_dataset(static_cast<const Derivate*>(this)).getId(),
+                array_datatype.getId(),
+                details::get_memspace_id((static_cast<const Derivate*>(this))),
+                space.getId(), H5P_DEFAULT,
+                static_cast<void*>(array.derived().data())) < 0) {
+        HDF5ErrMapper::ToException<DataSetException>(
+                                                     "Error during HDF5 Read: ");
+    }
+    if(dtip){
+        Eigen::Map<Eigen::Matrix<Scalar,Derived::RowsAtCompileTime,Derived::ColsAtCompileTime> > tm(array.data(),array.rows(),array.cols());
+        tm=tm.transpose().eval();
+    }
+}
+
+  
 
 template <typename Derivate>
 template <typename T>
@@ -343,13 +343,13 @@ inline void SliceTraits<Derivate>::read(T *array) {
     const AtomicType<typename details::type_of_array<T>::type> array_datatype;
 
     if (H5Dread(
-            details::get_dataset(static_cast<const Derivate*>(this)).getId(),
-            array_datatype.getId(),
-            details::get_memspace_id((static_cast<const Derivate*>(this))),
-            space.getId(), H5P_DEFAULT,
-            static_cast<void*>(array)) < 0) {
+                details::get_dataset(static_cast<const Derivate*>(this)).getId(),
+                array_datatype.getId(),
+                details::get_memspace_id((static_cast<const Derivate*>(this))),
+                space.getId(), H5P_DEFAULT,
+                static_cast<void*>(array)) < 0) {
         HDF5ErrMapper::ToException<DataSetException>(
-            "Error during HDF5 Read: ");
+                                                     "Error during HDF5 Read: ");
     }
 }
 

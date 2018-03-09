@@ -86,6 +86,31 @@ NodeTraits<Derivate>::getDataSet(const std::string& dataset_name) const {
     return set;
 }
 
+  template<typename Derivate>
+  inline std::variant<DataSet,Group> NodeTraits<Derivate>::getObject(const std::string & object_name) const{
+    if(object_name=="/"){
+      return(this->getGroup("/"));
+    }
+    H5O_info_t tid;
+    if(H5Oget_info_by_name(static_cast<Derivate*>(this)->getId(),object_name.c_str(),tid,H5P_DEFAULT)<0){
+      HDF5ErrMapper::ToException<DataSetException>(
+						   std::string("Unable to open the object \"") + object_name +
+						   "\":");
+    }
+    if(tid.type==H5O_TYPE_GROUP){
+      return(this->getGroup(object_name));
+    }else{
+      if(tid.type==H5O_TYPE_DATASET){
+	return(this->getDataSet(object_name));
+      }else{
+	      HDF5ErrMapper::ToException<DataSetException>(
+							   std::string("Unable to open object of type\"") + std::to_string(tid.type) +
+						   "\":");
+      }
+    }
+	
+  }
+
     template <typename Derivate>
     inline Group NodeTraits<Derivate>::createGroup(const std::string& group_name) {
         Group group;
@@ -210,6 +235,18 @@ inline std::vector<std::string> NodeTraits<Derivate>::listObjectNames() const {
     }
 
     return names;
+}
+
+
+template <typename Derivate>
+inline std::vector<std::variant<DataSet,Group> > NodeTraits<Derivate>::getObjects() const {
+  std::vector<std::string> names = this->listObjectNames();
+  const int num_objs=names.size();
+  std::vector<std::variant<DataSet,Group> > retvec(num_objs);
+  for(int i=0;i<num_objs;i++){
+    retvec[i]=this->getObject(names[i]);
+  }
+  return(retvec);
 }
 
 template <typename Derivate>

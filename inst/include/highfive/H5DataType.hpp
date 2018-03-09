@@ -25,6 +25,8 @@ class DataType : public Object {
 
     bool operator != (const DataType& other) const;
 
+  bool isVariable() const;
+
   protected:
     friend class Attribute;
     friend class File;
@@ -44,6 +46,7 @@ class AtomicType : public DataType {
     typedef T basic_type;
 };
 }
+
 /*
 template<hid_t HT,is>
 struct CppType {

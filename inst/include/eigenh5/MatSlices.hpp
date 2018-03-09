@@ -276,10 +276,7 @@ public:
     }
   }
   
-  // template<typename T, int RAC, int CAC, int Options> void write_create(const int i,Eigen::Matrix<T,RAC,CAC,Options>& b){
-  //   
-  //   get_slice(i).write(b);
-  // }
+ 
 
   template<typename T, int RAC, int CAC, int Options> void read(const int i,Eigen::Matrix<T,RAC,CAC,Options>& b){
     // 2147483631
@@ -334,5 +331,32 @@ public:
   int p;
   int N;
   };
+
+class IO_c{
+  friend class MatSlices;
+protected:
+  std::unordered_map<std::string,std::shared_ptr<HighFive::File> >  m_file_map;
+  std::unordered_map<std::string,std::shared_ptr<HighFive::Group> >  m_group_map;
+  std::unordered_map<std::string,std::shared_ptr<HighFive::DataSet> > m_dataset_map;
+public:
+  MatSlices input_f;
+  MatSlices output_f;
+  IO_c(const Rcpp::DataFrame input_dff,
+         const Rcpp::DataFrame output_dff):m_file_map(),
+         m_group_map(),
+         m_dataset_map(),
+         input_f(input_dff,m_file_map,m_group_map,m_dataset_map,true),
+         output_f(output_dff,m_file_map,m_group_map,m_dataset_map,false){}
+};
+
+
+
+
+
+
+
+
+
+
 
 #endif

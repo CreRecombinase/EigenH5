@@ -15,12 +15,18 @@ get_sub_obj <- function(h5filepath,tpath="/"){
   return(paste0(ifelse(tpath=="/","",tpath),"/",res))
 }
 
+
+
+
+
+
+
+
 split_chunk_df<- function(info_df,pos_id,group_id,rowsel=T,colsel=T){
   q_pos <- dplyr::enquo(pos_id)
   q_group <- dplyr::enquo(group_id)
-  # stopifnot(!is.unsorted(as.integer(info_df[[group_id]])),
-  #           !is.unsorted(as.integer(info_df[[pos_id]])),
-  #           rowsel||colsel)
+
+  
   sel_df <- dplyr::group_by(info_df,!!q_group) %>% 
     dplyr::summarise(offset=as.integer(min(!!q_pos)-1),chunksize=as.integer(n()))
   if(rowsel){
@@ -40,25 +46,8 @@ split_chunk_df<- function(info_df,pos_id,group_id,rowsel=T,colsel=T){
 #   node_objs <- purrr::map(root_objs,~paste0(ifelse(.x=="/","",.x),"/",bg_objs(h5filepath=h5filepath,groupname = .x)))
 #   
 # }
+# 
 
-gz2hdf5 <- function(input_filename,output_filename,output_groupname,output_dataname,p=NULL,N=NULL,chunk_size=10000){
-  
-  stopifnot(!is.null(p),!is.null(N))
-  if(!file.exists(output_filename)){
-    create_matrix_h5(output_filename,output_groupname,output_dataname,integer(),doTranspose=F,dims=as.integer(c(N,p)),chunksizes=as.integer(c(N,min(200,p))))
-  }else{
-    if(!data_exists(output_filename,output_groupname,output_dataname)){
-      create_matrix_h5(output_filename,output_groupname,output_dataname,integer(),doTranspose=F,dims=as.integer(c(N,p)),chunksizes=as.integer(c(N,min(200,p))))
-    }
-  }
-  
-
-  write_f <- function(x,pos){
-    tm <- parse_mat(x)
-    write_matrix_h5(filename = output_filename,groupname = output_groupname,dataname = output_dataname,data = tm,offsets = c(0,pos-1))
-  }
-  readr::read_lines_chunked(input_filename,callback=SideEffectChunkCallback$new(write_f),chunk_size=chunk_size,progress=T)
-}
 
 read_mat_h5 <- function(filename,groupname,dataname,offset_rows=0,offset_cols=0,chunksize_rows=NULL,chunksize_cols=NULL){
   mat_dims <- get_dims_h5(filename,groupname,dataname)
@@ -93,6 +82,9 @@ read_h5 <- function(filename,groupname,dataname,subset_rows=NULL,subset_cols=NUL
     return(read_matrix_h5(filename,groupname,dataname,subset_rows = subset_rows,subset_cols=subset_cols))
   }
 }
+
+
+
 
 
 read_mat_l <- function(dff){

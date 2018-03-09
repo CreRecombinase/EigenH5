@@ -1,6 +1,7 @@
-useDynLib(EigenH5)
+useDynLib(EigenH5,.registration=TRUE)
 import(libblosc)
 import(RcppEigen)
+import(methods,Rcpp)
 importFrom(Rcpp, evalCpp)
 exportPattern("^[[:alpha:]]+")
 importFrom(magrittr,"%>%")

@@ -13,6 +13,12 @@
 
 #include "H5Utils.hpp"
 
+#ifdef H5_USE_EIGEN
+
+#include <Eigen/Core>
+
+#endif
+
 namespace HighFive {
 
 class DataSet;
@@ -75,8 +81,14 @@ class SliceTraits {
     /// no dimensionality checking will be performed, it is the user's
     /// responsibility to ensure that the right amount of space has been
     /// allocated.
+  template <typename T>
+  void readString(T &array);
     template <typename T>
     void read(T &array);
+#ifdef H5_USE_EIGEN
+    template <typename Derived>
+    void read(Eigen::DenseBase<Derived> &array);
+#endif
 
     ///
     /// Read the entire dataset into a raw buffer

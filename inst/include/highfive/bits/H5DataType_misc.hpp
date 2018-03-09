@@ -18,14 +18,17 @@
 namespace HighFive {
 
 inline DataType::DataType() {}
-
-inline bool DataType::operator==(const DataType& other) const {
+  
+  inline bool DataType::operator==(const DataType& other) const {
     return (H5Tequal(_hid, other._hid) > 0);
-}
-
-inline bool DataType::operator!=(const DataType& other) const {
+  }
+  
+  inline bool DataType::operator!=(const DataType& other) const {
     return !(*this == other);
-}
+  }
+  inline bool DataType::isVariable() const{
+    return(H5Tget_class(_hid)==H5T_VLEN);
+  }
 
 // char mapping
 template <>

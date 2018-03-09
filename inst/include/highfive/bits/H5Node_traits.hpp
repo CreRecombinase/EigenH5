@@ -10,6 +10,8 @@
 
 #include <string>
 
+#include <variant>
+
 namespace HighFive {
 
 class Attribute;
@@ -60,6 +62,16 @@ class NodeTraits {
     /// \return return the named dataset, or throw exception if not found
     ///
     DataSet getDataSet(const std::string& dataset_name) const;
+
+
+      ///
+    /// \brief get an object by path,check to see if it's a dataset or a group, and return accordingly
+    /// \param object name
+    /// \return return the named dataset, or throw exception if not found
+    ///
+  std::variant<DataSet,Group> getObject(const std::string & object_name) const;
+  std::vector<std::variant<DataSet,Group> > getObjects() const;
+  
 
     ///
     /// \brief create a new group with the name group_name

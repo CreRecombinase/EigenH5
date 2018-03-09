@@ -99,61 +99,6 @@ namespace EigenH5 {
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
-    inline void copy_mat_h5(std::string infilename, std::string outfilename, std::string groupname, std::string dataname, const Rcpp::IntegerVector offsets = Rcpp::IntegerVector::create(), const Rcpp::IntegerVector chunksizes = Rcpp::IntegerVector::create()) {
-        typedef SEXP(*Ptr_copy_mat_h5)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
-        static Ptr_copy_mat_h5 p_copy_mat_h5 = NULL;
-        if (p_copy_mat_h5 == NULL) {
-            validateSignature("void(*copy_mat_h5)(std::string,std::string,std::string,std::string,const Rcpp::IntegerVector,const Rcpp::IntegerVector)");
-            p_copy_mat_h5 = (Ptr_copy_mat_h5)R_GetCCallable("EigenH5", "_EigenH5_copy_mat_h5");
-        }
-        RObject rcpp_result_gen;
-        {
-            RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_copy_mat_h5(Shield<SEXP>(Rcpp::wrap(infilename)), Shield<SEXP>(Rcpp::wrap(outfilename)), Shield<SEXP>(Rcpp::wrap(groupname)), Shield<SEXP>(Rcpp::wrap(dataname)), Shield<SEXP>(Rcpp::wrap(offsets)), Shield<SEXP>(Rcpp::wrap(chunksizes)));
-        }
-        if (rcpp_result_gen.inherits("interrupted-error"))
-            throw Rcpp::internal::InterruptedException();
-        if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-    }
-
-    inline Rcpp::IntegerMatrix parse_mat(Rcpp::CharacterVector inp) {
-        typedef SEXP(*Ptr_parse_mat)(SEXP);
-        static Ptr_parse_mat p_parse_mat = NULL;
-        if (p_parse_mat == NULL) {
-            validateSignature("Rcpp::IntegerMatrix(*parse_mat)(Rcpp::CharacterVector)");
-            p_parse_mat = (Ptr_parse_mat)R_GetCCallable("EigenH5", "_EigenH5_parse_mat");
-        }
-        RObject rcpp_result_gen;
-        {
-            RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_parse_mat(Shield<SEXP>(Rcpp::wrap(inp)));
-        }
-        if (rcpp_result_gen.inherits("interrupted-error"))
-            throw Rcpp::internal::InterruptedException();
-        if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-        return Rcpp::as<Rcpp::IntegerMatrix >(rcpp_result_gen);
-    }
-
-    inline void write_mat_chunk_h5(std::string filename, std::string groupname, std::string dataname, Eigen::MatrixXd& data, const Rcpp::IntegerVector offsets = Rcpp::IntegerVector::create(), const Rcpp::IntegerVector chunksizes = Rcpp::IntegerVector::create()) {
-        typedef SEXP(*Ptr_write_mat_chunk_h5)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
-        static Ptr_write_mat_chunk_h5 p_write_mat_chunk_h5 = NULL;
-        if (p_write_mat_chunk_h5 == NULL) {
-            validateSignature("void(*write_mat_chunk_h5)(std::string,std::string,std::string,Eigen::MatrixXd&,const Rcpp::IntegerVector,const Rcpp::IntegerVector)");
-            p_write_mat_chunk_h5 = (Ptr_write_mat_chunk_h5)R_GetCCallable("EigenH5", "_EigenH5_write_mat_chunk_h5");
-        }
-        RObject rcpp_result_gen;
-        {
-            RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_write_mat_chunk_h5(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(groupname)), Shield<SEXP>(Rcpp::wrap(dataname)), Shield<SEXP>(Rcpp::wrap(data)), Shield<SEXP>(Rcpp::wrap(offsets)), Shield<SEXP>(Rcpp::wrap(chunksizes)));
-        }
-        if (rcpp_result_gen.inherits("interrupted-error"))
-            throw Rcpp::internal::InterruptedException();
-        if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-    }
-
     inline void write_vec_chunk_h5(std::string filename, std::string groupname, std::string dataname, Eigen::VectorXd& data, const Rcpp::IntegerVector offsets = Rcpp::IntegerVector::create(), const Rcpp::IntegerVector chunksizes = Rcpp::IntegerVector::create()) {
         typedef SEXP(*Ptr_write_vec_chunk_h5)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
         static Ptr_write_vec_chunk_h5 p_write_vec_chunk_h5 = NULL;
@@ -246,6 +191,44 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("try-error"))
             throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<Rcpp::IntegerVector >(rcpp_result_gen);
+    }
+
+    inline Rcpp::DataFrame cont_diff(Rcpp::IntegerVector inp, int chunksize = 0) {
+        typedef SEXP(*Ptr_cont_diff)(SEXP,SEXP);
+        static Ptr_cont_diff p_cont_diff = NULL;
+        if (p_cont_diff == NULL) {
+            validateSignature("Rcpp::DataFrame(*cont_diff)(Rcpp::IntegerVector,int)");
+            p_cont_diff = (Ptr_cont_diff)R_GetCCallable("EigenH5", "_EigenH5_cont_diff");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_cont_diff(Shield<SEXP>(Rcpp::wrap(inp)), Shield<SEXP>(Rcpp::wrap(chunksize)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::DataFrame >(rcpp_result_gen);
+    }
+
+    inline Rcpp::DataFrame cont_reg(Rcpp::IntegerVector input, int chunksize = 0) {
+        typedef SEXP(*Ptr_cont_reg)(SEXP,SEXP);
+        static Ptr_cont_reg p_cont_reg = NULL;
+        if (p_cont_reg == NULL) {
+            validateSignature("Rcpp::DataFrame(*cont_reg)(Rcpp::IntegerVector,int)");
+            p_cont_reg = (Ptr_cont_reg)R_GetCCallable("EigenH5", "_EigenH5_cont_reg");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_cont_reg(Shield<SEXP>(Rcpp::wrap(input)), Shield<SEXP>(Rcpp::wrap(chunksize)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::DataFrame >(rcpp_result_gen);
     }
 
     inline SEXP read_matrix_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, const Rcpp::IntegerVector offsets = Rcpp::IntegerVector::create(), const Rcpp::IntegerVector chunksizes = Rcpp::IntegerVector::create(), const Rcpp::IntegerVector subset_rows = Rcpp::IntegerVector::create(), const Rcpp::IntegerVector subset_cols = Rcpp::IntegerVector::create()) {

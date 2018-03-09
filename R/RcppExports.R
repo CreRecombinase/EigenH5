@@ -2,91 +2,87 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 start_blosc <- function() {
-    invisible(.Call('_EigenH5_start_blosc', PACKAGE = 'EigenH5'))
+    invisible(.Call(`_EigenH5_start_blosc`))
 }
 
 check_blosc <- function() {
-    .Call('_EigenH5_check_blosc', PACKAGE = 'EigenH5')
+    .Call(`_EigenH5_check_blosc`)
 }
 
 create_vector_h5 <- function(filename, groupname, dataname, dimension, chunksize = 1000L) {
-    invisible(.Call('_EigenH5_create_vector_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, dimension, chunksize))
+    invisible(.Call(`_EigenH5_create_vector_h5`, filename, groupname, dataname, dimension, chunksize))
 }
 
 is_transposed <- function(filename, groupname, dataname) {
-    .Call('_EigenH5_is_transposed', PACKAGE = 'EigenH5', filename, groupname, dataname)
-}
-
-copy_mat_h5 <- function(infilename, outfilename, groupname, dataname, offsets = as.integer( c()), chunksizes = as.integer( c())) {
-    invisible(.Call('_EigenH5_copy_mat_h5', PACKAGE = 'EigenH5', infilename, outfilename, groupname, dataname, offsets, chunksizes))
-}
-
-parse_mat <- function(inp) {
-    .Call('_EigenH5_parse_mat', PACKAGE = 'EigenH5', inp)
-}
-
-write_mat_chunk_h5 <- function(filename, groupname, dataname, data, offsets = as.integer( c()), chunksizes = as.integer( c())) {
-    invisible(.Call('_EigenH5_write_mat_chunk_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data, offsets, chunksizes))
+    .Call(`_EigenH5_is_transposed`, filename, groupname, dataname)
 }
 
 write_vec_chunk_h5 <- function(filename, groupname, dataname, data, offsets = as.integer( c()), chunksizes = as.integer( c())) {
-    invisible(.Call('_EigenH5_write_vec_chunk_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data, offsets, chunksizes))
+    invisible(.Call(`_EigenH5_write_vec_chunk_h5`, filename, groupname, dataname, data, offsets, chunksizes))
 }
 
 data_exists <- function(filename, groupname, dataname) {
-    .Call('_EigenH5_data_exists', PACKAGE = 'EigenH5', filename, groupname, dataname)
+    .Call(`_EigenH5_data_exists`, filename, groupname, dataname)
 }
 
 check_dtype <- function(filename, groupname, dataname) {
-    .Call('_EigenH5_check_dtype', PACKAGE = 'EigenH5', filename, groupname, dataname)
+    .Call(`_EigenH5_check_dtype`, filename, groupname, dataname)
 }
 
 read_vector_h5 <- function(filename, groupname, dataname, offset = as.integer( c()), chunksize = as.integer( c()), filtervec = as.integer( c())) {
-    .Call('_EigenH5_read_vector_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, offset, chunksize, filtervec)
+    .Call(`_EigenH5_read_vector_h5`, filename, groupname, dataname, offset, chunksize, filtervec)
 }
 
 get_dims_h5 <- function(filename, groupname, dataname) {
-    .Call('_EigenH5_get_dims_h5', PACKAGE = 'EigenH5', filename, groupname, dataname)
+    .Call(`_EigenH5_get_dims_h5`, filename, groupname, dataname)
+}
+
+cont_diff <- function(inp, chunksize = 0L) {
+    .Call(`_EigenH5_cont_diff`, inp, chunksize)
+}
+
+cont_reg <- function(input, chunksize = 0L) {
+    .Call(`_EigenH5_cont_reg`, input, chunksize)
 }
 
 read_matrix_h5 <- function(filename, groupname, dataname, offsets = as.integer( c()), chunksizes = as.integer( c()), subset_rows = as.integer( c()), subset_cols = as.integer( c())) {
-    .Call('_EigenH5_read_matrix_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, offsets, chunksizes, subset_rows, subset_cols)
+    .Call(`_EigenH5_read_matrix_h5`, filename, groupname, dataname, offsets, chunksizes, subset_rows, subset_cols)
 }
 
 read_array_h5 <- function(filename, groupname, dataname, offsets = as.integer( c()), chunksizes = as.integer( c())) {
-    .Call('_EigenH5_read_array_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, offsets, chunksizes)
+    .Call(`_EigenH5_read_array_h5`, filename, groupname, dataname, offsets, chunksizes)
 }
 
 write_vector_h5 <- function(filename, groupname, dataname, data) {
-    invisible(.Call('_EigenH5_write_vector_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data))
+    invisible(.Call(`_EigenH5_write_vector_h5`, filename, groupname, dataname, data))
 }
 
 create_matrix_h5 <- function(filename, groupname, dataname, data, doTranspose = FALSE, dims = as.integer( c()), chunksizes = as.integer( c())) {
-    invisible(.Call('_EigenH5_create_matrix_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data, doTranspose, dims, chunksizes))
+    invisible(.Call(`_EigenH5_create_matrix_h5`, filename, groupname, dataname, data, doTranspose, dims, chunksizes))
 }
 
 write_matrix_h5 <- function(filename, groupname, dataname, data, doTranspose = FALSE, offsets = as.integer( c(0,0)), chunksizes = as.integer( c())) {
-    invisible(.Call('_EigenH5_write_matrix_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data, doTranspose, offsets, chunksizes))
+    invisible(.Call(`_EigenH5_write_matrix_h5`, filename, groupname, dataname, data, doTranspose, offsets, chunksizes))
 }
 
 write_df_h5 <- function(df, groupname, outfile, deflate_level = as.integer( c(4))) {
-    .Call('_EigenH5_write_df_h5', PACKAGE = 'EigenH5', df, groupname, outfile, deflate_level)
+    .Call(`_EigenH5_write_df_h5`, df, groupname, outfile, deflate_level)
 }
 
 get_objs_h5 <- function(h5filepath, groupname = as.character( c("/"))) {
-    .Call('_EigenH5_get_objs_h5', PACKAGE = 'EigenH5', h5filepath, groupname)
+    .Call(`_EigenH5_get_objs_h5`, h5filepath, groupname)
 }
 
 read_l_h5 <- function(h5filepath, groupname, subcols = as.character( c()), offset = as.integer( c()), chunksize = as.integer( c()), filtervec = as.integer( c())) {
-    .Call('_EigenH5_read_l_h5', PACKAGE = 'EigenH5', h5filepath, groupname, subcols, offset, chunksize, filtervec)
+    .Call(`_EigenH5_read_l_h5`, h5filepath, groupname, subcols, offset, chunksize, filtervec)
 }
 
 intersect_snpinfo_h5 <- function(h5files) {
-    .Call('_EigenH5_intersect_snpinfo_h5', PACKAGE = 'EigenH5', h5files)
+    .Call(`_EigenH5_intersect_snpinfo_h5`, h5files)
 }
 
 split_ldd <- function(region_ids) {
-    .Call('_EigenH5_split_ldd', PACKAGE = 'EigenH5', region_ids)
+    .Call(`_EigenH5_split_ldd`, region_ids)
 }
 
 # Register entry points for exported C++ functions

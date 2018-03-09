@@ -1,7 +1,6 @@
-
 #include <EigenH5.h>
 //[[depends(RcppEigen)]]
-//[[Rcpp::plugins(cpp11)]]
+//[[Rcpp::plugins(cpp14)]]
 // [[Rcpp::depends(RcppProgress)]]
 #include <progress.hpp>
 #include <array>
@@ -515,28 +514,137 @@ Rcpp::IntegerVector get_dims_h5(const std::string &filename,
 
 }
 
+// 
+// 
+// Rcpp::DataFrame split_chunk_id(Rcpp::IntegerVector idx,bool rowscols){
+//   using namespace ranges;
+//   const int out_size=inp.size();
+//   if(chunksize==0){
+//     chunksize = out_size;
+//   }
+//   using namespace std::placeholders;
+//   
+//   auto ir = make_iterator_range(inp.begin(), inp.end());
+//   // auto dr = make_iterator_range(diff_v.begin(), diff_v.end());
+//   auto b_chunk = std::bind(view::chunk,_1,chunksize);
+//   std::vector<std::tuple<int,int,int> > ar= view::zip_with([](int i,int j){
+//     return(std::make_tuple(i-1,j));
+//   },ir,view::ints(0)) | view::group_by([&](std::tuple<int,int> i, std::tuple<int,int> j){
+//     return((std::get<0>(i)-std::get<0>(j))==(std::get<1>(i)-std::get<1>(j)));
+//   }) | view::transform(b_chunk) | view::join | view::transform([](auto el){
+//     auto elr = el.front();
+//     int csize= distance(el);
+//     return(std::make_tuple(std::get<0>(elr),std::get<1>(elr),csize));
+//   });
+//   // auto adr = adjacent_difference(ir,dr,std::minus<int>());
+//   //   std::vector<std::vector<int> > ar = view::group_by(dr,[](int &j,int &k){
+//   //   return((*k-*j)==(k-j));
+//   // });
+//   
+//   int tkk=0;
+//   const int n_groups = ar.size();
+//   Rcpp::IntegerVector chunk_i(n_groups);
+//   Rcpp::IntegerVector in_beg(n_groups);
+//   Rcpp::IntegerVector out_beg(n_groups);
+//   Rcpp::IntegerVector csize(n_groups);
+//   for(int i=0; i<n_groups;i++){
+//     auto te=ar[i];
+//     chunk_i[i]=i;
+//     in_beg[i]=std::get<0>(te);
+//     out_beg[i]=std::get<1>(te);
+//     csize[i]  = std::get<2>(te);
+//   }
+//   
+//   
+//   using namespace Rcpp;
+//   
+//   return(DataFrame::create( _["chunk_id"]=chunk_i,
+//                             _["in_offset"]=in_beg,
+//                             _["out_offset"]=out_beg,
+//                             _["chunksize"]=csize));
+// }
 
+
+
+
+//[[Rcpp::export]]
+Rcpp::DataFrame cont_diff(Rcpp::IntegerVector inp,int chunksize=0){
+  using namespace ranges;
+  const int out_size=inp.size();
+  if(chunksize==0){
+    chunksize = out_size;
+  }
+  using namespace std::placeholders;
+  
+  auto ir = make_iterator_range(inp.begin(), inp.end());
+  // auto dr = make_iterator_range(diff_v.begin(), diff_v.end());
+  auto b_chunk = std::bind(view::chunk,_1,chunksize);
+  std::vector<std::tuple<int,int,int> > ar= view::zip_with([](int i,int j){
+    return(std::make_tuple(i-1,j));
+  },ir,view::ints(0)) | view::group_by([&](std::tuple<int,int> i, std::tuple<int,int> j){
+    return((std::get<0>(i)-std::get<0>(j))==(std::get<1>(i)-std::get<1>(j)));
+  }) | view::transform(b_chunk) | view::join | view::transform([](auto el){
+    auto elr = el.front();
+    int csize= distance(el);
+    return(std::make_tuple(std::get<0>(elr),std::get<1>(elr),csize));
+  });
+  // auto adr = adjacent_difference(ir,dr,std::minus<int>());
+  //   std::vector<std::vector<int> > ar = view::group_by(dr,[](int &j,int &k){
+  //   return((*k-*j)==(k-j));
+  // });
+  
+  int tkk=0;
+  const int n_groups = ar.size();
+  Rcpp::IntegerVector chunk_i(n_groups);
+  Rcpp::IntegerVector in_beg(n_groups);
+  Rcpp::IntegerVector out_beg(n_groups);
+  Rcpp::IntegerVector csize(n_groups);
+  for(int i=0; i<n_groups;i++){
+    auto te=ar[i];
+    chunk_i[i]=i;
+    in_beg[i]=std::get<0>(te);
+    out_beg[i]=std::get<1>(te);
+    csize[i]  = std::get<2>(te);
+  }
+ 
+ 
+  using namespace Rcpp;
+  
+  return(DataFrame::create( _["chunk_id"]=chunk_i,
+                            _["in_offset"]=in_beg,
+                            _["out_offset"]=out_beg,
+                            _["chunksize"]=csize));
+}
 
 template<typename It>
-std::vector<std::pair<std::array<int,2>,std::array<int,2> > > find_cont(It itb, It ite){
+std::vector<std::pair<std::array<int,2>,std::array<int,2> > > find_cont(It itb, It ite,int chunksize=0){
   using namespace Rcpp;
   using namespace ranges;
   using iarray = std::array<int,2>;
   using piarray = std::pair<iarray,iarray>;
+  
+
+  const int n_elem = ite-itb;
 
   std::transform(itb,ite,itb,[](int f){return f-1;});
 
   std::vector<std::pair<std::array<int,2>,std::array<int,2> > > sub_ranges;
-  const int n_elem = ite-itb;
+
+  if(chunksize==0){
+    chunksize = n_elem;
+  }
   sub_ranges.reserve(n_elem/2);
   auto itbb=itb;
   auto it = itb;
   int tot_dist=0;
   while(it!=ite){
-    it = std::adjacent_find(itb,ite,[](int i,int j){
+    int sf=0;
+
+    it = std::adjacent_find(itb,ite,[&](int i,int j){
       // Rcpp::Rcout<<"i is : "<<i<<std::endl;
       // Rcpp::Rcout<<"j is : "<<j<<std::endl;
-      return((j-i)!=1);
+      sf++;
+      return(((j-i)!=1) && (sf>=chunksize));
     });
     int iti = it==ite ? *(it-1) : *(it);
     int itb_pos = itb-itbb;
@@ -550,6 +658,35 @@ std::vector<std::pair<std::array<int,2>,std::array<int,2> > > find_cont(It itb, 
   }
   return(sub_ranges);
 }
+
+
+
+//[[Rcpp::export]]
+  Rcpp::DataFrame cont_reg(Rcpp::IntegerVector input,int chunksize=0){
+ 
+  auto ret=find_cont(input.begin(),input.end(),chunksize);
+  const size_t nret=ret.size();
+  using namespace Rcpp;
+  IntegerVector begv(nret);
+  IntegerVector endv(nret);
+  IntegerVector sv1(nret);
+  IntegerVector sv2(nret);
+  std::array<int,2> tra,trb;
+  for(int i=0;i<nret;i++){
+    std::tie(tra,trb) = ret[i];
+    begv[i]=tra[0];
+    endv[i]=tra[1];
+    sv1[i]=trb[0];
+    sv2[i]=trb[1];
+  }
+  return(DataFrame::create( _["in_start"] = begv,
+                            _["in_stop"] = endv,
+                            _["out_start"] = sv1,
+                            _["out_stop"] = sv2));
+}
+  
+  
+  
 
 
 
@@ -716,118 +853,7 @@ SEXP read_array_h5(const std::string &filename,
   }
 }
 
-//
-// void copy_matrix_h5(const std::string &infilename,
-//                     const std::string &outilename,
-//                     const std::string &groupname,
-//                     const std::string &dataname,
-//                     const bool doTranspose=false,
-//                     std::vector<size_t> chunk_dims={},
-//                     Rcpp::IntegerVector offset = Rcpp::IntegerVector::create(),
-//                     Rcpp::IntegerVector chunksize = Rcpp::IntegerVector::create(),
-//                     Rcpp::IntegerVector subset_rows = Rcpp::IntegerVector::create(),
-//                     Rcpp::IntegerVector subset_cols = Rcpp::IntegerVector::create()){
-//   using namespace Rcpp;
-//
-//
-//   using namespace HighFive;
-//   File infile(infilename,File::ReadOnly);
-//   File outfile(infilename,File::ReadWrite|File::Create);
-//
-//   auto grp = infile.getGroup(groupname);
-//   auto ogrp = outfile.getGroup(groupname);
-//
-//
-//
-//
-//
-//   const bool read_subset_rows = (subset_rows.size()!=0);
-//   const bool read_subset_cols = (subset_cols.size()!=0);
-//
-//   std::vector<size_t> elem(read_subset_rows ? subset_rows.size() : subset_cols.size());
-//   auto fv_begin  = read_subset_rows ? subset_rows.begin() : subset_cols.begin();
-//   auto fv_end  = read_subset_rows ? subset_rows.end() : subset_cols.end();
-//
-//   std::transform(fv_begin,fv_end,elem.begin(),[](auto f) -> size_t{return f-1;});
-//
-//   if(read_subset_rows && read_subset_cols){
-//     Rcpp::stop("can only subset rows or cols");
-//   }
-//
-//   const bool read_chunk = (offset.size()!=0) && (chunksize.size()!=0);
-//   if(read_subset_rows && read_chunk){
-//     Rcpp::stop("subset_rows and chunking can't both be specified");
-//
-//   }
-//   if(read_subset_cols && read_chunk){
-//     Rcpp::stop("subset_rows and chunking can't both be specified");
-//
-//   }
-//
-//
-//   if(read_chunk && ((offset.size()!=2) && (chunksize.size()!=2))){
-//     Rcpp::stop("offset and chunksize must both be empty or must both be length two vectors");
-//   }
-//   std::array<size_t,2> offset_r ={read_chunk ? static_cast<size_t>(offset[0]) :  0,read_chunk ? static_cast<size_t>(offset[1]) :  0} ;
-//   std::array<size_t,2> chunksize_r= {read_chunk ? static_cast<size_t>(chunksize[0]) :  0,read_chunk ? static_cast<size_t>(chunksize[1]) :  0} ;
-//
-//
-//   if((offset.size()!=0) ^ (chunksize.size()!=0)){
-//     Rcpp::stop("offset and chunksize must both be specified or neither can be specified ");
-//   }
-//   const bool read_subset = read_subset_rows || read_subset_cols;
-//
-//
-//   auto my_t = check_dtype(infilename,groupname,dataname);
-//   switch (my_t){
-//   case INTSXP: {
-//
-//   break;
-//   }
-//   case REALSXP: {
-//
-//   break;
-//     }
-//
-//
-//   }
-//   break;
-//
-//   }
-//     // case STRSXP: {
-//     //   if(!read_subset){
-//     //   return impl::read_m_h5<STRSXP>(file,
-//     //                                  grp,
-//     //                                  dataname,
-//     //                                  offset_r,chunksize_r);
-//     // }else{
-//     //   if(read_subset_rows){
-//     //     return impl::read_elem_m_h5<STRSXP,true>(file,
-//     //                                              grp,
-//     //                                              dataname,
-//     //                                              elem);
-//     //
-//     //   }else{
-//     //     return impl::read_elem_m_h5<STRSXP,false>(file,
-//     //                                               grp,
-//     //                                               dataname,
-//     //                                               elem);
-//     //
-//     //   }
-//     //
-//     //
-//     // }
-//     // break;
-//   default: {
-//     warning(
-//       "Invalid SEXPTYPE %d.\n",
-//       my_t
-//     );
-//     Rcpp::Rcerr<<dataname<<" has type that can't be read"<<std::endl;
-//     Rcpp::stop("Can't read type");
-//   }
-//   }
-// }
+
 
 
 

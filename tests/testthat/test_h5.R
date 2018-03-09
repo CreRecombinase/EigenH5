@@ -12,6 +12,13 @@ test_that("can write string vector",{
 })
 
 
+test_that("can use R interface for files",{
+  tvec <- c("allb","allc","alld")
+  tempf <- tempfile()
+  write_vector_h5(tempf,"grp","dat",tvec)
+  mf <-  new(H5File, tempf, TRUE)
+})
+
 
 test_that("can read string vector",{
   tvec <- c("allb","allc","alld")
@@ -33,6 +40,8 @@ test_that("can read int matrix",{
   expect_equal(tmat,rd)
 })
 
+cont_reg(c(1:10,15:12),chunksize=5)
+cont_diff(c(1:10,15:12),chunksize = 5)
 
 test_that("can read int matrix to an 'array'",{
   library(EigenH5)
