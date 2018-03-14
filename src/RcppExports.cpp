@@ -358,6 +358,35 @@ RcppExport SEXP _EigenH5_cont_reg(SEXP inputSEXP, SEXP chunksizeSEXP) {
     UNPROTECT(1);
     return rcpp_result_gen;
 }
+// multi_array_variant
+void multi_array_variant(SEXP input_mat);
+static SEXP _EigenH5_multi_array_variant_try(SEXP input_matSEXP) {
+BEGIN_RCPP
+    Rcpp::traits::input_parameter< SEXP >::type input_mat(input_matSEXP);
+    multi_array_variant(input_mat);
+    return R_NilValue;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _EigenH5_multi_array_variant(SEXP input_matSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_EigenH5_multi_array_variant_try(input_matSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
 // read_matrix_h5
 SEXP read_matrix_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, const Rcpp::IntegerVector offsets, const Rcpp::IntegerVector chunksizes, const Rcpp::IntegerVector subset_rows, const Rcpp::IntegerVector subset_cols);
 static SEXP _EigenH5_read_matrix_h5_try(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP offsetsSEXP, SEXP chunksizesSEXP, SEXP subset_rowsSEXP, SEXP subset_colsSEXP) {
@@ -686,6 +715,7 @@ static int _EigenH5_RcppExport_validate(const char* sig) {
         signatures.insert("Rcpp::IntegerVector(*get_dims_h5)(const std::string&,const std::string&,const std::string&)");
         signatures.insert("Rcpp::DataFrame(*cont_diff)(Rcpp::IntegerVector,int)");
         signatures.insert("Rcpp::DataFrame(*cont_reg)(Rcpp::IntegerVector,int)");
+        signatures.insert("void(*multi_array_variant)(SEXP)");
         signatures.insert("SEXP(*read_matrix_h5)(const std::string&,const std::string&,const std::string&,const Rcpp::IntegerVector,const Rcpp::IntegerVector,const Rcpp::IntegerVector,const Rcpp::IntegerVector)");
         signatures.insert("SEXP(*read_array_h5)(const std::string&,const std::string&,const std::string&,const Rcpp::IntegerVector,const Rcpp::IntegerVector)");
         signatures.insert("void(*write_vector_h5)(const std::string&,const std::string&,const std::string&,SEXP)");
@@ -712,6 +742,7 @@ RcppExport SEXP _EigenH5_RcppExport_registerCCallable() {
     R_RegisterCCallable("EigenH5", "_EigenH5_get_dims_h5", (DL_FUNC)_EigenH5_get_dims_h5_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_cont_diff", (DL_FUNC)_EigenH5_cont_diff_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_cont_reg", (DL_FUNC)_EigenH5_cont_reg_try);
+    R_RegisterCCallable("EigenH5", "_EigenH5_multi_array_variant", (DL_FUNC)_EigenH5_multi_array_variant_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_read_matrix_h5", (DL_FUNC)_EigenH5_read_matrix_h5_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_read_array_h5", (DL_FUNC)_EigenH5_read_array_h5_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_write_vector_h5", (DL_FUNC)_EigenH5_write_vector_h5_try);
@@ -740,6 +771,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_EigenH5_get_dims_h5", (DL_FUNC) &_EigenH5_get_dims_h5, 3},
     {"_EigenH5_cont_diff", (DL_FUNC) &_EigenH5_cont_diff, 2},
     {"_EigenH5_cont_reg", (DL_FUNC) &_EigenH5_cont_reg, 2},
+    {"_EigenH5_multi_array_variant", (DL_FUNC) &_EigenH5_multi_array_variant, 1},
     {"_EigenH5_read_matrix_h5", (DL_FUNC) &_EigenH5_read_matrix_h5, 7},
     {"_EigenH5_read_array_h5", (DL_FUNC) &_EigenH5_read_array_h5, 5},
     {"_EigenH5_write_vector_h5", (DL_FUNC) &_EigenH5_write_vector_h5, 4},

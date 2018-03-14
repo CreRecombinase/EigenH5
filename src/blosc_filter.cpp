@@ -153,7 +153,7 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
   int doshuffle = 1;             /* Shuffle default */
   int compcode;                  /* Blosc compressor */
   int code;
-  char* compname = "blosclz";    /* The compressor by default */
+  char* compname = strdup("blosclz");    /* The compressor by default */
   char* complist;
   char errmsg[256];
 

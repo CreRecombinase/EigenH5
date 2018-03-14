@@ -45,6 +45,10 @@ cont_reg <- function(input, chunksize = 0L) {
     .Call(`_EigenH5_cont_reg`, input, chunksize)
 }
 
+multi_array_variant <- function(input_mat) {
+    invisible(.Call(`_EigenH5_multi_array_variant`, input_mat))
+}
+
 read_matrix_h5 <- function(filename, groupname, dataname, offsets = as.integer( c()), chunksizes = as.integer( c()), subset_rows = as.integer( c()), subset_cols = as.integer( c())) {
     .Call(`_EigenH5_read_matrix_h5`, filename, groupname, dataname, offsets, chunksizes, subset_rows, subset_cols)
 }

@@ -45,11 +45,12 @@ namespace HighFive {
 
 #endif
         hid_t getId() const;
+          static std::vector<size_t> reset_chunks_vec(const std::vector<size_t> &chunk_dims,
+                                                     const std::vector<size_t> mat_dims);
 
     protected:
 
-        std::vector<size_t> reset_chunks_vec(const std::vector<size_t> &chunk_dims,
-                                                     const std::vector<size_t> mat_dims);
+    
         template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
         std::vector<size_t> reset_chunks(const std::vector<size_t> &chunk_dims,
                                                  const Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> >&mat);

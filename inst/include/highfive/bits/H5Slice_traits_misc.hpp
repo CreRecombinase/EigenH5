@@ -271,12 +271,17 @@ inline void SliceTraits<Derivate>::read(T &array) {
     
 
     // Apply pre read convertions (these will depend on the dataset, unfortunately
-    H5T_class_t dtype_class = H5Tget_class(dtype_id);
-
-    details::data_converter<T> converter(array, mem_space, isTranspose);
+    const bool isVlen  = (H5Tget_class(details::get_dataset(static_cast<const Derivate *>(this)).getDataType().getId())==H5T_ARRAY);
+    if(isVlen){
+      
+    }
+    
+    
+    details::data_converter<T> converter(array, mem_space);
     // Create mem datatype
     const AtomicType<typename details::type_of_array<T>::type>
         array_datatype;
+
 
 
     auto mem_datatype = array_datatype.getId();
@@ -376,7 +381,7 @@ inline void SliceTraits<Derivate>::write(const T& buffer) {
 
     // Apply pre write convertions
     bool isTranspose = details::get_dataset(static_cast<const Derivate *>(this)).isTransposed();
-    details::data_converter<type_no_const> converter(nocv_buffer, mem_space, isTranspose);
+    details::data_converter<type_no_const> converter(nocv_buffer, mem_space);
 
     if (H5Dwrite(details::get_dataset(static_cast<Derivate*>(this)).getId(),
                  array_datatype.getId(),

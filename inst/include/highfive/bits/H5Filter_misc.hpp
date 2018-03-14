@@ -94,11 +94,20 @@ namespace HighFive {
 
     inline std::vector<size_t> Filter::reset_chunks_vec(const std::vector<size_t> &chunk_dims,
                                                  const std::vector<size_t> mat_dims){
-        std::vector<size_t> ret_chunks(mat_dims.size());
+      const size_t num_dims = mat_dims.size();
+        std::vector<size_t> ret_chunks(num_dims);
+
         ret_chunks[0] = std::min<size_t>(mat_dims[0], chunk_dims[0]);
-        if (ret_chunks.size() > 1) {
+        if (num_dims > 1) {
             ret_chunks[1] = std::min<size_t>(mat_dims[1], chunk_dims[1]);
         }
+	size_t total_chunk_size = std::accumulate(ret_chunks.begin(), ret_chunks.end(), 1, std::multiplies<size_t>());
+	int i=0;
+	while(total_chunk_size>=CHUNK_MAX){
+	  ret_chunks[(i % num_dims)]/=static_cast<size_t>(std::max(static_cast<int>(ret_chunks[(i%num_dims)]/2),1));
+	  i++;
+	}
+	  
         return (ret_chunks);
 
     }

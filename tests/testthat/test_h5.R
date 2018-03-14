@@ -3,7 +3,7 @@ context("h5")
 library(testthat)
 library(EigenH5)
 test_that("can write string vector",{
-  tvec <- c("allb","allc","alld")
+  tvec <- c("allb","allc","alld","alle")
   tempf <- tempfile()
   write_vector_h5(tempf,"grp","dat",tvec)
   expect_equal(get_dims_h5(tempf,"grp","dat"),length(tvec))
@@ -40,8 +40,8 @@ test_that("can read int matrix",{
   expect_equal(tmat,rd)
 })
 
-cont_reg(c(1:10,15:12),chunksize=5)
-cont_diff(c(1:10,15:12),chunksize = 5)
+# cont_reg(c(1:10,15:12),chunksize=5)
+# cont_diff(c(1:10,15:12),chunksize = 5)
 
 test_that("can read int matrix to an 'array'",{
   library(EigenH5)
@@ -50,22 +50,21 @@ test_that("can read int matrix to an 'array'",{
   #write_matrix_h5(tempf,"grp","tmat_t",tmat,doTranspose = T)
   write_matrix_h5(tempf,"grp","tmat",tmat)
   rd <- read_array_h5(tempf,"grp","tmat",offsets = c(0,0),chunksizes = c(2,3))
-  expect_equal(get_dims_h5(tempf,"grp","tmat"),c(100,9))
-  expect_equal(get_dims_h5(tempf,"grp","tmat"),c(100,9))
-  expect_equal(tmat,t(rd))
+  expect_equal(get_dims_h5(tempf,"grp","tmat"),c(2,3))
+  expect_equal(tmat,rd)
 })
 
-test_that("can read allel_h5",{
-  tempf <- '/home/nwknoblauch/Desktop/t_19.h5'
-  rd <- data.matrix(read_delim("/home/nwknoblauch/Desktop/t_19.impute.hap",delim=" ",col_names = F))
-  attr(rd,"dimnames")<- NULL
-  tal <- do.call("cbind",array_branch(trd,c(1,2)))
-  expect_equal(tal,rd)
-  snp_df <- read_df_h5("/home/nwknoblauch/Desktop/scratch/polyg_scratch/impute/EUR.chr19.h5","variants",subcols = c("CHROM"))
-  
-
-  trd <- read_array_h5(tempf,"calldata","GT",offsets=c(0L,0L,0L),chunksizes=c(500L,503L,2L))
-})
+# test_that("can read allel_h5",{
+#   tempf <- '/home/nwknoblauch/Desktop/t_19.h5'
+#   rd <- data.matrix(read_delim("/home/nwknoblauch/Desktop/t_19.impute.hap",delim=" ",col_names = F))
+#   attr(rd,"dimnames")<- NULL
+#   tal <- do.call("cbind",array_branch(trd,c(1,2)))
+#   expect_equal(tal,rd)
+#   snp_df <- read_df_h5("/home/nwknoblauch/Desktop/scratch/polyg_scratch/impute/EUR.chr19.h5","variants",subcols = c("CHROM"))
+#   
+# 
+#   trd <- read_array_h5(tempf,"calldata","GT",offsets=c(0L,0L,0L),chunksizes=c(500L,503L,2L))
+# })
 
 test_that("can read int matrix rows",{
   tmat <- matrix(sample(1:900),100,9)

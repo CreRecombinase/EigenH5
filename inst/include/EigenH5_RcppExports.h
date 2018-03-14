@@ -231,6 +231,24 @@ namespace EigenH5 {
         return Rcpp::as<Rcpp::DataFrame >(rcpp_result_gen);
     }
 
+    inline void multi_array_variant(SEXP input_mat) {
+        typedef SEXP(*Ptr_multi_array_variant)(SEXP);
+        static Ptr_multi_array_variant p_multi_array_variant = NULL;
+        if (p_multi_array_variant == NULL) {
+            validateSignature("void(*multi_array_variant)(SEXP)");
+            p_multi_array_variant = (Ptr_multi_array_variant)R_GetCCallable("EigenH5", "_EigenH5_multi_array_variant");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_multi_array_variant(Shield<SEXP>(Rcpp::wrap(input_mat)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+    }
+
     inline SEXP read_matrix_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, const Rcpp::IntegerVector offsets = Rcpp::IntegerVector::create(), const Rcpp::IntegerVector chunksizes = Rcpp::IntegerVector::create(), const Rcpp::IntegerVector subset_rows = Rcpp::IntegerVector::create(), const Rcpp::IntegerVector subset_cols = Rcpp::IntegerVector::create()) {
         typedef SEXP(*Ptr_read_matrix_h5)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
         static Ptr_read_matrix_h5 p_read_matrix_h5 = NULL;
