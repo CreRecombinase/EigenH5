@@ -12,12 +12,12 @@ test_that("can write string vector",{
 })
 
 
-test_that("can use R interface for files",{
-  tvec <- c("allb","allc","alld")
-  tempf <- tempfile()
-  write_vector_h5(tempf,"grp","dat",tvec)
-  mf <-  new(H5File, tempf, TRUE)
-})
+# test_that("can use R interface for files",{
+#   tvec <- c("allb","allc","alld")
+#   tempf <- tempfile()
+#   write_vector_h5(tempf,"grp","dat",tvec)
+#   mf <-  new(H5File, tempf, TRUE)
+# })
 
 
 test_that("can read string vector",{
@@ -45,11 +45,11 @@ test_that("can read int matrix",{
 
 test_that("can read int matrix to an 'array'",{
   library(EigenH5)
-  tmat <- matrix(1:6,2,3)
+  tmat <- matrix(letters[1:6],2,3)
   tempf <- tempfile()
   #write_matrix_h5(tempf,"grp","tmat_t",tmat,doTranspose = T)
   write_matrix_h5(tempf,"grp","tmat",tmat)
-  rd <- read_array_h5(tempf,"grp","tmat",offsets = c(0,0),chunksizes = c(2,3))
+  rd <- read_array_h5(tempf,"grp","tmat",subset_indices = list(integer(),1:2))
   expect_equal(get_dims_h5(tempf,"grp","tmat"),c(2,3))
   expect_equal(tmat,rd)
 })

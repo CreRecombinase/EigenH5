@@ -40,17 +40,38 @@
 #include <highfive/H5Object.hpp>
 #include <highfive/H5Selection.hpp>
 
+
 #include <blosc_filter.h>
 #include <lzf/lzf_filter.h>
 #include<H5Tpublic.h>
 #include <EigenH5_RcppExports.h> 
 #include <eigenh5/MatSlices.hpp>
-#include <eigenh5/H5classes.h>
 #include <RcppEigen.h>
 
 
+template<int RTYPE> struct r2cpp_t{
+  typedef std::false_type type;
+};
+template<> struct r2cpp_t<INTSXP>{
+  typedef int type;
+};
+template<> struct r2cpp_t<REALSXP>{
+  typedef double type;
+};
+template<> struct r2cpp_t<LGLSXP>{
+  typedef bool type;
+};
+template<> struct r2cpp_t<STRSXP>{
+  typedef std::string type;
+};
 
 
 
+SEXPTYPE h2r_T(hid_t htype);
+
+
+#include <eigenh5/Selection.hpp>
+#include <eigenh5/H5classes.h>
+#include <eigenh5/Matrix.hpp>
 
 #endif

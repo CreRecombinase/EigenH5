@@ -3,6 +3,9 @@
 .RData
 .Ruserdata
 src/*.o
+**#
+.query_cached_index/*
+compile_commands.json
 src/*.so
 src/*.dll
 inst/doc
