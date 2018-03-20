@@ -33,13 +33,6 @@ void read_m_h5(Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,RM> > &t
   const int Dims=2;
   using namespace HighFive;
 
-  auto is_sorted=comp_sel.get_sorted();
-  for(int i=0;i<Dims;i++){
-    if(!is_sorted[i]){
-      Rcpp::Rcerr<<"In dimension: "<<i<<" of array"<<std::endl;
-      Rcpp::stop("indices must be sorted for arrays");
-    }
-  }
   dset.selectEigen(comp_sel.get_offsets(),comp_sel.get_chunksizes(),{}).read(tref);
 
   if(!is_sorted[0]){

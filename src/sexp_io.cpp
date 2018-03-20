@@ -233,8 +233,33 @@ Rcpp::IntegerVector get_dims_h5(const std::string &filename,
   return(Rcpp::wrap(HighFive::File(filename,HighFive::File::ReadOnly).getGroup(groupname).getDataSet(dataname).getDataDimensions()));
 }
 
-
-
+//[[Rcpp::export]]
+Rcpp::DataFrame gen_MatSlice(const std::string &filename,
+                                const std::string &groupname,
+			     const std::string &dataname,
+			     Rcpp::List subset_indices=Rcpp::ListOf<Rcpp::IntegerVector>::create(Rcpp::IntegerVector::create())){
+    HighFive::File file(filename,HighFive::File::ReadOnly);
+  auto grp = file.getGroup(groupname);
+  auto dset = file.getGroup(groupname).getDataSet(dataname);
+  auto dims = dset.getDataDimensions();
+  const int num_dims=dims.size();
+  int n_subsets = subset_indices.size();
+  if(n_subsets>num_dims){
+    Rcpp::Rcerr<<"Rank of "<<groupname<<"/"<<dataname<<" is"<<num_dims<<std::endl;
+    Rcpp::Rcerr<<"Rank of selection is is"<<n_subsets<<std::endl;
+  }
+  if(num_dims>4){
+    Rcpp::stop("EigenH5 currently can't handle data with dimensions greater than 4");
+  }
+  std::vector<std::vector<dim_sel> > chunk_vec(num_dims);
+  for(int i=0;i<num_dims;i++){
+    std::vector<int> local_subset_vec;
+    if(i<n_subsets){
+      local_subset_vec=as<std::vector<int> >(as<IntegerVector>(subset_indices[i]));
+    }
+    chunk_vec[i] = find_cont(local_subset_vec.begin(),local_subset_vec.end(),dims[i]);
+  }
+}
 
 
 
@@ -259,10 +284,6 @@ Rcpp::DataFrame cont_diff(Rcpp::IntegerVector inp,int chunksize=0){
     int csize= distance(el);
     return(std::make_tuple(std::get<0>(elr),std::get<1>(elr),csize));
   });
-  // auto adr = adjacent_difference(ir,dr,std::minus<int>());
-  //   std::vector<std::vector<int> > ar = view::group_by(dr,[](int &j,int &k){
-  //   return((*k-*j)==(k-j));
-  // });
   
   int tkk=0;
   const int n_groups = ar.size();

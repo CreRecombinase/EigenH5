@@ -15,9 +15,6 @@ void read_a_h5(boost::multi_array_ref<T,Dims> &tref,
 }
 
 
-
-
-
 template <typename T,size_t Dims>
 void write_a_h5(boost::multi_array_ref<T,Dims> &tref,
 		HighFive::DataSet &dset,
@@ -36,55 +33,11 @@ void write_a_h5(boost::multi_array_ref<T,Dims> &tref,
 
 
 
-template<typename T,size_t Dims> void block_assign_read(boost::multi_array_ref<T,Dims> &retref,
-						     boost::multi_array_ref<T,Dims> &tarr,
-						     std::array<boost::multi_array_types::index_range,Dims> ranges){
-  if constexpr(Dims==1){
-      retref[ boost::indices[ ranges[0] ] ] = tarr;
-    }else{
-    if constexpr( Dims==2){
-	retref[ boost::indices[ ranges[0] ][ ranges[1] ] ] = tarr;
-      }else{
-      if constexpr( Dims==3){
-	  retref[ boost::indices[ ranges[0] ][ ranges[1] ][ ranges[2] ] ] = tarr;
-	}else{
-	if constexpr( Dims==4){
-	    retref[ boost::indices[ ranges[0] ][ ranges[1] ][ ranges[2] ][ ranges[3] ] ] = tarr;
-	  }else{
-	  static_assert(Dims<=4, "Arrays of dimension > 4 not supported");
-	}
-      }
-    }
-  }
-}
-
-  template<typename T,size_t Dims> void block_assign_write(boost::multi_array_ref<T,Dims> &retref,
-						     boost::multi_array_ref<T,Dims> &tarr,
-						     std::array<boost::multi_array_types::index_range,Dims> ranges){
-  if constexpr(Dims==1){
-      tarr =retref[ boost::indices[ ranges[0] ] ] = ;
-    }else{
-    if constexpr( Dims==2){
-        tarr = retref[ boost::indices[ ranges[0] ][ ranges[1] ] ] ;
-      }else{
-      if constexpr( Dims==3){
-	  tarr =  retref[ boost::indices[ ranges[0] ][ ranges[1] ][ ranges[2] ] ];
-	}else{
-	if constexpr( Dims==4){
-	    tarr = retref[ boost::indices[ ranges[0] ][ ranges[1] ][ ranges[2] ][ ranges[3] ] ] ;
-	  }else{
-	  static_assert(Dims<=4, "Arrays of dimension > 4 not supported");
-	}
-      }
-    }
-  }
-}
 
 
 
-
-template <SEXPTYPE RTYPE ,size_t Dims,typename T= typename r2cpp_t<RTYPE>::type,typename RR>
-void write_elem_a_h5(T& adata,HighFive::DataSet &dset,const data_selection dsel){
+template <SEXPTYPE RTYPE ,size_t Dims,typename T= typename r2cpp_t<RTYPE>::type>
+void write_elem_a_h5(T& adata,HighFive::DataSet &dset,const DatasetSelection dsel){
 
   using namespace ranges;
 
@@ -103,7 +56,7 @@ void write_elem_a_h5(T& adata,HighFive::DataSet &dset,const data_selection dsel)
 }
 
 template <SEXPTYPE RTYPE ,size_t Dims,typename T= typename r2cpp_t<RTYPE>::type,typename RR>
-Rcpp::Vector<RTYPE> read_elem_a_h5(HighFive::DataSet &dset,const data_selection<Dims> dsel){
+Rcpp::Vector<RTYPE> read_elem_a_h5(HighFive::DataSet &dset,const DatasetSelection<Dims> dsel){
 
   using namespace ranges;
 
@@ -145,16 +98,13 @@ SEXP read_array_h5(const std::string &filename,
   if(num_dims>4){
     Rcpp::stop("EigenH5 currently can't handle data with dimensions greater than 4");
   }
-  std::vector<std::vector<int> > local_subset_vec(num_dims);
-  std::vector<bool> read_subset(num_dims,false);
   std::vector<std::vector<dim_sel> > chunk_vec(num_dims);
   for(int i=0;i<num_dims;i++){
+    std::vector<int> local_subset_vec;
     if(i<n_subsets){
-      local_subset_vec[i]=as<std::vector<int> >(as<IntegerVector>(subset_indices[i]));
-    }else{
-      local_subset_vec[i]={};
+      local_subset_vec=as<std::vector<int> >(as<IntegerVector>(subset_indices[i]));
     }
-    chunk_vec[i] = find_cont(local_subset_vec[i].begin(),local_subset_vec[i].end(),dims[i]);
+    chunk_vec[i] = find_cont(local_subset_vec.begin(),local_subset_vec.end(),dims[i]);
   }
 
   auto my_t = check_dtype(filename,groupname,dataname);
@@ -163,57 +113,57 @@ SEXP read_array_h5(const std::string &filename,
   switch (my_t){
   case INTSXP: {
     if(num_dims==1){
-      data_selection<1> ds(chunk_vec,dims);
+      DatasetSelection<1> ds(chunk_vec,dims);
       return(read_elem_a_h5<INTSXP,1>(dset,ds));
     }
     if(num_dims==2){
-      data_selection<2> ds(chunk_vec,dims);
+      DatasetSelection<2> ds(chunk_vec,dims);
       return(read_elem_a_h5<INTSXP,2>(dset,ds));
     }
     if(num_dims==3){
-      data_selection<3> ds(chunk_vec,dims);
+      DatasetSelection<3> ds(chunk_vec,dims);
       return(read_elem_a_h5<INTSXP,3>(dset,ds));
     }
     if(num_dims==4){
-      data_selection<4> ds(chunk_vec,dims);
+      DatasetSelection<4> ds(chunk_vec,dims);
       return(read_elem_a_h5<INTSXP,4>(dset,ds));
     }
     break;
   }
   case REALSXP: {
     if(num_dims==1){
-      data_selection<1> ds(chunk_vec,dims);
+      DatasetSelection<1> ds(chunk_vec,dims);
       return(read_elem_a_h5<REALSXP,1>(dset,ds));
     }
     if(num_dims==2){
-      data_selection<2> ds(chunk_vec,dims);
+      DatasetSelection<2> ds(chunk_vec,dims);
       return(read_elem_a_h5<REALSXP,2>(dset,ds));
     }
     if(num_dims==3){
-      data_selection<3> ds(chunk_vec,dims);
+      DatasetSelection<3> ds(chunk_vec,dims);
       return(read_elem_a_h5<REALSXP,3>(dset,ds));
     }
     if(num_dims==4){
-      data_selection<4> ds(chunk_vec,dims);
+      DatasetSelection<4> ds(chunk_vec,dims);
       return(read_elem_a_h5<REALSXP,4>(dset,ds));
     }
     break;
   }
   case STRSXP: {
     if(num_dims==1){
-      data_selection<1> ds(chunk_vec,dims);
+      DatasetSelection<1> ds(chunk_vec,dims);
       return(read_elem_a_h5<STRSXP,1>(dset,ds));
     }
     if(num_dims==2){
-      data_selection<2> ds(chunk_vec,dims);
+      DatasetSelection<2> ds(chunk_vec,dims);
       return(read_elem_a_h5<STRSXP,2>(dset,ds));
     }
     if(num_dims==3){
-      data_selection<3> ds(chunk_vec,dims);
+      DatasetSelection<3> ds(chunk_vec,dims);
       return(read_elem_a_h5<STRSXP,3>(dset,ds));
     }
     if(num_dims==4){
-      data_selection<4> ds(chunk_vec,dims);
+      DatasetSelection<4> ds(chunk_vec,dims);
       return(read_elem_a_h5<STRSXP,4>(dset,ds));
     }
     break;
@@ -245,27 +195,25 @@ void write_array_h5(const std::string &filename,
 
   if(create_ds){
     auto my_t = data.sexp_type();
-    std::vector<int> dtdims =as<std::vector<size_t> >(data.attr("dim"));
+    std::vector<int> dtchunksizes=as<std::vector<int> >(chunksizes);
+    std::vector<size_t> tchunksizes(dtchunksizes.begin(),dtchunksizes.end());
+    std::vector<int> dtdims =as<std::vector<int> >(data.attr("dim"));
     std::vector<size_t> ddims(dtdims.begin(),dtdims.end());
-    
     switch(my_t){
     case INTSXP:{
-      create_m_h5<int>(ddims,grp,dataname,false,as<std::vector<size_t> >(chunksizes));
+      create_m_h5<int>(ddims,grp,dataname,false,tchunksizes);
       break;
     }
     case REALSXP:{
-      create_m_h5<double>(ddims,grp,dataname,false,as<std::vector<size_t> >(chunksizes));
+      create_m_h5<double>(ddims,grp,dataname,false,tchunksizes);
       break;
     }
     case STRSXP:{
-      create_m_h5<std::string>(ddims,grp,dataname,false,as<std::vector<size_t> >(chunksizes));
+      create_m_h5<std::string>(ddims,grp,dataname,false,tchunksizes);
       break;
     }
     default: {
-      warning(
-	      "Invalid SEXPTYPE %d.\n",
-	      my_t
-	      );
+      warning("Invalid SEXPTYPE %d.\n",my_t);
       Rcpp::stop("Unable to write data of this type");
     }
     }
@@ -278,19 +226,18 @@ void write_array_h5(const std::string &filename,
     Rcpp::Rcerr<<"Rank of "<<groupname<<"/"<<dataname<<" is"<<num_dims<<std::endl;
     Rcpp::Rcerr<<"Rank of selection is is"<<n_subsets<<std::endl;
   }
+
   if(num_dims>4){
     Rcpp::stop("EigenH5 currently can't handle data with dimensions greater than 4");
   }
-  std::vector<std::vector<int> > local_subset_vec(num_dims);
-  std::vector<bool> read_subset(num_dims,false);
+
   std::vector<std::vector<dim_sel> > chunk_vec(num_dims);
   for(int i=0;i<num_dims;i++){
+    std::vector<int> local_subset_vec;
     if(i<n_subsets){
       local_subset_vec[i]=as<std::vector<int> >(as<IntegerVector>(subset_indices[i]));
-    }else{
-      local_subset_vec[i]={};
     }
-    chunk_vec[i] = find_cont(local_subset_vec[i].begin(),local_subset_vec[i].end(),dims[i]);
+    chunk_vec[i] = find_cont(local_subset_vec.begin(),local_subset_vec.end(),dims[i]);
   }
 
   //  auto my_t = check_dtype(filename,groupname,dataname);
@@ -299,21 +246,20 @@ void write_array_h5(const std::string &filename,
   switch (my_t){
   case INTSXP: {
     Rcpp::Vector<INTSXP> td(dtata);
-
     if(num_dims==1){
-      data_selection<1> ds(chunk_vec,dims);
+      DatasetSelection<1> ds(chunk_vec,dims);
       return(write_elem_a_h5<INTSXP,1>(&td[0],dset,ds));
     }
     if(num_dims==2){
-      data_selection<2> ds(chunk_vec,dims);
+      DatasetSelection<2> ds(chunk_vec,dims);
       return(write_elem_a_h5<INTSXP,2>(&td[0],dset,ds));
     }
     if(num_dims==3){
-      data_selection<3> ds(chunk_vec,dims);
+      DatasetSelection<3> ds(chunk_vec,dims);
       return(write_elem_a_h5<INTSXP,3>(&td[0],dset,ds));
     }
     if(num_dims==4){
-      data_selection<4> ds(chunk_vec,dims);
+      DatasetSelection<4> ds(chunk_vec,dims);
       return(write_elem_a_h5<INTSXP,4>(&td[0],dset,ds));
     }
     break;
@@ -321,19 +267,19 @@ void write_array_h5(const std::string &filename,
   case REALSXP: {
     Rcpp::Vector<INTSXP> td(dtata);
     if(num_dims==1){
-      data_selection<1> ds(chunk_vec,dims);
+      DatasetSelection<1> ds(chunk_vec,dims);
       return(write_elem_a_h5<REALSXP,1>(&td[0],dset,ds));
     }
     if(num_dims==2){
-      data_selection<2> ds(chunk_vec,dims);
+      DatasetSelection<2> ds(chunk_vec,dims);
       return(write_elem_a_h5<REALSXP,2>(&td[0],dset,ds));
     }
     if(num_dims==3){
-      data_selection<3> ds(chunk_vec,dims);
+      DatasetSelection<3> ds(chunk_vec,dims);
       return(write_elem_a_h5<REALSXP,3>(&td[0],dset,ds));
     }
     if(num_dims==4){
-      data_selection<4> ds(chunk_vec,dims);
+      DatasetSelection<4> ds(chunk_vec,dims);
       return(write_elem_a_h5<REALSXP,4>(&td[0],dset,ds));
     }
     break;
@@ -342,19 +288,19 @@ void write_array_h5(const std::string &filename,
     Rcpp::Vector<STRSXP> td(dtata);
     std::vector<std::string> ntd=as::<std::vector<std::string> >td;
     if(num_dims==1){
-      data_selection<1> ds(chunk_vec,dims);
+      DatasetSelection<1> ds(chunk_vec,dims);
       return(write_elem_a_h5<STRSXP,1>(&ntd[0],dset,ds));
     }
     if(num_dims==2){
-      data_selection<2> ds(chunk_vec,dims);
+      DatasetSelection<2> ds(chunk_vec,dims);
       return(write_elem_a_h5<STRSXP,2>(&ntd[0],dset,ds));
     }
     if(num_dims==3){
-      data_selection<3> ds(chunk_vec,dims);
+      DatasetSelection<3> ds(chunk_vec,dims);
       return(write_elem_a_h5<STRSXP,3>(&ntd[0],dset,ds));
     }
     if(num_dims==4){
-      data_selection<4> ds(chunk_vec,dims);
+      DatasetSelection<4> ds(chunk_vec,dims);
       return(write_elem_a_h5<STRSXP,4>(&ntd[0],dset,ds));
     }
     break;
