@@ -34,29 +34,29 @@ test_that("can read int matrix",{
 })
 
 
-test_that("can read int matrix to an 'array'",{
-  library(EigenH5)
-  tmat <- matrix(1:6,2,3)
-  tempf <- tempfile()
-  #write_matrix_h5(tempf,"grp","tmat_t",tmat,doTranspose = T)
-  write_matrix_h5(tempf,"grp","tmat",tmat)
-  rd <- read_array_h5(tempf,"grp","tmat",offsets = c(0,0),chunksizes = c(2,3))
-  expect_equal(get_dims_h5(tempf,"grp","tmat"),c(100,9))
-  expect_equal(get_dims_h5(tempf,"grp","tmat"),c(100,9))
-  expect_equal(tmat,t(rd))
-})
+## test_that("can read int matrix to an 'array'",{
+##   library(EigenH5)
+##   tmat <- matrix(1:6,2,3)
+##   tempf <- tempfile()
+##   #write_matrix_h5(tempf,"grp","tmat_t",tmat,doTranspose = T)
+##   write_matrix_h5(tempf,"grp","tmat",tmat)
+##   rd <- read_array_h5(tempf,"grp","tmat",offsets = c(0,0),chunksizes = c(2,3))
+##   expect_equal(get_dims_h5(tempf,"grp","tmat"),c(100,9))
+##   expect_equal(get_dims_h5(tempf,"grp","tmat"),c(100,9))
+##   expect_equal(tmat,t(rd))
+## })
 
-test_that("can read allel_h5",{
-  tempf <- '/home/nwknoblauch/Desktop/t_19.h5'
-  rd <- data.matrix(read_delim("/home/nwknoblauch/Desktop/t_19.impute.hap",delim=" ",col_names = F))
-  attr(rd,"dimnames")<- NULL
-  tal <- do.call("cbind",array_branch(trd,c(1,2)))
-  expect_equal(tal,rd)
-  snp_df <- read_df_h5("/home/nwknoblauch/Desktop/scratch/polyg_scratch/impute/EUR.chr19.h5","variants",subcols = c("CHROM"))
+## test_that("can read allel_h5",{
+##   tempf <- '/home/nwknoblauch/Desktop/t_19.h5'
+##   rd <- data.matrix(read_delim("/home/nwknoblauch/Desktop/t_19.impute.hap",delim=" ",col_names = F))
+##   attr(rd,"dimnames")<- NULL
+##   tal <- do.call("cbind",array_branch(trd,c(1,2)))
+##   expect_equal(tal,rd)
+##   snp_df <- read_df_h5("/home/nwknoblauch/Desktop/scratch/polyg_scratch/impute/EUR.chr19.h5","variants",subcols = c("CHROM"))
   
 
-  trd <- read_array_h5(tempf,"calldata","GT",offsets=c(0L,0L,0L),chunksizes=c(500L,503L,2L))
-})
+##   trd <- read_array_h5(tempf,"calldata","GT",offsets=c(0L,0L,0L),chunksizes=c(500L,503L,2L))
+## })
 
 test_that("can read int matrix rows",{
   tmat <- matrix(sample(1:900),100,9)
@@ -95,6 +95,20 @@ test_that("can read int matrix rows",{
   rd <- read_matrix_h5(tempf,"grp","tmat",subset_rows = c(1,3,5))
   expect_equal(ttmat,rd)
 })
+
+
+test_that("can read int matrix rows & cols",{
+  tmat <- matrix(sample(1:900),100,9)
+  tempf <- tempfile()
+  write_matrix_h5(tempf,"grp","tmat",tmat)
+  ttmat <- tmat[c(1,3,5),c(3,5,6)]
+  rd <- read_matrix_h5(tempf,"grp","tmat",
+                       subset_rows = c(1,3,5),
+                       subset_cols=c(3,5,6))
+  expect_equal(ttmat,rd)
+})
+
+
 
 test_that("can read int matrix cols",{
   tmat <- matrix(sample(1:900),100,9)
@@ -244,6 +258,8 @@ test_that("can create nested groups",{
   tvec <- runif(200)
   tempf <- tempfile()
   write_matrix_h5(tempf,"testg/tg2","test",data =matrix(runif(9*3),9,3))
+  rvec <- read_matrix_h5(tempf,"testg/tg2","test")
+  expect_equal(tvec,rvec)
 })
 
 # test_that("ld_region splitting works as",{
@@ -286,18 +302,18 @@ test_that("can create nested groups",{
 # })
 
 
-test_that("can convert flat matrices to hdf5 files ",{
+## test_that("can convert flat matrices to hdf5 files ",{
   
-  p <- 5
-  N <- 3
-  tf <- tempfile(fileext=".txt.gz")
-  tm <- matrix(sample(0:9,p*N,replace=T),p,N)
-  readr::write_delim(tibble::as_data_frame(tm),path = tf,delim=" ",col_names = F)
-  nhf <- tempfile()
-  gz2hdf5(tf,output_filename = nhf,"/","test",p = p,N = N,chunk_size = 3)
-  res <- read_matrix_h5(nhf,"/","test")
-  expect_equal(res,t(tm))
-})
+##   p <- 5
+##   N <- 3
+##   tf <- tempfile(fileext=".txt.gz")
+##   tm <- matrix(sample(0:9,p*N,replace=T),p,N)
+##   readr::write_delim(tibble::as_data_frame(tm),path = tf,delim=" ",col_names = F)
+##   nhf <- tempfile()
+##   gz2hdf5(tf,output_filename = nhf,"/","test",p = p,N = N,chunk_size = 3)
+##   res <- read_matrix_h5(nhf,"/","test")
+##   expect_equal(res,t(tm))
+## })
 # 
 # gwas_names <- c("bd","cad","cd","ht","ra","t1d","t2d")
 # # gwas_names <- c("t1d","ht")
@@ -315,13 +331,13 @@ test_that("can convert flat matrices to hdf5 files ",{
 test_that("writing a vector works as in RcppEigenH5",{
   tvec <- runif(200)
   tempf <- tempfile()
-  write_vector(filename = tempf,groupname = "testg",dataname = "test",data = tvec)
-  retvec <- read_vector(tempf,"testg","test")
+  write_vector_h5(tempf,"testg","test",data = tvec)
+  retvec <- read_vector_h5(tempf,"testg","test")
   expect_equal(tvec,retvec)
 })
 
-test_that("guessing chunks works like in python",{
-  data_dims <- c(10000,10)
-  guess_chunks(data_dims)
-  
-})
+# test_that("guessing chunks works like in python",{
+#   data_dims <- c(10000,10)
+#   guess_chunks(data_dims)
+#   
+# })
