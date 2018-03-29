@@ -6,7 +6,7 @@ template <typename T> void create_m_h5(const std::vector<size_t> mat_dims,
 					 HighFive::Group &grp,
 					 const std::string &dataname,
 					 const bool doTranspose=false,
-					 std::vector<size_t> chunk_dims={}){
+				       std::vector<size_t> chunk_dims={}){
     using namespace HighFive;
 
     //Make initial chunking guess
@@ -67,17 +67,13 @@ void write_m_h5(Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,RM> > &
 
 
 template <SEXPTYPE RTYPE,typename T= enable_if_t<std::is_arithmetic<typename r2cpp_t<RTYPE>::type >::value,typename r2cpp_t<RTYPE>::type> >
-Rcpp::Matrix<RTYPE> read_elem_m_h5(HighFive::DataSet &dset,const dataset_selection<2> dsel){
+Rcpp::Matrix<RTYPE> read_elem_m_h5(HighFive::DataSet &dset,const DatasetSelection dsel){
 
     //using T = typename r2cpp_t<RTYPE>::type;
 
     //Rcpp::Vector<r2cpp_t<RTYPE>::type> retvec;
     using namespace ranges;
     const int Dims=2;
-
-
-
-
     const size_t n_rows=dsel.n_elem[0];
     const size_t n_cols=dsel.n_elem[1];
 
@@ -97,14 +93,14 @@ Rcpp::Matrix<RTYPE> read_elem_m_h5(HighFive::DataSet &dset,const dataset_selecti
       mretmat.block(out_starts[0],out_starts[1],tdim_sizes[0],tdim_sizes[1])=ttreadmat;
     }
   return(rretmat);
-  }
+}
 
 
   template <SEXPTYPE RTYPE,typename T= enable_if_t<std::is_arithmetic<typename r2cpp_t<RTYPE>::type >::value,typename r2cpp_t<RTYPE>::type>,
 	    int RM =Eigen::ColMajor>
   void write_elem_m_h5(Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,RM> > &retmat,
 		       HighFive::DataSet &dset,
-		       const dataset_selection<2> dsel){
+		       const DatasetSelection dsel){
 
     //using T = typename r2cpp_t<RTYPE>::type;
 

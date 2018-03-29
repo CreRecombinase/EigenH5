@@ -263,50 +263,39 @@ Rcpp::DataFrame gen_MatSlice(const std::string &filename,
 
 
 
-// //[[Rcpp::export]]
-Rcpp::DataFrame cont_diff(Rcpp::IntegerVector inp,int chunksize=0){
+std::vector<dim_sel> find_cont(const Rcpp::IntegerVector inp,int chunksize=0,int dimsize=0){
   using namespace ranges;
   const int out_size=inp.size();
+  if(dimsize==0){
+    dimsize=out_size;
+  }
   if(chunksize==0){
-    chunksize = out_size;
+    chunksize = dimsize;
   }
   using namespace std::placeholders;
   
   auto ir = make_iterator_range(inp.begin(), inp.end());
   // auto dr = make_iterator_range(diff_v.begin(), diff_v.end());
   auto b_chunk = std::bind(view::chunk,_1,chunksize);
-  std::vector<std::tuple<int,int,int> > ar= view::zip_with([](int i,int j){
-    return(std::make_tuple(i-1,j));
-  },ir,view::ints(0)) | view::group_by([&](std::tuple<int,int> i, std::tuple<int,int> j){
-    return((std::get<0>(i)-std::get<0>(j))==(std::get<1>(i)-std::get<1>(j)));
-  }) | view::transform(b_chunk) | view::join | view::transform([](auto el){
-    auto elr = el.front();
-    int csize= distance(el);
-    return(std::make_tuple(std::get<0>(elr),std::get<1>(elr),csize));
-  });
-  
-  int tkk=0;
-  const int n_groups = ar.size();
-  Rcpp::IntegerVector chunk_i(n_groups);
-  Rcpp::IntegerVector in_beg(n_groups);
-  Rcpp::IntegerVector out_beg(n_groups);
-  Rcpp::IntegerVector csize(n_groups);
-  for(int i=0; i<n_groups;i++){
-    auto te=ar[i];
-    chunk_i[i]=i;
-    in_beg[i]=std::get<0>(te);
-    out_beg[i]=std::get<1>(te);
-    csize[i]  = std::get<2>(te);
-  }
- 
- 
-  using namespace Rcpp;
-  
-  return(DataFrame::create( _["chunk_id"]=chunk_i,
-                            _["in_offset"]=in_beg,
-                            _["out_offset"]=out_beg,
-                            _["chunksize"]=csize));
+  std::vector<dim_sel> ar= view::zip_with([](const int i,const int j){
+      return(std::make_tuple(i-1,j));
+    },ir,view::ints(0)) |
+    view::group_by([&](std::tuple<int,int> i, std::tuple<int,int> j){
+	return(std::abs((std::get<0>(i)-std::get<0>(j)))==(std::get<1>(i)-std::get<1>(j)));
+      }) |
+    view::transform(b_chunk) |
+    view::join |
+    view::transform([](auto el){
+	auto elr = el.front();
+	auto elb = el.back();
+	int csize= distance(el);
+	return(dim_sel(std::get<0>(elr),std::get<0>(elb),std::get<1>(elr),std::get<1>(elb),dimsize));
+      });
+  return(ar);
 }
+
+
+
 
 
 											  
@@ -318,7 +307,7 @@ Rcpp::DataFrame cont_diff(Rcpp::IntegerVector inp,int chunksize=0){
 //   using namespace ranges;
 //   using iarray = std::array<int,2>;
 //   using piarray = std::pair<iarray,iarray>;
-  
+
 
 //   const int n_elem = ite-itb;
 
