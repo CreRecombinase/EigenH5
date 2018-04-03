@@ -130,6 +130,21 @@ test_that("can read/write integer vector",{
   expect_equal(rd,tvec)
 })
 
+test_that("can read a string matrix",{
+  tm <- matrix(c("allb","allc","alld","alle"),2,2)
+  tempf <- tempfile()
+  
+  write_matrix_h5(tempf,
+                  groupname = "grp",
+                  dataname = "tdat",
+                  data = tm
+  )
+  rd <- read_matrix_h5(tempf,"grp","tdat")
+  expect_equal(rd,tm)
+  
+  #check_dtype(tempf,"grp","tdat")
+  
+})
 
 test_that("can read string vector",{
   tvec <- c("allb","allc","alld")
@@ -148,11 +163,11 @@ test_that("writing a matrix works as in RcppEigenH5",{
   
   tmat <- matrix(runif(9*10),9,10)
   tempf <- tempfile()
-  write_matrix_h5(tempf,groupname = "testg",dataname = "testd",data = tmat,doTranspose = T)  
+  EigenH5::write_matrix_h5(tempf,groupname = "testg",dataname = "testd",data = tmat)
   sub_t <- tmat[,c(1,3,5)]
   rmat <- read_matrix_h5(tempf,"testg","testd",subset_cols = c(1,3,5))
   expect_equal(rmat,sub_t)  
-  write_matrix_h5(tempf,groupname = "testg",dataname = "testd2",data = tmat,doTranspose = F)  
+  write_matrix_h5(tempf,groupname = "testg",dataname = "testd2",data = tmat)  
   rmat <- read_matrix_h5(tempf,"testg","testd2",subset_cols=c(1L,3L,5L))
   expect_equal(rmat,sub_t)
 })
@@ -171,13 +186,15 @@ test_that("writing 2 matrix blocks works",{
                      groupname = "testg",
                      dataname = "testd",
                      data = sub_mat,offsets = c(0,0))
-  r_sub_mat <- read_matrix_h5(filename = tempf,groupname = "testg",dataname = "testd",offsets = c(0L,0L),c(5L,2L))
+  r_sub_mat <- read_matrix_h5(filename = tempf,groupname = "testg",dataname = "testd",offsets = c(0L,0L),chunksizes = c(5L,2L))
+  
   expect_equal(sub_mat,r_sub_mat)
   sub_mat <- tmat[-(1:5),-(1:2),drop=F]
   write_matrix_h5(filename = tempf,
                   groupname = "testg",
                   dataname = "testd",
-                  data = sub_mat,offsets = c(5,2))
+                  data = sub_mat,
+                  offsets = c(5,2))
   sub_mat <- tmat[(1:5),-(1:2),drop=F]
   write_matrix_h5(filename = tempf,
                   groupname = "testg",
@@ -251,73 +268,13 @@ test_that("writing a vector chunk works",{
 test_that("can create nested groups",{
   tvec <- runif(200)
   tempf <- tempfile()
-  write_matrix_h5(tempf,"testg/tg2","test",data =matrix(runif(9*3),9,3))
+  tm <- matrix(runif(9*3),9,3)
+  write_matrix_h5(tempf,"testg/tg2","test",data =tm)
+  ntv <- read_matrix_h5(tempf,"testg/tg2","test")
+  expect_equal(ntv,tm)
 })
 
-# test_that("ld_region splitting works as",{
-#   
-#   
-#   num_ld_r <- 20
-#   region_id <- integer()
-#   result_matrix <- matrix(0,num_ld_r,3)
-#   for(i in 1:num_ld_r){
-#     result_matrix[i,1] <- i
-#     result_matrix[i,2] <- length(region_id)
-#     isize <- sample(1:1000,1)
-#     result_matrix[i,3] <- isize
-#     region_id <- c(region_id,rep(i,isize))
-#   }
-#   N <- 100
-#   lr <- length(region_id)
-#   test_mat <- matrix(0.01,lr,N)
-#   for(i in 1:nrow(result_matrix)){
-#     row_start <- (result_matrix[i,2]+1)
-#     row_stop <- row_start+result_matrix[i,3]-1
-#     row_val <- result_matrix[i,1]
-#     test_mat[row_start:row_stop,] <- as.numeric(row_val)
-#   }
-#   
-#   tempf <- tempfile()
-#   write_vector_h5(filename = tempf,groupname = "grp",dataname = "region_id",data = region_id)
-#   tv <- read_vec_h5(tempf,"grp","region_id")
-#   write_matrix_h5(filename=tempf,groupname="/",dataname = "data",data = test_mat)
-#   tM <- apply(result_matrix,1,function(x,filename,groupname,dataname,N){
-#     tX <- read_mat_h5(filename,groupname,dataname,
-#                 offsets=as.integer(c(x[2],0)),
-#                 chunksizes = as.integer(c(x[3],N)))
-#     expect_equal(all(tX==x[1]),T)
-#     return(tX)
-#     
-#   },filename=tempf,groupname="/",dataname="data",N=N)
-#   
-#   
-# })
 
-
-test_that("can convert flat matrices to hdf5 files ",{
-  
-  p <- 5
-  N <- 3
-  tf <- tempfile(fileext=".txt.gz")
-  tm <- matrix(sample(0:9,p*N,replace=T),p,N)
-  readr::write_delim(tibble::as_data_frame(tm),path = tf,delim=" ",col_names = F)
-  nhf <- tempfile()
-  gz2hdf5(tf,output_filename = nhf,"/","test",p = p,N = N,chunk_size = 3)
-  res <- read_matrix_h5(nhf,"/","test")
-  expect_equal(res,t(tm))
-})
-# 
-# gwas_names <- c("bd","cad","cd","ht","ra","t1d","t2d")
-# # gwas_names <- c("t1d","ht")
-# # snpif <- sprintf("/home/nwknoblauch/Desktop/scratch/polyg_scratch/h5/%s_seq_wtcc_geno.h5",gwas_names)
-# resl <- intersect_snpinfo_h5(snpif)
-# tmap_df <- imap(resl,~read_df_h5(.y,"SNPinfo",subcols=c("chr","pos","snp_id","SNP"))) %>% set_names(gwas_names)
-# 
-# nt_df <- imap_dfr(tmap_df,function(x,y){
-#    rdf <- slice(x,84:88) %>% mutate(n=y)
-#   stopifnot(!is.unsorted(rdf$pos))
-#   return(rdf)
-# })
 
 
 test_that("writing a vector works as in RcppEigenH5",{

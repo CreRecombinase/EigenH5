@@ -41,8 +41,8 @@ class ElementSet {
     friend class SliceTraits;
 };
 
-template <typename Derivate>
-class SliceTraits {
+  template <typename Derivate>
+  class SliceTraits {
   public:
     ///
     /// select a region in the current Slice/Dataset of 'count' points at
@@ -52,15 +52,15 @@ class SliceTraits {
     ///
     Selection select(const std::vector<size_t>& offset,
                      const std::vector<size_t>& count,
-                     const std::vector<size_t>& stride = std::vector<size_t>())
-        const;
-
-    ///
+                     const std::vector<size_t>& stride = std::vector<size_t>()) const;
+    //    void clear();
     /// select a set of columns in the last dimension of this dataset.
     /// The column indices must be smaller than the dimension size.
     ///
-    Selection selectRows(const std::vector<size_t>& rows) const;
-    Selection select(const std::vector<size_t>& columns) const;
+    Selection selectRows(const std::vector<size_t>& rows,const size_t col_offset=0,const size_t col_count=0) const;
+    Selection selectRowsCols(const std::vector<size_t>& rows,const std::vector<size_t>& cols) const;
+    Selection selectCols(const std::vector<size_t>& columns,const size_t row_offset=0,const size_t row_count=0) const;
+    // Selection selectRowsCols(const std::vector<size_t> &rows, const std::vector<size_t> &columns) const;
 
     ///
     /// select a region in the current Slice/Dataset out of a list of elements
@@ -69,7 +69,7 @@ class SliceTraits {
 
     Selection selectEigen(const std::vector<size_t> &offset,
                           const std::vector<size_t> &count,
-                          const std::vector<size_t> &stride) const;
+                          const std::vector<size_t> &stride,const bool add_selection=false) const;
     std::vector<size_t> getDataDimensions() const;
 
     ///
@@ -81,8 +81,8 @@ class SliceTraits {
     /// no dimensionality checking will be performed, it is the user's
     /// responsibility to ensure that the right amount of space has been
     /// allocated.
-  template <typename T>
-  void readString(T &array);
+    template <typename T>
+    void readString(T &array);
     template <typename T>
     void read(T &array);
 #ifdef H5_USE_EIGEN
@@ -122,6 +122,6 @@ class SliceTraits {
   private:
 
     typedef Derivate derivate_type;
-};
+  };
 }
 

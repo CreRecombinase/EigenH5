@@ -101,7 +101,7 @@ inline ElementSet::ElementSet(const std::vector<std::size_t>& element_ids)
     inline Selection
     SliceTraits<Derivate>::selectEigen(const std::vector<size_t> &offset,
                                        const std::vector<size_t> &count,
-                                       const std::vector<size_t> &stride) const {
+                                       const std::vector<size_t> &stride,const bool add_selection) const {
         // hsize_t type convertion
 
         bool isTranspose = details::get_dataset(static_cast<const Derivate *>(this)).isTransposed();
@@ -117,9 +117,9 @@ inline ElementSet::ElementSet(const std::vector<std::size_t>& element_ids)
             std::reverse(count_local.begin(), count_local.end());
             std::reverse(stride_local.begin(), stride_local.end());
         }
-
+	auto selection_type = add_selection ? H5S_SELECT_OR : H5S_SELECT_SET;
         DataSpace space = static_cast<const Derivate *>(this)->getSpace().clone();
-        if (H5Sselect_hyperslab(space.getId(), H5S_SELECT_SET, offset_local.data(),
+        if (H5Sselect_hyperslab(space.getId(), selection_type, offset_local.data(),
                                 stride.empty() ? NULL : stride_local.data(),
                                 count_local.data(), NULL) < 0) {
             HDF5ErrMapper::ToException<DataSpaceException>(
@@ -131,31 +131,36 @@ inline ElementSet::ElementSet(const std::vector<std::size_t>& element_ids)
     }
 
 #endif
+
+  // template<typename Derivate>
+  // inline void SliceTraits<Derivate>::clear(){
+  //     DataSpace& space = static_cast<const Derivate*>(this)->getSpace();
+  //     H5Sselect_all(space.getId());
+  // }
     template <typename Derivate>
     inline Selection
-    SliceTraits<Derivate>::select(const std::vector<size_t>& columns) const {
+    SliceTraits<Derivate>::selectCols(const std::vector<size_t>& columns,const size_t row_offset,const size_t row_count) const {
 
         const DataSpace& space = static_cast<const Derivate*>(this)->getSpace();
         const DataSet& dataset =
                 details::get_dataset(static_cast<const Derivate*>(this));
         const bool isTranspose = details::get_dataset(static_cast<const Derivate *>(this)).isTransposed();
-        /* if(isTranspose){
-             HDF5ErrMapper::ToException<DataSpaceException>(
-                     "Unable to select columns when ");
-         }*/
-
         std::vector<size_t> dims = space.getDimensions();
         std::vector<hsize_t> counts(dims.size());
         std::copy(dims.begin(), dims.end(), counts.begin());
-        const int woffset = isTranspose ? dims.size() : 1;
-        counts[dims.size() - woffset] = 1;
-        std::vector<hsize_t> offsets(dims.size(), 0);
+	const int c_offset = isTranspose ? dims.size() : 1;
+	const int r_offset = isTranspose ?  1 : dims.size();
+	if(row_count!=0){
+	  counts[dims.size()-r_offset]=row_count;
+	}
+        counts[dims.size() - c_offset] = 1;
+        std::vector<hsize_t> offsets(dims.size(), row_offset);
 
-        H5Sselect_none(space.getId());
+	H5Sselect_none(space.getId());
         for (std::vector<size_t>::const_iterator i = columns.begin();
              i != columns.end(); ++i) {
 
-            offsets[offsets.size() - woffset] = *i;
+            offsets[offsets.size() - c_offset] = *i;
 
             if (H5Sselect_hyperslab(space.getId(),
                                     H5S_SELECT_OR,
@@ -166,48 +171,92 @@ inline ElementSet::ElementSet(const std::vector<std::size_t>& element_ids)
             }
         }
 
-        dims[dims.size() - woffset] = columns.size();
+        dims[dims.size() - c_offset] = columns.size();
+	dims[dims.size() - r_offset] = counts[dims.size()-r_offset];
         return Selection(DataSpace(dims,isTranspose), space, dataset);
     }
 
-    template <typename Derivate>
-    inline Selection
-    SliceTraits<Derivate>::selectRows(const std::vector<size_t>& rows) const {
 
-        const DataSpace& space = static_cast<const Derivate*>(this)->getSpace();
-        const DataSet& dataset =
-                details::get_dataset(static_cast<const Derivate*>(this));
-        const bool isTranspose = details::get_dataset(static_cast<const Derivate *>(this)).isTransposed();
-        /* if(isTranspose){
-             HDF5ErrMapper::ToException<DataSpaceException>(
-                     "Unable to select columns when ");
-         }*/
+  template <typename Derivate>
+  inline Selection
+  SliceTraits<Derivate>::selectRowsCols(const std::vector<size_t>& rows,const std::vector<size_t> &cols) const {
+    const DataSpace& space = static_cast<const Derivate*>(this)->getSpace();
+    const DataSet& dataset =
+      details::get_dataset(static_cast<const Derivate*>(this));
+    const bool isTranspose = details::get_dataset(static_cast<const Derivate *>(this)).isTransposed();
 
-        std::vector<size_t> dims = space.getDimensions();
-        std::vector<hsize_t> counts(dims.size());
-        std::copy(dims.begin(), dims.end(), counts.begin());
-        const int woffset = isTranspose ? 1 : dims.size();
-        counts[dims.size() - woffset] = 1;
-        std::vector<hsize_t> offsets(dims.size(), 0);
+    std::vector<size_t> dims = space.getDimensions();
+    std::vector<hsize_t> counts(dims.size(),1);
+    //    std::copy(dims.begin(), dims.end(), counts.begin());
+    const int c_offset = isTranspose ? dims.size() : 1;
+    const int r_offset = isTranspose ?  1 : dims.size();
+    //    counts[dims.size() - r_offset] = 1;
+    std::vector<hsize_t> offsets(dims.size(), 0);
 
-        H5Sselect_none(space.getId());
-        for (std::vector<size_t>::const_iterator i = rows.begin();
-             i != rows.end(); ++i) {
+    H5Sselect_none(space.getId());
+    for (std::vector<size_t>::const_iterator i = rows.begin();
+	 i != rows.end(); ++i) {
+      for (std::vector<size_t>::const_iterator j = cols.begin();
+	   j != cols.end(); ++j) {
+	offsets[offsets.size() - r_offset] = *i;
+	offsets[offsets.size()- c_offset] = *j;
 
-            offsets[offsets.size() - woffset] = *i;
-
-            if (H5Sselect_hyperslab(space.getId(),
-                                    H5S_SELECT_OR,
-                                    offsets.data(),
-                                    0, counts.data(), 0) < 0) {
-                HDF5ErrMapper::ToException<DataSpaceException>(
-                        "Unable to select hyperslap");
-            }
-        }
-
-        dims[dims.size() - woffset] = rows.size();
-        return Selection(DataSpace(dims,isTranspose), space, dataset);
+	if (H5Sselect_hyperslab(space.getId(),
+				H5S_SELECT_OR,
+				offsets.data(),
+				0, counts.data(), 0) < 0) {
+	  HDF5ErrMapper::ToException<DataSpaceException>(
+							 "Unable to select hyperslab");
+	}
+      }
     }
+
+    dims[dims.size() - r_offset] = rows.size();
+    dims[dims.size() - c_offset] = cols.size();
+    return Selection(DataSpace(dims,isTranspose), space, dataset);
+  }
+
+  template <typename Derivate>
+  inline Selection
+  SliceTraits<Derivate>::selectRows(const std::vector<size_t>& rows,const size_t col_offset,const size_t col_count) const {
+
+    const DataSpace& space = static_cast<const Derivate*>(this)->getSpace();
+    const DataSet& dataset =
+      details::get_dataset(static_cast<const Derivate*>(this));
+    const bool isTranspose = details::get_dataset(static_cast<const Derivate *>(this)).isTransposed();
+
+
+    std::vector<size_t> dims = space.getDimensions();
+    std::vector<hsize_t> counts(dims.size());
+    std::copy(dims.begin(), dims.end(), counts.begin());
+    const int c_offset = isTranspose ? dims.size() : 1;
+    const int r_offset = isTranspose ?  1 : dims.size();
+    if(col_count!=0){
+      counts[dims.size()-c_offset]=col_count;
+    }
+    counts[dims.size() - r_offset] = 1;
+    std::vector<hsize_t> offsets(dims.size(), col_offset);
+
+    H5Sselect_none(space.getId());
+    for (std::vector<size_t>::const_iterator i = rows.begin();
+	 i != rows.end(); ++i) {
+
+      offsets[offsets.size() - r_offset] = *i;
+
+      if (H5Sselect_hyperslab(space.getId(),
+			      H5S_SELECT_OR,
+			      offsets.data(),
+			      0, counts.data(), 0) < 0) {
+	HDF5ErrMapper::ToException<DataSpaceException>(
+						       "Unable to select hyperslap");
+      }
+    }
+
+    dims[dims.size() - r_offset] = rows.size();
+    return Selection(DataSpace(dims,isTranspose), space, dataset);
+  }
+
+
 
 template <typename Derivate>
 inline Selection

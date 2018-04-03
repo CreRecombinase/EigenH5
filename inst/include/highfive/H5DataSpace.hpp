@@ -78,8 +78,6 @@ class DataSpace : public Object {
     static DataSpace From(const ScalarValue& scalar_value);
 
 #ifdef H5_USE_EIGEN
-
-
         template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
         static DataSpace From(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> &mat,
                               const bool doTranspose = false);

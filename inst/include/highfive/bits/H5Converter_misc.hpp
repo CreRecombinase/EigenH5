@@ -197,55 +197,56 @@ struct data_converter<CArray,isArray,
 #ifdef H5_USE_EIGEN
 
 // apply conversion to eigen vector
-  template<typename Scalar,bool isArray>
-  struct data_converter<Eigen::Matrix<Scalar,Eigen::Dynamic,1>,isArray, void> {
-            typedef Eigen::Matrix<Scalar,Eigen::Dynamic,1>  Vector ;
+  // typename enable_if<(is_c_array<CArray>::value)>::type
+  template<typename Scalar,bool isArray >
+  struct data_converter<Eigen::Matrix<Scalar,Eigen::Dynamic,1>,isArray, std::enable_if_t<std::is_arithmetic<Scalar>::value> > {
+    typedef Eigen::Matrix<Scalar,Eigen::Dynamic,1>  Vector ;
 
-            inline data_converter(Vector &matrix, DataSpace &space, size_t dim = 0)
-                    : disk_dims(space.getDimensions()),
-                      mem_dims(disk_dims)
-            {
-                assert(disk_dims.size() == 1);
-                (void)
-                        dim;
-                (void)
-                        matrix;
-            }
+    inline data_converter(Vector &matrix, DataSpace &space, size_t dim = 0)
+      : disk_dims(space.getDimensions()),
+	mem_dims(disk_dims)
+    {
+      assert(disk_dims.size() == 1);
+      (void)
+	dim;
+      (void)
+	matrix;
+    }
 
-            inline typename type_of_array<Scalar>::type *transform_read(Vector &matrix) {
+    inline typename type_of_array<Scalar>::type *transform_read(Vector &matrix) {
 
-                auto return_pointer = matrix.data();
-                if ((size_t ) mem_dims[0] !=(size_t) matrix.rows()) {
-                    matrix.resize(mem_dims[0]);
-                }
-                return_pointer = matrix.data();
-                return return_pointer;
+      auto return_pointer = matrix.data();
+      if ((size_t ) mem_dims[0] !=(size_t) matrix.rows()) {
+	matrix.resize(mem_dims[0]);
+      }
+      return_pointer = matrix.data();
+      return return_pointer;
 
-            }
+    }
 
-            inline typename type_of_array<Scalar>::type *transform_write(Vector &matrix) {
+    inline typename type_of_array<Scalar>::type *transform_write(Vector &matrix) {
 
-                auto return_pointer = matrix.data();
-                return return_pointer;
-            }
+      auto return_pointer = matrix.data();
+      return return_pointer;
+    }
 
-            inline void process_result(Vector &matrix) {
+    inline void process_result(Vector &matrix) {
 
-                (void) matrix;
-            }
+      (void) matrix;
+    }
 
-            std::vector<size_t> disk_dims;
-            std::vector<size_t> mem_dims;
-        };
+    std::vector<size_t> disk_dims;
+    std::vector<size_t> mem_dims;
+  };
 
 
 
 
 // apply conversion to eigen matrix
   template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options,bool isArray>
-  struct data_converter<Eigen::Matrix<Scalar,RowsAtCompileTime,ColsAtCompileTime,Options>,isArray, void> {
+  struct data_converter<Eigen::Matrix<Scalar,RowsAtCompileTime,ColsAtCompileTime,Options>,isArray, std::enable_if_t<std::is_arithmetic<Scalar>::value> > {
     typedef Eigen::Matrix<Scalar,RowsAtCompileTime,ColsAtCompileTime,Options>  Matrix ;
-    
+
     inline data_converter(Matrix &matrix, DataSpace &space, size_t dim = 0)
       : disk_dims(space.getDimensions()),
 	mem_dims(disk_dims),
@@ -255,7 +256,7 @@ struct data_converter<CArray,isArray,
       }
       assert(disk_dims.size() == 2);
     }
-    
+
     inline typename type_of_array<Scalar>::type *transform_read(Matrix &matrix) {
       auto return_pointer = matrix.data();
       if (std::pair<size_t, size_t>(mem_dims[0], mem_dims[1]) !=
@@ -268,7 +269,7 @@ struct data_converter<CArray,isArray,
 	return_pointer = _temp_row_matrix.data();
       }
       return return_pointer;
-      
+
     }
 
     inline typename type_of_array<Scalar>::type *transform_write(Matrix &matrix) {
@@ -283,7 +284,7 @@ struct data_converter<CArray,isArray,
     inline void process_result(Matrix &matrix) {
       if (!is_row_major) {
 	matrix = _temp_row_matrix;
-      } 
+      }
     }
 
     std::vector<size_t> disk_dims;
@@ -295,10 +296,122 @@ struct data_converter<CArray,isArray,
   };
 
 
+
+  template<int RowsAtCompileTime, int ColsAtCompileTime, int Options,bool isArray>
+  struct data_converter<typename Eigen::Matrix<std::string,RowsAtCompileTime,ColsAtCompileTime,Options>,isArray, void> {
+    typedef Eigen::Matrix<std::string,RowsAtCompileTime,ColsAtCompileTime,Options>  Matrix ;
+
+    inline data_converter(Matrix &matrix, DataSpace &space, size_t dim = 0)
+      : disk_dims(space.getDimensions()),dim_(dim==0 ? 255 : dim),
+	mem_dims(disk_dims),
+	is_row_major{Options == Eigen::RowMajor}{
+
+      assert(disk_dims.size() == 2);
+    }
+
+    inline char *transform_read(Matrix &matrix) {
+      _c_vec.resize(dim_ * mem_dims[0]*mem_dims[1],'\0');
+      return(_c_vec.data());
+
+    }
+
+    inline char *transform_write(Matrix &matrix) {
+      auto return_pointer = matrix.data();
+      _c_vec.resize(dim_ * mem_dims[0]*mem_dims[1],'\0');
+      std::vector<char>::iterator it = _c_vec.begin();
+      size_t jj=0;
+      for(size_t i=0; i<matrix.rows();i++){
+	for(size_t j=0; j<matrix.cols();j++){
+	  auto tb = matrix(i,j).begin();
+	  auto te = matrix(i,j).end();
+	  std::copy(tb, te, it);
+	  it += dim_;
+	}
+      }
+    }
+      inline void process_result(Matrix &matrix) {
+	matrix.resize(mem_dims[0],mem_dims[1]);
+	size_t jj=0;
+	for(size_t i=0; i<matrix.rows();i++){
+	  for(size_t j=0; j<matrix.cols();j++){
+	    matrix(i,j)=std::string(&_c_vec[jj*dim_]);
+	    jj++;
+	  }
+	}
+      }
+
+    const size_t dim_;
+    std::vector<size_t> disk_dims;
+    std::vector<size_t> mem_dims;
+    const bool is_row_major;
+    std::vector<char> _c_vec;
+    //    Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Eigen::RowMajor> _temp_row_matrix;
+    //    Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Eigen::ColMajor> _temp_col_matrix;
+
+  };
+
+    template<int RowsAtCompileTime, int ColsAtCompileTime, int Options,bool isArray>
+    struct data_converter<typename Eigen::Map<Eigen::Matrix<std::string,RowsAtCompileTime,ColsAtCompileTime,Options>>,isArray, void> {
+      typedef Eigen::Map<Eigen::Matrix<std::string,RowsAtCompileTime,ColsAtCompileTime,Options> >  Matrix ;
+
+    inline data_converter(Matrix &matrix, DataSpace &space, size_t dim = 0)
+      : disk_dims(space.getDimensions()),dim_(dim==0 ? 255 : dim),
+	mem_dims(disk_dims),
+	is_row_major{Options == Eigen::RowMajor}{
+
+      assert(disk_dims.size() == 2);
+    }
+
+    inline char *transform_read(Matrix &matrix) {
+      _c_vec.resize(dim_ * mem_dims[0]*mem_dims[1],'\0');
+      return(_c_vec.data());
+
+    }
+
+    inline char* transform_write(Matrix &matrix) {
+
+      _c_vec.resize(dim_ * mem_dims[0]*mem_dims[1],'\0');
+      std::vector<char>::iterator it = _c_vec.begin();
+      size_t jj=0;
+      std::string::const_iterator tb,te;
+
+      for(size_t i=0; i<matrix.rows();i++){
+	for(size_t j=0; j<matrix.cols();j++){
+	  tb = matrix(i,j).begin();
+	  te = matrix(i,j).end();
+	  std::copy(tb, te, it);
+	  it += dim_;
+	}
+      }
+      return(_c_vec.data());
+    }
+      inline void process_result(Matrix &matrix) {
+	assert(mem_dims[0] == (unsigned long) matrix.rows());
+	assert(mem_dims[1] == (unsigned long) matrix.cols());
+	size_t jj=0;
+	for(size_t i=0; i<matrix.rows();i++){
+	  for(size_t j=0; j<matrix.cols();j++){
+	    matrix(i,j)=std::string(&_c_vec[jj*dim_]);
+	    jj++;
+	  }
+	}
+      }
+
+    const size_t dim_;
+    std::vector<size_t> disk_dims;
+    std::vector<size_t> mem_dims;
+    const bool is_row_major;
+    std::vector<char> _c_vec;
+    //    Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Eigen::RowMajor> _temp_row_matrix;
+    //    Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Eigen::ColMajor> _temp_col_matrix;
+
+  };
+
+
 // apply conversion to eigen matrix
   template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options,bool isArray>
-  struct data_converter<Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>>,isArray, void> {
-            typedef Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>> Matrix;
+  struct data_converter<Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>>,isArray, std::enable_if_t<std::is_arithmetic<Scalar>::value> > {
+            typedef Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > Matrix;
 
             inline data_converter(Matrix &matrix, DataSpace &space, size_t dim = 0)
                     : disk_dims(space.getDimensions()),
@@ -564,60 +677,60 @@ struct data_converter<std::string,isArray,void> {
     DataSpace& _space;
 };
 
-        template<bool isArray>
-        struct data_converter<std::vector<std::string>,isArray, void> {
-            inline data_converter(std::vector<std::string> &vec, DataSpace &space,const size_t dim=0)
-                : _space(space),dim_(dim==0 ? 255 : dim) {
-                (void) vec;
-            }
-
-            // create a C vector adapted to HDF5
-            // fill last element with NULL to identify end
-            inline char *transform_read(std::vector<std::string> &vec) {
-                (void) vec;
-
-                _c_vec.resize(dim_ * _space.getDimensions()[0]);
-
-                //_c_vec.resize(_space.getDimensions()[0], NULL);
-                return (_c_vec.data());
-            }
-
-            static inline char *char_converter(const std::string &str) {
-                return const_cast<char *>(str.c_str());
-            }
-
-            inline char *transform_write(std::vector<std::string> &vec) {
-                _c_vec.resize(dim_ * _space.getDimensions()[0]);
-                std::vector<char>::iterator it = _c_vec.begin();
-                const size_t vs = vec.size();
-                for (size_t i = 0; i < vs; i++) {
-                    auto tb = vec[i].begin();
-                    auto te = vec[i].end();
-                    std::copy(tb, te, it);
-                    it += dim_;
-                }
-
-                return (_c_vec.data());
-            }
-
-            inline void process_result(std::vector<std::string> &vec) {
-                (void) vec;
-                const size_t vs = _space.getDimensions()[0];
-                vec.resize(vs);
-                for (size_t i = 0; i < vs; ++i) {
-                    vec[i] = std::string(&_c_vec[i * dim_]);
-                }
-                /*   if (_c_vec.empty() == false && _c_vec[0] != NULL) {
-                    AtomicType<std::string> str_type;
-                    (void) H5Dvlen_reclaim(str_type.getId(), _space.getId(), H5P_DEFAULT,
-                                           &(_c_vec[0]));
-                }*/
-            }
-
-            std::vector<char> _c_vec;
-            const size_t dim_;
-            DataSpace &_space;
-        };
+  template<bool isArray>
+  struct data_converter<std::vector<std::string>,isArray, void> {
+    inline data_converter(std::vector<std::string> &vec, DataSpace &space,const size_t dim=0)
+      : _space(space),dim_(dim==0 ? 255 : dim) {
+      (void) vec;
     }
+
+    // create a C vector adapted to HDF5
+    // fill last element with NULL to identify end
+    inline char *transform_read(std::vector<std::string> &vec) {
+      (void) vec;
+
+      _c_vec.resize(dim_ * _space.getDimensions()[0]);
+
+      //_c_vec.resize(_space.getDimensions()[0], NULL);
+      return (_c_vec.data());
+    }
+
+    static inline char *char_converter(const std::string &str) {
+      return const_cast<char *>(str.c_str());
+    }
+
+    inline char *transform_write(std::vector<std::string> &vec) {
+      _c_vec.resize(dim_ * _space.getDimensions()[0]);
+      std::vector<char>::iterator it = _c_vec.begin();
+      const size_t vs = vec.size();
+      for (size_t i = 0; i < vs; i++) {
+	auto tb = vec[i].begin();
+	auto te = vec[i].end();
+	std::copy(tb, te, it);
+	it += dim_;
+      }
+
+      return (_c_vec.data());
+    }
+
+    inline void process_result(std::vector<std::string> &vec) {
+      (void) vec;
+      const size_t vs = _space.getDimensions()[0];
+      vec.resize(vs);
+      for (size_t i = 0; i < vs; ++i) {
+	vec[i] = std::string(&_c_vec[i * dim_]);
+      }
+      /*   if (_c_vec.empty() == false && _c_vec[0] != NULL) {
+	   AtomicType<std::string> str_type;
+	   (void) H5Dvlen_reclaim(str_type.getId(), _space.getId(), H5P_DEFAULT,
+	   &(_c_vec[0]));
+	   }*/
+    }
+
+    std::vector<char> _c_vec;
+    const size_t dim_;
+    DataSpace &_space;
+  };
+}
 }
 
