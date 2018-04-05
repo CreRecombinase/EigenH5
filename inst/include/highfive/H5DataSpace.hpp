@@ -42,7 +42,7 @@ class DataSpace : public Object {
     ///  size(dim1) = vec[0]
     ///  size(dim2) = vec[1]
     ///  etc...
-    explicit DataSpace(const std::vector<size_t> &dims, const bool doTranspose = false);
+    explicit DataSpace(const std::vector<size_t> &dims);
 
     ///
     /// \brief DataSpace create a dataspace of a single dimension and of size
@@ -81,18 +81,15 @@ class DataSpace : public Object {
 
 
         template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
-        static DataSpace From(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> &mat,
-                              const bool doTranspose = false);
+        static DataSpace From(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> &mat);
 
         template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
         static DataSpace
-        From(const Eigen::Map<const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat,
-             const bool doTranspose = false);
+        From(const Eigen::Map<const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat);
 
         template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
         static DataSpace
-        From(const Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat,
-             const bool doTranspose = false);
+        From(const Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat);
 
 #endif
     /// Create a dataspace matching the container dimensions and size

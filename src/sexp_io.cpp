@@ -49,58 +49,53 @@ SEXPTYPE h2r_T(hid_t htype){
 
 using namespace Rcpp;
 namespace impl{
+  template <typename T> void write_v_h5(std::vector<T> &data,
+					HighFive::File &file,
+					HighFive::Group & group,
+					const std::string &dataname){
 
-template <typename T> void write_v_h5(std::vector<T> &data,
-                                      HighFive::File &file,
-                                      HighFive::Group & group,
-                                      const std::string &dataname){
+    using namespace HighFive;
 
-  using namespace HighFive;
+    std::vector<size_t> vec_dims{data.size()};
+    // int r = 0;
 
-
-  //
-
-  std::vector<size_t> vec_dims{data.size()};
-  // int r = 0;
-
-  // Create a new file using the default property lists.
-  Filter filter({1000}, vec_dims, FILTER_BLOSC, 1);
-  // Create a dataset with double precision floating points
+    // Create a new file using the default property lists.
+    Filter filter({1000}, vec_dims, FILTER_BLOSC, 1);
+    // Create a dataset with double precision floating points
 
 
-  DataSpace ds = DataSpace(vec_dims);
+    DataSpace ds = DataSpace(vec_dims);
 
-  DataSet dataset = group.createDataSet(dataname, ds, AtomicType<T>(), filter.getId());
-  dataset.write(data);
-}
+    DataSet dataset = group.createDataSet(dataname, ds, AtomicType<T>(), filter.getId());
+    dataset.write(data);
+  }
 
 
-template <typename T> void create_m_h5(typename Eigen::Map<typename Eigen::Matrix<enable_if_t<std::is_arithmetic<T>::value,T>,Eigen::Dynamic,Eigen::Dynamic> > &data,
-                                      HighFive::Group &grp,
-                                      const std::string &dataname,
-                                      const bool doTranspose=false,
-                                      std::vector<size_t> chunk_dims={}){
-  using namespace HighFive;
-  std::vector<size_t> mat_dims={static_cast<size_t>(data.rows()),static_cast<size_t>(data.cols())};
-  if (chunk_dims.empty()) {
-    const size_t MAX_CHUNK = 1024*1024;
-    const size_t chunk_rows = static_cast<size_t>(std::min(static_cast<double>(data.rows()),std::ceil(static_cast<double>(MAX_CHUNK)/static_cast<double>(data.cols()))));
-    chunk_dims = {chunk_rows, static_cast<size_t>(data.cols())};
-    //Rcpp::Rcout<<"chunk_dims: "<<chunk_dims[0]<<" , "<<chunk_dims[1]<<std::endl;
+  template <typename T> void create_m_h5(typename Eigen::Map<typename Eigen::Matrix<enable_if_t<std::is_arithmetic<T>::value,T>,Eigen::Dynamic,Eigen::Dynamic> > &data,
+					 HighFive::Group &grp,
+					 const std::string &dataname,
+					 std::vector<size_t> chunk_dims={}){
+    using namespace HighFive;
+    std::vector<size_t> mat_dims={static_cast<size_t>(data.rows()),static_cast<size_t>(data.cols())};
+    if (chunk_dims.empty()) {
+      const size_t MAX_CHUNK = 1024*1024;
+      const size_t chunk_rows = static_cast<size_t>(std::min(static_cast<double>(data.rows()),std::ceil(static_cast<double>(MAX_CHUNK)/static_cast<double>(data.cols()))));
+      chunk_dims = {chunk_rows, static_cast<size_t>(data.cols())};
+      //Rcpp::Rcout<<"chunk_dims: "<<chunk_dims[0]<<" , "<<chunk_dims[1]<<std::endl;
+
+    }
+    // Create a new file using the default property lists.
+    // if(doTranspose){
+    //   Rcpp::Rcout<<"transpose!"<<std::endl;
+    // }
+    Filter filter(chunk_dims, FILTER_BLOSC, 0);
+    // Create a dataset with double precision floating points
+
+
+    DataSpace ds = DataSpace(mat_dims);
+    DataSet dataset = grp.createDataSet(dataname, ds, AtomicType<T>(), filter.getId());
 
   }
-  // Create a new file using the default property lists.
-  // if(doTranspose){
-  //   Rcpp::Rcout<<"transpose!"<<std::endl;
-  // }
-  Filter filter(chunk_dims, FILTER_BLOSC, 0,doTranspose);
-  // Create a dataset with double precision floating points
-
-
-  DataSpace ds = DataSpace(mat_dims,doTranspose);
-  DataSet dataset = grp.createDataSet(dataname, ds, AtomicType<T>(), filter.getId(), doTranspose);
-
-}
 
 
 
@@ -512,7 +507,6 @@ Rcpp::IntegerVector get_dims_h5(const std::string &filename,
                                 const std::string &groupname,
                                 const std::string &dataname){
   return(Rcpp::wrap(HighFive::File(filename,HighFive::File::ReadOnly).getGroup(groupname).getDataSet(dataname).getDataDimensions()));
-
 }
 
 
@@ -871,7 +865,7 @@ void create_matrix_h5(const std::string &filename,
                      const std::string &groupname,
                      const std::string &dataname,
                      SEXP data,
-                     const bool doTranspose=false,
+
                      const Rcpp::IntegerVector dims=Rcpp::IntegerVector::create(),
                      const Rcpp::IntegerVector chunksizes=Rcpp::IntegerVector::create() ){
   using namespace Rcpp;
@@ -891,7 +885,7 @@ void create_matrix_h5(const std::string &filename,
     const size_t rows=dims[0];
     const size_t cols=dims[1];
     Eigen::Map<Eigen::MatrixXi> d(nullptr,rows,cols);
-    impl::create_m_h5<int>(d,grp,dataname,doTranspose,local_chunksizes);
+    impl::create_m_h5<int>(d,grp,dataname,local_chunksizes);
     break;
   }
   case REALSXP: {
@@ -899,7 +893,7 @@ void create_matrix_h5(const std::string &filename,
     const size_t rows=dims[0];
     const size_t cols=dims[1];
     Eigen::Map<Eigen::MatrixXd> d(nullptr,rows,cols);
-    impl::create_m_h5<double>(d,grp,dataname,doTranspose,local_chunksizes);
+    impl::create_m_h5<double>(d,grp,dataname,local_chunksizes);
     break;
   }
   case STRSXP: {
@@ -925,7 +919,6 @@ void write_matrix_h5(const std::string &filename,
                      const std::string &groupname,
                      const std::string &dataname,
                      SEXP data,
-                     const bool doTranspose=false,
                      const Rcpp::IntegerVector offsets=Rcpp::IntegerVector::create(0,0),
                      const Rcpp::IntegerVector chunksizes=Rcpp::IntegerVector::create() ){
   using namespace Rcpp;
@@ -944,7 +937,7 @@ void write_matrix_h5(const std::string &filename,
     const int cols=rmat.cols();
     Eigen::Map<Eigen::MatrixXi> d(&rmat(0,0),rows,cols);
     if(create_ds){
-      impl::create_m_h5<int>(d,grp,dataname,doTranspose,local_chunksizes);
+      impl::create_m_h5<int>(d,grp,dataname,local_chunksizes);
     }
     auto dset = grp.getDataSet(dataname);
 
@@ -959,7 +952,7 @@ void write_matrix_h5(const std::string &filename,
     const int cols=rmat.cols();
     Eigen::Map<Eigen::MatrixXd> d(&rmat(0,0),rows,cols);
     if(create_ds){
-      impl::create_m_h5<double>(d,grp,dataname,doTranspose,local_chunksizes);
+      impl::create_m_h5<double>(d,grp,dataname,local_chunksizes);
     }
     auto dset = grp.getDataSet(dataname);
     // Rcpp::Rcout<<"Row_out: "<<offsets[0]<<" : "<<offsets[0]+rows-1<<std::endl;
@@ -1021,9 +1014,19 @@ bool write_df_h5(Rcpp::DataFrame &df,const std::string groupname,const std::stri
 Rcpp::StringVector get_objs_h5(Rcpp::CharacterVector h5filepath,Rcpp::CharacterVector groupname=Rcpp::CharacterVector::create("/")){
 
   HighFive::File file(Rcpp::as<std::string>(h5filepath(0)),HighFive::File::ReadOnly);
+  HighFive::Group grp;
   std::string gname=Rcpp::as<std::string>(groupname(0));
   // if(file.is)
-  auto grp = file.getGroup(gname);
+  try{
+    HighFive::SilenceHDF5 silence;
+    grp = file.getGroup(gname);
+  }catch (HighFive::Exception& err) {
+    Rcpp::StringVector retvec(1);
+    
+    return(retvec);
+  }
+  //HDF5ErrMapper::ToException<GroupException>(
+  grp = file.getGroup(gname);
   const size_t num_cols = grp.getNumberObjects();
   Rcpp::StringVector retvec(num_cols);
   for(int i=0; i<num_cols;i++){

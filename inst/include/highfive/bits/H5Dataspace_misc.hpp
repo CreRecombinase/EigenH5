@@ -20,13 +20,9 @@
 
 namespace HighFive {
 
-inline DataSpace::DataSpace(const std::vector<size_t> &dims, const bool doTranspose) {
+  inline DataSpace::DataSpace(const std::vector<size_t> &dims) {
   std::vector<hsize_t> real_dims(dims.size());
   std::copy(dims.begin(), dims.end(), real_dims.begin());
-  if (doTranspose) {
-    std::reverse(real_dims.begin(), real_dims.end());
-  }
-  
   if ((_hid = H5Screate_simple(int(dims.size()), &(real_dims.at(0)), NULL)) <
     0) {
     throw DataSpaceException("Impossible to create dataspace");
@@ -41,22 +37,22 @@ inline DataSpace::DataSpace(const size_t dim1) {
 }
 
 inline DataSpace::DataSpace(DataSpace::DataspaceType dtype) {
-    H5S_class_t h5_dataspace_type;
-    switch (dtype) {
-    case DataSpace::datascape_scalar:
-        h5_dataspace_type = H5S_SCALAR;
-        break;
-    case DataSpace::datascape_null:
-        h5_dataspace_type = H5S_NULL;
-        break;
-    default:
-        throw DataSpaceException("Invalid dataspace type: should be "
-                                 "datascape_scalar or datascape_null");
-    }
+  H5S_class_t h5_dataspace_type;
+  switch (dtype) {
+  case DataSpace::datascape_scalar:
+    h5_dataspace_type = H5S_SCALAR;
+    break;
+  case DataSpace::datascape_null:
+    h5_dataspace_type = H5S_NULL;
+    break;
+  default:
+    throw DataSpaceException("Invalid dataspace type: should be "
+			     "datascape_scalar or datascape_null");
+  }
 
-    if ((_hid = H5Screate(h5_dataspace_type)) < 0) {
-        throw DataSpaceException("Unable to create dataspace");
-    }
+  if ((_hid = H5Screate(h5_dataspace_type)) < 0) {
+    throw DataSpaceException("Unable to create dataspace");
+  }
 }
 
 inline DataSpace::DataSpace() {}
@@ -120,26 +116,23 @@ inline DataSpace DataSpace::From(const std::vector<Value>& container) {
 
     template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
     inline DataSpace
-    DataSpace::From(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> &mat,
-                    const bool doTranspose) {
+    DataSpace::From(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> &mat) {
         auto retv = details::get_dim_vector<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>(mat);
-        return (DataSpace(retv, doTranspose));
+        return (DataSpace(retv));
     }
 
     template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
     inline DataSpace
-    DataSpace::From(const Eigen::Map<const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat,
-                    const bool doTranspose) {
+    DataSpace::From(const Eigen::Map<const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat) {
         auto retv = details::get_dim_vector<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>(mat);
-        return (DataSpace(retv, doTranspose));
+        return (DataSpace(retv));
     }
 
     template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
     inline DataSpace
-    DataSpace::From(const Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat,
-                    const bool doTranspose) {
+    DataSpace::From(const Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat) {
         auto retv = details::get_dim_vector<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>(mat);
-        return (DataSpace(retv, doTranspose));
+        return (DataSpace(retv));
     }
 
 

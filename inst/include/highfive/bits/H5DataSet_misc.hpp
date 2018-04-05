@@ -42,20 +42,20 @@ inline DataType DataSet::getDataType() const {
     return res;
 }
 
-    inline bool DataSet::isTransposed() const {
-        int transpose_int = 0;
-        if (this->hasAttribute("doTranspose")) {
-            this->getAttribute("doTranspose").read(transpose_int);
-        }
-        return (transpose_int != 0);
+  inline bool DataSet::isTransposed() const {
+    int transpose_int = 0;
+    if (this->hasAttribute("doTranspose")) {
+      this->getAttribute("doTranspose").read(transpose_int);
     }
+    return (transpose_int != 0);
+  }
 
-    inline void DataSet::setTranspose(const bool transpose) {
-        int transpose_int = transpose ? 1 : 0;
-        auto transpose_attr = this->createAttribute<int>("doTranspose", DataSpace::From(transpose_int));
-        transpose_attr.write(transpose_int);
-        doTranspose = transpose;
-    }
+  inline void DataSet::setTranspose(const bool transpose) {
+    int transpose_int = transpose ? 1 : 0;
+    auto transpose_attr = this->createAttribute<int>("doTranspose", DataSpace::From(transpose_int));
+    transpose_attr.write(transpose_int);
+    doTranspose = transpose;
+  }
 
 
 

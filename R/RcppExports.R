@@ -9,28 +9,8 @@ check_blosc <- function() {
     .Call('_EigenH5_check_blosc', PACKAGE = 'EigenH5')
 }
 
-create_vector_h5 <- function(filename, groupname, dataname, dimension, chunksize = 1000L) {
-    invisible(.Call('_EigenH5_create_vector_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, dimension, chunksize))
-}
-
 is_transposed <- function(filename, groupname, dataname) {
     .Call('_EigenH5_is_transposed', PACKAGE = 'EigenH5', filename, groupname, dataname)
-}
-
-copy_mat_h5 <- function(infilename, outfilename, groupname, dataname, offsets = as.integer( c()), chunksizes = as.integer( c())) {
-    invisible(.Call('_EigenH5_copy_mat_h5', PACKAGE = 'EigenH5', infilename, outfilename, groupname, dataname, offsets, chunksizes))
-}
-
-parse_mat <- function(inp) {
-    .Call('_EigenH5_parse_mat', PACKAGE = 'EigenH5', inp)
-}
-
-write_mat_chunk_h5 <- function(filename, groupname, dataname, data, offsets = as.integer( c()), chunksizes = as.integer( c())) {
-    invisible(.Call('_EigenH5_write_mat_chunk_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data, offsets, chunksizes))
-}
-
-write_vec_chunk_h5 <- function(filename, groupname, dataname, data, offsets = as.integer( c()), chunksizes = as.integer( c())) {
-    invisible(.Call('_EigenH5_write_vec_chunk_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data, offsets, chunksizes))
 }
 
 data_exists <- function(filename, groupname, dataname) {
@@ -61,12 +41,12 @@ write_vector_h5 <- function(filename, groupname, dataname, data) {
     invisible(.Call('_EigenH5_write_vector_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data))
 }
 
-create_matrix_h5 <- function(filename, groupname, dataname, data, doTranspose = FALSE, dims = as.integer( c()), chunksizes = as.integer( c())) {
-    invisible(.Call('_EigenH5_create_matrix_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data, doTranspose, dims, chunksizes))
+create_matrix_h5 <- function(filename, groupname, dataname, data, dims = as.integer( c()), chunksizes = as.integer( c())) {
+    invisible(.Call('_EigenH5_create_matrix_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data, dims, chunksizes))
 }
 
-write_matrix_h5 <- function(filename, groupname, dataname, data, doTranspose = FALSE, offsets = as.integer( c(0,0)), chunksizes = as.integer( c())) {
-    invisible(.Call('_EigenH5_write_matrix_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data, doTranspose, offsets, chunksizes))
+write_matrix_h5 <- function(filename, groupname, dataname, data, offsets = as.integer( c(0,0)), chunksizes = as.integer( c())) {
+    invisible(.Call('_EigenH5_write_matrix_h5', PACKAGE = 'EigenH5', filename, groupname, dataname, data, offsets, chunksizes))
 }
 
 write_df_h5 <- function(df, groupname, outfile, deflate_level = as.integer( c(4))) {

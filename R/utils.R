@@ -7,31 +7,28 @@ read_df_h5 <- function(h5filepath,groupname,subcols = character(),filtervec = in
   return(tibble::as_data_frame(read_l_h5(h5filepath = normalizePath(h5filepath),groupname = groupname,subcols = subcols,offset = offset,chunksize = chunksize,filtervec = filtervec)))
 }
 
-get_sub_obj <- function(h5filepath,tpath="/"){
-  res <- purrr::possibly(get_objs_h5,otherwise=NULL,quiet = T)(h5filepath,tpath)
-  if(is.null(res)){
-    return(tpath)
-  }
-  return(paste0(ifelse(tpath=="/","",tpath),"/",res))
-}
+# get_sub_obj <- function(h5filepath,tpath="/"){
+#   res <- purrr::possibly(get_objs_h5,otherwise=NULL,quiet = T)(h5filepath,tpath)
+#   if(is.null(res)){
+#     return(tpath)
+#   }
+#   return(paste0(ifelse(tpath=="/","",tpath),"/",res))
+# }
 
-split_chunk_df<- function(info_df,pos_id,group_id,rowsel=T,colsel=T){
-  q_pos <- dplyr::enquo(pos_id)
-  q_group <- dplyr::enquo(group_id)
-  # stopifnot(!is.unsorted(as.integer(info_df[[group_id]])),
-  #           !is.unsorted(as.integer(info_df[[pos_id]])),
-  #           rowsel||colsel)
-  sel_df <- dplyr::group_by(info_df,!!q_group) %>% 
-    dplyr::summarise(offset=as.integer(min(!!q_pos)-1),chunksize=as.integer(n()))
-  if(rowsel){
-    sel_df <- dplyr::mutate(sel_df,row_offsets=offset,row_chunksizes=chunksize)
-  }
-  if(colsel){
-    sel_df <- dplyr::mutate(sel_df,col_offsets=offset,col_chunksizes=chunksize)
-  }
-  sel_df <- dplyr::select(sel_df,-offset,-chunksize)
-  return(sel_df)
-}
+# split_chunk_df<- function(info_df,pos_id,group_id,rowsel=T,colsel=T){
+#   q_pos <- dplyr::enquo(pos_id)
+#   q_group <- dplyr::enquo(group_id)
+#   sel_df <- dplyr::group_by(info_df,!!q_group) %>% 
+#     dplyr::summarise(offset=as.integer(min(!!q_pos)-1),chunksize=as.integer(n()))
+#   if(rowsel){
+#     sel_df <- dplyr::mutate(sel_df,row_offsets=offset,row_chunksizes=chunksize)
+#   }
+#   if(colsel){
+#     sel_df <- dplyr::mutate(sel_df,col_offsets=offset,col_chunksizes=chunksize)
+#   }
+#   sel_df <- dplyr::select(sel_df,-offset,-chunksize)
+#   return(sel_df)
+# }
 
 # h5ls_df <- function(h5filepath){
 #   root_objs <- get_sub_obj(h5filepath =h5filepath)
@@ -41,24 +38,6 @@ split_chunk_df<- function(info_df,pos_id,group_id,rowsel=T,colsel=T){
 #   
 # }
 
-gz2hdf5 <- function(input_filename,output_filename,output_groupname,output_dataname,p=NULL,N=NULL,chunk_size=10000){
-  
-  stopifnot(!is.null(p),!is.null(N))
-  if(!file.exists(output_filename)){
-    create_matrix_h5(output_filename,output_groupname,output_dataname,integer(),doTranspose=F,dims=as.integer(c(N,p)),chunksizes=as.integer(c(N,min(200,p))))
-  }else{
-    if(!data_exists(output_filename,output_groupname,output_dataname)){
-      create_matrix_h5(output_filename,output_groupname,output_dataname,integer(),doTranspose=F,dims=as.integer(c(N,p)),chunksizes=as.integer(c(N,min(200,p))))
-    }
-  }
-  
-
-  write_f <- function(x,pos){
-    tm <- parse_mat(x)
-    write_matrix_h5(filename = output_filename,groupname = output_groupname,dataname = output_dataname,data = tm,offsets = c(0,pos-1))
-  }
-  readr::read_lines_chunked(input_filename,callback=SideEffectChunkCallback$new(write_f),chunk_size=chunk_size,progress=T)
-}
 
 read_mat_h5 <- function(filename,groupname,dataname,offset_rows=0,offset_cols=0,chunksize_rows=NULL,chunksize_cols=NULL){
   mat_dims <- get_dims_h5(filename,groupname,dataname)
@@ -77,7 +56,13 @@ read_mat_h5 <- function(filename,groupname,dataname,offset_rows=0,offset_cols=0,
 }
 
 
-read_h5 <- function(filename,groupname,dataname,subset_rows=NULL,subset_cols=NULL){
+read_h5 <- function(filename,h5path="/",subset=list()){
+  groupname <- dirname(h5path)
+  dataname <- basename(h5path)
+  if(dataname==""){
+    dataname <- groupname
+  }
+  objs <- get_objs_h5(filename,groupname=groupname)
   obj_dim <- get_dims_h5(filename,groupname,dataname)
   isvec <- length(obj_dim)==1
   if(isvec){
@@ -94,19 +79,6 @@ read_h5 <- function(filename,groupname,dataname,subset_rows=NULL,subset_cols=NUL
   }
 }
 
-
-read_mat_l <- function(dff){
-  return(purrr::pmap(dff,function(filenames,
-                                  groupnames,
-                                  datanames,
-                                  row_offsets=0,
-                                  col_offsets=0,
-                                  row_chunksizes=NULL,
-                                  col_chunksizes=NULL,...){
-    
-    return(EigenH5::read_mat_h5(filenames,groupnames,datanames,row_offsets,col_offsets,row_chunksizes,col_chunksizes))
-  }))
-}
 
 create_mat_l <- function(dff){
   tl <- list(integer=integer(),numeric=numeric())

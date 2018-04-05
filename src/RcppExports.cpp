@@ -66,39 +66,6 @@ RcppExport SEXP _EigenH5_check_blosc() {
     UNPROTECT(1);
     return rcpp_result_gen;
 }
-// create_vector_h5
-void create_vector_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, const int dimension, const int chunksize);
-static SEXP _EigenH5_create_vector_h5_try(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dimensionSEXP, SEXP chunksizeSEXP) {
-BEGIN_RCPP
-    Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type groupname(groupnameSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type dataname(datanameSEXP);
-    Rcpp::traits::input_parameter< const int >::type dimension(dimensionSEXP);
-    Rcpp::traits::input_parameter< const int >::type chunksize(chunksizeSEXP);
-    create_vector_h5(filename, groupname, dataname, dimension, chunksize);
-    return R_NilValue;
-END_RCPP_RETURN_ERROR
-}
-RcppExport SEXP _EigenH5_create_vector_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dimensionSEXP, SEXP chunksizeSEXP) {
-    SEXP rcpp_result_gen;
-    {
-        Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_EigenH5_create_vector_h5_try(filenameSEXP, groupnameSEXP, datanameSEXP, dimensionSEXP, chunksizeSEXP));
-    }
-    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
-    if (rcpp_isInterrupt_gen) {
-        UNPROTECT(1);
-        Rf_onintr();
-    }
-    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
-    if (rcpp_isError_gen) {
-        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
-        UNPROTECT(1);
-        Rf_error(CHAR(rcpp_msgSEXP_gen));
-    }
-    UNPROTECT(1);
-    return rcpp_result_gen;
-}
 // is_transposed
 bool is_transposed(const std::string filename, const std::string groupname, const std::string dataname);
 static SEXP _EigenH5_is_transposed_try(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP) {
@@ -116,138 +83,6 @@ RcppExport SEXP _EigenH5_is_transposed(SEXP filenameSEXP, SEXP groupnameSEXP, SE
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
         rcpp_result_gen = PROTECT(_EigenH5_is_transposed_try(filenameSEXP, groupnameSEXP, datanameSEXP));
-    }
-    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
-    if (rcpp_isInterrupt_gen) {
-        UNPROTECT(1);
-        Rf_onintr();
-    }
-    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
-    if (rcpp_isError_gen) {
-        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
-        UNPROTECT(1);
-        Rf_error(CHAR(rcpp_msgSEXP_gen));
-    }
-    UNPROTECT(1);
-    return rcpp_result_gen;
-}
-// copy_mat_h5
-void copy_mat_h5(std::string infilename, std::string outfilename, std::string groupname, std::string dataname, const Rcpp::IntegerVector offsets, const Rcpp::IntegerVector chunksizes);
-static SEXP _EigenH5_copy_mat_h5_try(SEXP infilenameSEXP, SEXP outfilenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP offsetsSEXP, SEXP chunksizesSEXP) {
-BEGIN_RCPP
-    Rcpp::traits::input_parameter< std::string >::type infilename(infilenameSEXP);
-    Rcpp::traits::input_parameter< std::string >::type outfilename(outfilenameSEXP);
-    Rcpp::traits::input_parameter< std::string >::type groupname(groupnameSEXP);
-    Rcpp::traits::input_parameter< std::string >::type dataname(datanameSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type offsets(offsetsSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type chunksizes(chunksizesSEXP);
-    copy_mat_h5(infilename, outfilename, groupname, dataname, offsets, chunksizes);
-    return R_NilValue;
-END_RCPP_RETURN_ERROR
-}
-RcppExport SEXP _EigenH5_copy_mat_h5(SEXP infilenameSEXP, SEXP outfilenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP offsetsSEXP, SEXP chunksizesSEXP) {
-    SEXP rcpp_result_gen;
-    {
-        Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_EigenH5_copy_mat_h5_try(infilenameSEXP, outfilenameSEXP, groupnameSEXP, datanameSEXP, offsetsSEXP, chunksizesSEXP));
-    }
-    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
-    if (rcpp_isInterrupt_gen) {
-        UNPROTECT(1);
-        Rf_onintr();
-    }
-    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
-    if (rcpp_isError_gen) {
-        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
-        UNPROTECT(1);
-        Rf_error(CHAR(rcpp_msgSEXP_gen));
-    }
-    UNPROTECT(1);
-    return rcpp_result_gen;
-}
-// parse_mat
-Rcpp::IntegerMatrix parse_mat(Rcpp::CharacterVector inp);
-static SEXP _EigenH5_parse_mat_try(SEXP inpSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type inp(inpSEXP);
-    rcpp_result_gen = Rcpp::wrap(parse_mat(inp));
-    return rcpp_result_gen;
-END_RCPP_RETURN_ERROR
-}
-RcppExport SEXP _EigenH5_parse_mat(SEXP inpSEXP) {
-    SEXP rcpp_result_gen;
-    {
-        Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_EigenH5_parse_mat_try(inpSEXP));
-    }
-    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
-    if (rcpp_isInterrupt_gen) {
-        UNPROTECT(1);
-        Rf_onintr();
-    }
-    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
-    if (rcpp_isError_gen) {
-        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
-        UNPROTECT(1);
-        Rf_error(CHAR(rcpp_msgSEXP_gen));
-    }
-    UNPROTECT(1);
-    return rcpp_result_gen;
-}
-// write_mat_chunk_h5
-void write_mat_chunk_h5(std::string filename, std::string groupname, std::string dataname, Eigen::MatrixXd& data, const Rcpp::IntegerVector offsets, const Rcpp::IntegerVector chunksizes);
-static SEXP _EigenH5_write_mat_chunk_h5_try(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dataSEXP, SEXP offsetsSEXP, SEXP chunksizesSEXP) {
-BEGIN_RCPP
-    Rcpp::traits::input_parameter< std::string >::type filename(filenameSEXP);
-    Rcpp::traits::input_parameter< std::string >::type groupname(groupnameSEXP);
-    Rcpp::traits::input_parameter< std::string >::type dataname(datanameSEXP);
-    Rcpp::traits::input_parameter< Eigen::MatrixXd& >::type data(dataSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type offsets(offsetsSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type chunksizes(chunksizesSEXP);
-    write_mat_chunk_h5(filename, groupname, dataname, data, offsets, chunksizes);
-    return R_NilValue;
-END_RCPP_RETURN_ERROR
-}
-RcppExport SEXP _EigenH5_write_mat_chunk_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dataSEXP, SEXP offsetsSEXP, SEXP chunksizesSEXP) {
-    SEXP rcpp_result_gen;
-    {
-        Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_EigenH5_write_mat_chunk_h5_try(filenameSEXP, groupnameSEXP, datanameSEXP, dataSEXP, offsetsSEXP, chunksizesSEXP));
-    }
-    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
-    if (rcpp_isInterrupt_gen) {
-        UNPROTECT(1);
-        Rf_onintr();
-    }
-    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
-    if (rcpp_isError_gen) {
-        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
-        UNPROTECT(1);
-        Rf_error(CHAR(rcpp_msgSEXP_gen));
-    }
-    UNPROTECT(1);
-    return rcpp_result_gen;
-}
-// write_vec_chunk_h5
-void write_vec_chunk_h5(std::string filename, std::string groupname, std::string dataname, Eigen::VectorXd& data, const Rcpp::IntegerVector offsets, const Rcpp::IntegerVector chunksizes);
-static SEXP _EigenH5_write_vec_chunk_h5_try(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dataSEXP, SEXP offsetsSEXP, SEXP chunksizesSEXP) {
-BEGIN_RCPP
-    Rcpp::traits::input_parameter< std::string >::type filename(filenameSEXP);
-    Rcpp::traits::input_parameter< std::string >::type groupname(groupnameSEXP);
-    Rcpp::traits::input_parameter< std::string >::type dataname(datanameSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd& >::type data(dataSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type offsets(offsetsSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type chunksizes(chunksizesSEXP);
-    write_vec_chunk_h5(filename, groupname, dataname, data, offsets, chunksizes);
-    return R_NilValue;
-END_RCPP_RETURN_ERROR
-}
-RcppExport SEXP _EigenH5_write_vec_chunk_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dataSEXP, SEXP offsetsSEXP, SEXP chunksizesSEXP) {
-    SEXP rcpp_result_gen;
-    {
-        Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_EigenH5_write_vec_chunk_h5_try(filenameSEXP, groupnameSEXP, datanameSEXP, dataSEXP, offsetsSEXP, chunksizesSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -497,25 +332,24 @@ RcppExport SEXP _EigenH5_write_vector_h5(SEXP filenameSEXP, SEXP groupnameSEXP, 
     return rcpp_result_gen;
 }
 // create_matrix_h5
-void create_matrix_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, SEXP data, const bool doTranspose, const Rcpp::IntegerVector dims, const Rcpp::IntegerVector chunksizes);
-static SEXP _EigenH5_create_matrix_h5_try(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dataSEXP, SEXP doTransposeSEXP, SEXP dimsSEXP, SEXP chunksizesSEXP) {
+void create_matrix_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, SEXP data, const Rcpp::IntegerVector dims, const Rcpp::IntegerVector chunksizes);
+static SEXP _EigenH5_create_matrix_h5_try(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dataSEXP, SEXP dimsSEXP, SEXP chunksizesSEXP) {
 BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type groupname(groupnameSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type dataname(datanameSEXP);
     Rcpp::traits::input_parameter< SEXP >::type data(dataSEXP);
-    Rcpp::traits::input_parameter< const bool >::type doTranspose(doTransposeSEXP);
     Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type dims(dimsSEXP);
     Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type chunksizes(chunksizesSEXP);
-    create_matrix_h5(filename, groupname, dataname, data, doTranspose, dims, chunksizes);
+    create_matrix_h5(filename, groupname, dataname, data, dims, chunksizes);
     return R_NilValue;
 END_RCPP_RETURN_ERROR
 }
-RcppExport SEXP _EigenH5_create_matrix_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dataSEXP, SEXP doTransposeSEXP, SEXP dimsSEXP, SEXP chunksizesSEXP) {
+RcppExport SEXP _EigenH5_create_matrix_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dataSEXP, SEXP dimsSEXP, SEXP chunksizesSEXP) {
     SEXP rcpp_result_gen;
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_EigenH5_create_matrix_h5_try(filenameSEXP, groupnameSEXP, datanameSEXP, dataSEXP, doTransposeSEXP, dimsSEXP, chunksizesSEXP));
+        rcpp_result_gen = PROTECT(_EigenH5_create_matrix_h5_try(filenameSEXP, groupnameSEXP, datanameSEXP, dataSEXP, dimsSEXP, chunksizesSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -532,25 +366,24 @@ RcppExport SEXP _EigenH5_create_matrix_h5(SEXP filenameSEXP, SEXP groupnameSEXP,
     return rcpp_result_gen;
 }
 // write_matrix_h5
-void write_matrix_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, SEXP data, const bool doTranspose, const Rcpp::IntegerVector offsets, const Rcpp::IntegerVector chunksizes);
-static SEXP _EigenH5_write_matrix_h5_try(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dataSEXP, SEXP doTransposeSEXP, SEXP offsetsSEXP, SEXP chunksizesSEXP) {
+void write_matrix_h5(const std::string& filename, const std::string& groupname, const std::string& dataname, SEXP data, const Rcpp::IntegerVector offsets, const Rcpp::IntegerVector chunksizes);
+static SEXP _EigenH5_write_matrix_h5_try(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dataSEXP, SEXP offsetsSEXP, SEXP chunksizesSEXP) {
 BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type groupname(groupnameSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type dataname(datanameSEXP);
     Rcpp::traits::input_parameter< SEXP >::type data(dataSEXP);
-    Rcpp::traits::input_parameter< const bool >::type doTranspose(doTransposeSEXP);
     Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type offsets(offsetsSEXP);
     Rcpp::traits::input_parameter< const Rcpp::IntegerVector >::type chunksizes(chunksizesSEXP);
-    write_matrix_h5(filename, groupname, dataname, data, doTranspose, offsets, chunksizes);
+    write_matrix_h5(filename, groupname, dataname, data, offsets, chunksizes);
     return R_NilValue;
 END_RCPP_RETURN_ERROR
 }
-RcppExport SEXP _EigenH5_write_matrix_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dataSEXP, SEXP doTransposeSEXP, SEXP offsetsSEXP, SEXP chunksizesSEXP) {
+RcppExport SEXP _EigenH5_write_matrix_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP, SEXP dataSEXP, SEXP offsetsSEXP, SEXP chunksizesSEXP) {
     SEXP rcpp_result_gen;
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_EigenH5_write_matrix_h5_try(filenameSEXP, groupnameSEXP, datanameSEXP, dataSEXP, doTransposeSEXP, offsetsSEXP, chunksizesSEXP));
+        rcpp_result_gen = PROTECT(_EigenH5_write_matrix_h5_try(filenameSEXP, groupnameSEXP, datanameSEXP, dataSEXP, offsetsSEXP, chunksizesSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -713,12 +546,7 @@ static int _EigenH5_RcppExport_validate(const char* sig) {
     if (signatures.empty()) {
         signatures.insert("void(*start_blosc)()");
         signatures.insert("bool(*check_blosc)()");
-        signatures.insert("void(*create_vector_h5)(const std::string&,const std::string&,const std::string&,const int,const int)");
         signatures.insert("bool(*is_transposed)(const std::string,const std::string,const std::string)");
-        signatures.insert("void(*copy_mat_h5)(std::string,std::string,std::string,std::string,const Rcpp::IntegerVector,const Rcpp::IntegerVector)");
-        signatures.insert("Rcpp::IntegerMatrix(*parse_mat)(Rcpp::CharacterVector)");
-        signatures.insert("void(*write_mat_chunk_h5)(std::string,std::string,std::string,Eigen::MatrixXd&,const Rcpp::IntegerVector,const Rcpp::IntegerVector)");
-        signatures.insert("void(*write_vec_chunk_h5)(std::string,std::string,std::string,Eigen::VectorXd&,const Rcpp::IntegerVector,const Rcpp::IntegerVector)");
         signatures.insert("bool(*data_exists)(const std::string&,const std::string&,const std::string&)");
         signatures.insert("SEXPTYPE(*check_dtype)(const std::string&,const std::string&,const std::string&)");
         signatures.insert("SEXP(*read_vector_h5)(const std::string&,const std::string&,const std::string&,Rcpp::IntegerVector,Rcpp::IntegerVector,Rcpp::IntegerVector)");
@@ -726,8 +554,8 @@ static int _EigenH5_RcppExport_validate(const char* sig) {
         signatures.insert("SEXP(*read_matrix_h5)(const std::string&,const std::string&,const std::string&,const Rcpp::IntegerVector,const Rcpp::IntegerVector,const Rcpp::IntegerVector,const Rcpp::IntegerVector)");
         signatures.insert("SEXP(*read_array_h5)(const std::string&,const std::string&,const std::string&,const Rcpp::IntegerVector,const Rcpp::IntegerVector)");
         signatures.insert("void(*write_vector_h5)(const std::string&,const std::string&,const std::string&,SEXP)");
-        signatures.insert("void(*create_matrix_h5)(const std::string&,const std::string&,const std::string&,SEXP,const bool,const Rcpp::IntegerVector,const Rcpp::IntegerVector)");
-        signatures.insert("void(*write_matrix_h5)(const std::string&,const std::string&,const std::string&,SEXP,const bool,const Rcpp::IntegerVector,const Rcpp::IntegerVector)");
+        signatures.insert("void(*create_matrix_h5)(const std::string&,const std::string&,const std::string&,SEXP,const Rcpp::IntegerVector,const Rcpp::IntegerVector)");
+        signatures.insert("void(*write_matrix_h5)(const std::string&,const std::string&,const std::string&,SEXP,const Rcpp::IntegerVector,const Rcpp::IntegerVector)");
         signatures.insert("bool(*write_df_h5)(Rcpp::DataFrame&,const std::string,const std::string,Rcpp::IntegerVector)");
         signatures.insert("Rcpp::StringVector(*get_objs_h5)(Rcpp::CharacterVector,Rcpp::CharacterVector)");
         signatures.insert("Rcpp::List(*read_l_h5)(const std::string,const std::string,Rcpp::CharacterVector,Rcpp::IntegerVector,Rcpp::IntegerVector,Rcpp::IntegerVector)");
@@ -740,12 +568,7 @@ static int _EigenH5_RcppExport_validate(const char* sig) {
 RcppExport SEXP _EigenH5_RcppExport_registerCCallable() { 
     R_RegisterCCallable("EigenH5", "_EigenH5_start_blosc", (DL_FUNC)_EigenH5_start_blosc_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_check_blosc", (DL_FUNC)_EigenH5_check_blosc_try);
-    R_RegisterCCallable("EigenH5", "_EigenH5_create_vector_h5", (DL_FUNC)_EigenH5_create_vector_h5_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_is_transposed", (DL_FUNC)_EigenH5_is_transposed_try);
-    R_RegisterCCallable("EigenH5", "_EigenH5_copy_mat_h5", (DL_FUNC)_EigenH5_copy_mat_h5_try);
-    R_RegisterCCallable("EigenH5", "_EigenH5_parse_mat", (DL_FUNC)_EigenH5_parse_mat_try);
-    R_RegisterCCallable("EigenH5", "_EigenH5_write_mat_chunk_h5", (DL_FUNC)_EigenH5_write_mat_chunk_h5_try);
-    R_RegisterCCallable("EigenH5", "_EigenH5_write_vec_chunk_h5", (DL_FUNC)_EigenH5_write_vec_chunk_h5_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_data_exists", (DL_FUNC)_EigenH5_data_exists_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_check_dtype", (DL_FUNC)_EigenH5_check_dtype_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_read_vector_h5", (DL_FUNC)_EigenH5_read_vector_h5_try);
@@ -766,12 +589,7 @@ RcppExport SEXP _EigenH5_RcppExport_registerCCallable() {
 static const R_CallMethodDef CallEntries[] = {
     {"_EigenH5_start_blosc", (DL_FUNC) &_EigenH5_start_blosc, 0},
     {"_EigenH5_check_blosc", (DL_FUNC) &_EigenH5_check_blosc, 0},
-    {"_EigenH5_create_vector_h5", (DL_FUNC) &_EigenH5_create_vector_h5, 5},
     {"_EigenH5_is_transposed", (DL_FUNC) &_EigenH5_is_transposed, 3},
-    {"_EigenH5_copy_mat_h5", (DL_FUNC) &_EigenH5_copy_mat_h5, 6},
-    {"_EigenH5_parse_mat", (DL_FUNC) &_EigenH5_parse_mat, 1},
-    {"_EigenH5_write_mat_chunk_h5", (DL_FUNC) &_EigenH5_write_mat_chunk_h5, 6},
-    {"_EigenH5_write_vec_chunk_h5", (DL_FUNC) &_EigenH5_write_vec_chunk_h5, 6},
     {"_EigenH5_data_exists", (DL_FUNC) &_EigenH5_data_exists, 3},
     {"_EigenH5_check_dtype", (DL_FUNC) &_EigenH5_check_dtype, 3},
     {"_EigenH5_read_vector_h5", (DL_FUNC) &_EigenH5_read_vector_h5, 6},
@@ -779,8 +597,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_EigenH5_read_matrix_h5", (DL_FUNC) &_EigenH5_read_matrix_h5, 7},
     {"_EigenH5_read_array_h5", (DL_FUNC) &_EigenH5_read_array_h5, 5},
     {"_EigenH5_write_vector_h5", (DL_FUNC) &_EigenH5_write_vector_h5, 4},
-    {"_EigenH5_create_matrix_h5", (DL_FUNC) &_EigenH5_create_matrix_h5, 7},
-    {"_EigenH5_write_matrix_h5", (DL_FUNC) &_EigenH5_write_matrix_h5, 7},
+    {"_EigenH5_create_matrix_h5", (DL_FUNC) &_EigenH5_create_matrix_h5, 6},
+    {"_EigenH5_write_matrix_h5", (DL_FUNC) &_EigenH5_write_matrix_h5, 6},
     {"_EigenH5_write_df_h5", (DL_FUNC) &_EigenH5_write_df_h5, 4},
     {"_EigenH5_get_objs_h5", (DL_FUNC) &_EigenH5_get_objs_h5, 2},
     {"_EigenH5_read_l_h5", (DL_FUNC) &_EigenH5_read_l_h5, 6},

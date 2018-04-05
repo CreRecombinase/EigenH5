@@ -9,31 +9,28 @@
 
 namespace HighFive {
 
-    inline Filter::Filter(const std::vector<size_t> &chunk_dims, const hid_t filter_id, const int r,
-                          const bool doTranspose) {
-        if (r < 0) {
-            HDF5ErrMapper::ToException<FilterException>(
-                    "Filter Improperly registered");
-        }
-        _hid = H5Pcreate(H5P_DATASET_CREATE);
-        if (_hid < 0) {
-            HDF5ErrMapper::ToException<FilterException>(
-                                                        "Unable to get create PropertyList");
-        }
-        size_t chunk_size = std::accumulate(chunk_dims.begin(), chunk_dims.end(), 1, std::multiplies<size_t>());
-        if(chunk_size>CHUNK_MAX){
-            HDF5ErrMapper::ToException<FilterException>(
-                                                        "Chunk size:"+std::to_string(chunk_size)+" is larger than max chunksize:  "+std::to_string(CHUNK_MAX));
-        }
+  inline Filter::Filter(const std::vector<size_t> &chunk_dims, const hid_t filter_id, const int r) {
+    if (r < 0) {
+      HDF5ErrMapper::ToException<FilterException>(
+						  "Filter Improperly registered");
+    }
+    _hid = H5Pcreate(H5P_DATASET_CREATE);
+    if (_hid < 0) {
+      HDF5ErrMapper::ToException<FilterException>(
+						  "Unable to get create PropertyList");
+    }
+    size_t chunk_size = std::accumulate(chunk_dims.begin(), chunk_dims.end(), 1, std::multiplies<size_t>());
+    if(chunk_size>CHUNK_MAX){
+      HDF5ErrMapper::ToException<FilterException>(
+						  "Chunk size:"+std::to_string(chunk_size)+" is larger than max chunksize:  "+std::to_string(CHUNK_MAX));
+    }
 
 
 
         const size_t c_size = chunk_dims.size();
         std::vector<hsize_t> nchunk_dims(c_size);
         std::copy(chunk_dims.begin(), chunk_dims.end(), nchunk_dims.begin());
-        if (doTranspose) {
-            std::reverse(nchunk_dims.begin(), nchunk_dims.end());
-        }
+
         //std::cout<<"Final Chunk Dims: "<<nchunk_dims[0]<<" "<<nchunk_dims[1]<<std::endl;
         auto rr = H5Pset_chunk(_hid, c_size, nchunk_dims.data());
         if (rr < 0) {
@@ -45,7 +42,7 @@ namespace HighFive {
             HDF5ErrMapper::ToException<FilterException>(
                     "Unable to set filter");
         }
-    }
+  }
 
     inline hid_t Filter::getId() const {
         return _hid;
@@ -116,22 +113,21 @@ namespace HighFive {
     template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
     inline Filter::Filter(const std::vector<size_t> &chunk_dims,
                           const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> &mat,
-                          const hid_t filter_id, const bool doTranspose):
-            Filter(reset_chunks(chunk_dims, mat), filter_id, 0, doTranspose) {
+                          const hid_t filter_id):
+            Filter(reset_chunks(chunk_dims, mat), filter_id, 0) {
     };
 
     template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
     inline Filter::Filter(const std::vector<size_t> &chunk_dims,
                           const Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat,
-                          const hid_t filter_id, const bool doTranspose):
-            Filter(reset_chunks(chunk_dims, mat), filter_id, 0, doTranspose) {
+                          const hid_t filter_id):
+            Filter(reset_chunks(chunk_dims, mat), filter_id, 0) {
     };
     inline Filter::Filter(const std::vector<size_t> &chunk_dims,
                           const std::vector<size_t> &data_dims,
                           const hid_t filter_id,
-                          const int r,
-                          const bool doTranspose):
-            Filter(reset_chunks_vec(chunk_dims,data_dims), filter_id, r, doTranspose){
+                          const int r):
+      Filter(reset_chunks_vec(chunk_dims,data_dims), filter_id, r){
 
     }
 

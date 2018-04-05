@@ -101,9 +101,9 @@ test_that("can read int matrix rows & cols",{
   tmat <- matrix(sample(1:900),100,9)
   tempf <- tempfile()
   write_matrix_h5(tempf,"grp","tmat",tmat)
-  ttmat <- tmat[c(1,3,5),c(3,5,6)]
+  ttmat <- tmat[c(5,3,1),c(3,5,6)]
   rd <- read_matrix_h5(tempf,"grp","tmat",
-                       subset_rows = c(1,3,5),
+                       subset_rows = c(5,3,1),
                        subset_cols=c(3,5,6))
   expect_equal(ttmat,rd)
 })
@@ -150,18 +150,30 @@ test_that("can read string vector",{
   expect_equal(rd,tvec)
 })
 
-test_that("writing a matrix works as in RcppEigenH5",{
+# test_that("writing a matrix works as in RcppEigenH5",{
+#   
+#   tmat <- matrix(runif(9*10),9,10)
+#   tempf <- tempfile()
+#   write_matrix_h5(tempf,groupname = "testg",dataname = "testd",data = tmat,doTranspose = T)  
+#   sub_t <- tmat[,c(1,3,5)]
+#   rmat <- read_matrix_h5(tempf,"testg","testd",subset_cols = c(1,3,5))
+#   expect_equal(rmat,sub_t)  
+#   write_matrix_h5(tempf,groupname = "testg",dataname = "testd2",data = tmat,doTranspose = F)  
+#   rmat <- read_matrix_h5(tempf,"testg","testd2",subset_cols=c(1L,3L,5L))
+#   expect_equal(rmat,sub_t)
+# })
+
+test_that("can read and write NA",{
   
   tmat <- matrix(runif(9*10),9,10)
+  tmat[sample(1:(9*10),3,replace=F)] <- NA_real_
   tempf <- tempfile()
-  write_matrix_h5(tempf,groupname = "testg",dataname = "testd",data = tmat,doTranspose = T)  
-  sub_t <- tmat[,c(1,3,5)]
-  rmat <- read_matrix_h5(tempf,"testg","testd",subset_cols = c(1,3,5))
-  expect_equal(rmat,sub_t)  
-  write_matrix_h5(tempf,groupname = "testg",dataname = "testd2",data = tmat,doTranspose = F)  
-  rmat <- read_matrix_h5(tempf,"testg","testd2",subset_cols=c(1L,3L,5L))
-  expect_equal(rmat,sub_t)
+  write_matrix_h5(tempf,groupname = "testg",dataname = "testd",data = tmat)  
+  rmat <- read_matrix_h5(tempf,"testg","testd")
+  expect_equal(rmat,tmat)
 })
+
+
 
 
 
@@ -204,7 +216,7 @@ test_that("writing matrix blocks works ",{
   
   tmat <- matrix(runif(9*3),9,3)
   tempf <- tempfile()
-  create_matrix_h5(filename = tempf,groupname = "testg",dataname = "testd",data=numeric(),dims = c(9L,3L),doTranspose = F)
+  create_matrix_h5(filename = tempf,groupname = "testg",dataname = "testd",data=numeric(),dims = c(9L,3L))
   sub_mat <- tmat[3:5,2:3]
   write_matrix_h5(filename = tempf,groupname = "testg",dataname = "testd",data = sub_mat,offsets = c(2L,1L))
   r_sub_mat <- read_matrix_h5(tempf,"testg","testd",offsets = c(2L,1L),chunksizes = c(3L,2L))
