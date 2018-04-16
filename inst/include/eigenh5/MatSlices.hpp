@@ -299,7 +299,7 @@ public:
       chunk_dims = {chunk_rows, static_cast<size_t>(b.cols())};
       Filter filter(chunk_dims, FILTER_BLOSC, 0);
       DataSpace ds = DataSpace(mat_dims);
-      DataSet dataset = mtg->createDataSet(dataname, ds, AtomicType<T>(), filter.getId(), false);
+      DataSet dataset = mtg->createDataSet(dataname, ds, AtomicType<T>(), filter);
       dataset.write(b);
     }
   }
@@ -333,7 +333,7 @@ public:
       chunk_dims = {chunk_rows};
       Filter filter(chunk_dims, FILTER_BLOSC, 0);
       DataSpace ds = DataSpace(vec_dims);
-      DataSet dataset = mtg->createDataSet(dataname, ds, AtomicType<T>(), filter.getId(), false);
+      DataSet dataset = mtg->createDataSet(dataname, ds, AtomicType<T>(), filter);
       dataset.write(b);
     }
   }

@@ -24,34 +24,19 @@ namespace HighFive {
         static const size_t CHUNK_MIN = 8*1024;
         static const size_t CHUNK_MAX = 1024*1024;
 
-        Filter(const std::vector<size_t> &chunk_dims, const hid_t filter_id, const int r);
-        Filter(const std::vector<size_t> &chunk_dims,
-               const std::vector<size_t> &data_dims,
-               const hid_t filter_id,
-               const int r);
-        static std::vector<size_t> guess_chunk(const std::vector<size_t> data_shape, const size_t typesize);
-#ifdef H5_USE_EIGEN
 
-        template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
-        Filter(const std::vector<size_t> &chunk_dims,
-               const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> &mat, const hid_t filter_id);
-        template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
-        Filter(const std::vector<size_t> &chunk_dims,
-               const Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat, const hid_t filter_id);
+      Filter(const std::vector<size_t> &chunk_dims, const hid_t filter_id, const int r);
+      Filter();
+      static std::vector<size_t> guess_chunk(const std::vector<size_t> data_shape);
+      static Filter From(const DataSpace &dataspace,const hid_t filter_id);
+#ifdef H5_USE_EIGEN
 
 #endif
         hid_t getId() const;
+      std::vector<size_t> get_chunksizes()const;
 
     protected:
-
-        std::vector<size_t> reset_chunks_vec(const std::vector<size_t> &chunk_dims,
-                                                     const std::vector<size_t> mat_dims);
-        template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
-        std::vector<size_t> reset_chunks(const std::vector<size_t> &chunk_dims,
-                                                 const Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> >&mat);
-        template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
-        std::vector<size_t> reset_chunks(const std::vector<size_t> &chunk_dims,
-                                                 const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> &mat);
+      std::vector<size_t> chunksizes;
         // protected constructor
         hid_t _hid;
 

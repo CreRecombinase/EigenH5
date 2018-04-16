@@ -67,7 +67,8 @@ class SliceTraits {
 
   template<size_t Dims>
   Selection selectRanges(const std::vector<std::array<size_t,Dims> > &offset,
-			 const std::vector<std::array<size_t,Dims> > &count) const;
+			 const std::vector<std::array<size_t,Dims> > &count,
+			 const std::array<size_t,Dims> &space_dim) const;
     std::vector<size_t> getDataDimensions() const;
 
     ///

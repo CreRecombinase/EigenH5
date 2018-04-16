@@ -183,6 +183,36 @@ struct data_converter<CArray,
     size_t _dim;
   };
 
+  // template <typename T,SEXPTYPE RTPE=cpp2r<T>::data_t>
+  // struct data_converter<
+  //   Rcpp::Vector<RTYPE>,
+  //   typename enable_if<(is_same<T, typename type_of_array<T>::type>::value)>::type> {
+  //   typedef     Rcpp::Vector<RTYPE> Vector;
+  //   inline data_converter(Vector &vec, DataSpace &space, size_t dim = 0)
+  //     : _space(
+  // 	       &space), _dim(dim) {
+  //     assert(_space->getDimensions().size() > dim);
+  //     (void)vec;
+  //   }
+    
+  //   inline typename type_of_array<T>::type*
+  //   transform_read(std::vector<T>& vec) {
+  //     assert(vec[0]);
+  //     vec.resize(_space->getDimensions()[_dim]);
+  //     return &(vec[0]);
+  //   }
+    
+  //   inline typename type_of_array<T>::type*
+  //   transform_write(std::vector<T>& vec) {
+  //     return &(vec[0]);
+  //   }
+
+  //   inline void process_result(std::vector<T>& vec) { (void)vec; }
+
+  //   DataSpace* _space;
+  //   size_t _dim;
+  // };
+
 #ifdef H5_USE_EIGEN
 
 // apply conversion to eigen vector
@@ -528,6 +558,13 @@ struct data_converter<std::vector<T>,
     size_t _dim;
     std::vector<typename type_of_array<T>::type> _vec_align;
 };
+
+
+
+
+
+
+  
 
 // apply conversion to scalar string
 template <>

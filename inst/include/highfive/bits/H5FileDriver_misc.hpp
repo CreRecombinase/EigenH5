@@ -22,21 +22,29 @@ namespace {
 
 class DefaultFileDriver : public FileDriver {
   public:
-    inline DefaultFileDriver() : FileDriver(H5P_DEFAULT) {}
+  inline DefaultFileDriver() : FileDriver(H5Pcreate(H5P_FILE_ACCESS)) {
+    }
 };
 }
 
 // file access property
-inline FileDriver::FileDriver() { _hid = H5Pcreate(H5P_FILE_ACCESS); }
+inline FileDriver::FileDriver() {
+  _hid = H5Pcreate(H5P_FILE_ACCESS);
+  H5Pset_libver_bounds(_hid, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
+}
 
-inline FileDriver::FileDriver(hid_t fapl) { _hid = fapl; }
+inline FileDriver::FileDriver(hid_t fapl) {
+  _hid = fapl;
+  H5Pset_libver_bounds(_hid, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
+}
 
 template <typename Comm, typename Info>
 inline MPIOFileDriver::MPIOFileDriver(Comm comm, Info info) {
-    if (H5Pset_fapl_mpio(_hid, comm, info) < 0) {
-        HDF5ErrMapper::ToException<FileException>(
-            "Unable to setup MPIO Driver configuration");
-    }
+  H5Pset_libver_bounds(_hid, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
+  if (H5Pset_fapl_mpio(_hid, comm, info) < 0) {
+    HDF5ErrMapper::ToException<FileException>(
+					      "Unable to setup MPIO Driver configuration");
+  }
 }
 }
 

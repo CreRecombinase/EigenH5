@@ -34,10 +34,14 @@ inline int convert_open_flag(int openFlags) {
     return res_open;
 }
 }
-    inline bool file_exists(const std::string& name) {
-        struct stat buffer;
-        return (stat (name.c_str(), &buffer) == 0);
-    }
+    // inline bool file_exists(const std::string& name) {
+    //     struct stat buffer;
+    //     return (stat (name.c_str(), &buffer) == 0);
+    // }
+
+  inline bool File::start_swmr(){
+    return(H5Fstart_swmr_write(_hid) < 0);
+  }
 
 inline File::File(const std::string& filename, int openFlags,
                   const FileDriver& driver)
@@ -56,6 +60,7 @@ inline File::File(const std::string& filename, int openFlags,
 
     openFlags = convert_open_flag(openFlags);
 
+    //    H5Pset_libver_bounds(fapl_id, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
 
 
     if (openFlags & H5F_ACC_CREAT) {
@@ -72,6 +77,19 @@ inline File::File(const std::string& filename, int openFlags,
         }
     }
 }
+
+  inline std::optional<File> File::openFile(const std::string& filename, int openFlags,const FileDriver& driver){
+    try{
+      HighFive::SilenceHDF5 silence;
+      File file(filename,openFlags,driver);
+      return(file);
+    }catch (HighFive::Exception& err) {
+      // Rcpp::StringVector retvec(1);
+      return(std::nullopt);
+    }
+
+  }
+
 
 inline const std::string& File::getName() const {
     return _filename;

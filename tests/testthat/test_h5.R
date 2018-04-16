@@ -1,16 +1,99 @@
 context("h5")
 
-library(testthat)
-library(EigenH5)
+
+
 test_that("can write string vector",{
+  library(testthat)
+  library(EigenH5)
+  tvec <- c("allb","allc","alld")
+  tempf <- tempfile()
+  expect_true(EigenH5::write_vector_h5(tvec,tempf,"grp/dat"))
+  expect_equal(typeof_h5(tempf,"grp"),"list")
+  expect_equal(typeof_h5(tempf,"grp/dat"),"character")
+  expect_equal(get_dims_h5(tempf,"grp/dat"),length(tvec))
+  expect_equal(get_dims_h5(tempf,"grp","dat"),length(tvec))
+  rd <- read_vector_h5(tempf,"grp/dat")
+  expect_equal(rd,tvec)
+  trd <- read_vector_h5(tempf,"grp/dat",chunksize=2)
+  expect_equal(head(tvec,2),trd)  
+  write_vector_h5(tvec,tempf,"/grp/dat2")
+  trd <- read_vector_h5(tempf,"grp/dat2")
+  expect_equal(trd,tvec)
+  tvec <- c("allb","allc","alld")
+  
+  write_vector_h5(tempf,"/grp2/grp3","dat2",tvec)
+  
+  
+  trd <- read_vector_h5(tempf,"grp","dat",subset=2:3)
+  
+  expect_equal(tail(tvec,2),trd)  
+  trd <- read_vector_h5(tempf,"grp","dat",subset=c(1,3))
+  expect_equal(tvec[c(1,3)],trd) 
+
+})
+
+test_that("can check type of vectors",{
   tvec <- c("allb","allc","alld")
   tempf <- tempfile()
   write_vector_h5(tempf,"grp","dat",tvec)
-  expect_equal(get_dims_h5(tempf,"grp","dat"),length(tvec))
-  rd <- read_vector_h5(tempf,"grp","dat")
-  expect_equal(rd,tvec)
+  expect_equal(typeof_h5(tempf,"grp"),list())
+  expect_equal(typeof_h5(tempf,"grp/dat"),character())
+  
+  tvec <- runif(3)
+  tempf <- tempfile()
+  write_vector_h5(tempf,"grp/grp2","dat",tvec)
+  
+  
+  tvec <- sample(1:10)
+  tempf <- tempfile()
+  write_vector_h5(tempf,"/","dat",tvec)
+  expect_equal(typeof_h5(tempf,"dat"),integer())
+  get_dims_h5(tempf,"dat")
 })
 
+test_that("can write a vector subset",{
+  tvec <- runif(3)
+  tempf <- tempfile()
+  write_vector_h5(tempf,"grp","dat",tvec)
+  trd <- read_vector_h5(tempf,"grp","dat",subset=2:3)
+  expect_equal(trd,tvec[2:3])
+  
+})
+
+
+# test_that("can guess chunks for compression",{
+#   
+#   tdim <- c(10,1024^3)
+#   guess_chunks(tdim)  
+# })
+
+
+test_that("can write REAL vector",{
+  tvec <- runif(3)
+  tempf <- tempfile()
+  write_vector_h5(tempf,"grp","dat",tvec)
+  expect_equal(dim_h5(tempf,"grp","dat"),length(tvec))
+  rd <- read_vector_h5(tempf,"grp","dat")
+  expect_equal(rd,tvec)
+  trd <- read_vector_h5(tempf,"grp","dat",chunksize=2)
+  expect_equal(head(tvec,2),trd)  
+  trd <- read_vector_h5(tempf,"grp","dat",subset=2:3)
+  expect_equal(tail(tvec,2),trd)  
+  trd <- read_vector_h5(tempf,"grp","dat",subset=c(1,3))
+  expect_equal(tvec[c(1,3)],trd) 
+  
+  
+})
+
+test_that("we can read subsets out of order",{
+  tvec <- c("allb","allc","alld")
+  tempf <- tempfile()
+  write_vector(tempf,"grp/dat",tvec)
+  trd <- read_vector(tempf,"grp/dat",subset=c(2,1))
+  expect_equal(tvec[c(2,1)],trd) 
+  trd <- read_vector(tempf,"grp/dat",subset=c(3,1))
+  expect_equal(tvec[c(3,1)],trd) 
+})
 
 
 test_that("can read string vector",{
@@ -21,80 +104,86 @@ test_that("can read string vector",{
   expect_equal(rd,tvec)
 })
 
+test_that("can create a vector and then write to it",{
+  tvec <- c("allb","allc","alld")
+  tempf <- tempfile()
+  create_vector_h5(tempf,"grp","dat",character(),3L)
+  rd <- read_vector_h5(tempf,"grp","dat")
+  expect_equal(rd,c("","",""))
+  write_vector_h5(tempf,"grp","dat",tvec)
+  rd <- read_vector_h5(tempf,"grp","dat")
+  expect_equal(rd,tvec)
+})
+
 test_that("can read int matrix",{
   library(EigenH5)
   tmat <- matrix(sample(1:900),100,9)
   tempf <- tempfile()
   #write_matrix_h5(tempf,"grp","tmat_t",tmat,doTranspose = T)
-  write_matrix_h5(tempf,"grp","tmat",tmat)
-  rd <- read_matrix_h5(tempf,"grp","tmat")
-  expect_equal(get_dims_h5(tempf,"grp","tmat"),c(100,9))
-  expect_equal(get_dims_h5(tempf,"grp","tmat"),c(100,9))
+  write_matrix_h5(tempf,"/","tmat",tmat)
+  rd <- read_matrix(tempf,"tmat")
+  expect_equal(dim_h5(tempf,"/","tmat"),c(100,9))
   expect_equal(tmat,rd)
 })
 
+test_that("check for groups/datasets",{
+  tmat <- matrix(sample(1:900),100,9)
+  tempf <- tempfile()
+  write_matrix_h5(tempf,"/grp/grp2","tmat",tmat)
+  
+  expect_true(isGroup(tempf,"grp"))
+  expect_true(isGroup(tempf,"grp/grp2"))
+  expect_true(isGroup(tempf,"/"))
+  expect_false(isGroup(tempf,"grp/grp2/tmat"))
+  expect_true(isDataset(tempf,"grp/grp2/tmat"))
+  expect_false(isDataset(tempf,"grp/grp2/"))
+})
 
-## test_that("can read int matrix to an 'array'",{
-##   library(EigenH5)
-##   tmat <- matrix(1:6,2,3)
-##   tempf <- tempfile()
-##   #write_matrix_h5(tempf,"grp","tmat_t",tmat,doTranspose = T)
-##   write_matrix_h5(tempf,"grp","tmat",tmat)
-##   rd <- read_array_h5(tempf,"grp","tmat",offsets = c(0,0),chunksizes = c(2,3))
-##   expect_equal(get_dims_h5(tempf,"grp","tmat"),c(100,9))
-##   expect_equal(get_dims_h5(tempf,"grp","tmat"),c(100,9))
-##   expect_equal(tmat,t(rd))
-## })
-
-## test_that("can read allel_h5",{
-##   tempf <- '/home/nwknoblauch/Desktop/t_19.h5'
-##   rd <- data.matrix(read_delim("/home/nwknoblauch/Desktop/t_19.impute.hap",delim=" ",col_names = F))
-##   attr(rd,"dimnames")<- NULL
-##   tal <- do.call("cbind",array_branch(trd,c(1,2)))
-##   expect_equal(tal,rd)
-##   snp_df <- read_df_h5("/home/nwknoblauch/Desktop/scratch/polyg_scratch/impute/EUR.chr19.h5","variants",subcols = c("CHROM"))
+test_that("check for groups/datasets",{
+  tmat <- matrix(sample(1:900),100,9)
+  tempf <- tempfile()
+  write_matrix(tempf,"grp/grp2/tmat",tmat)
+  data <- ls_h5(tempf,"grp/grp2",full_names = T)
+  expect_equal(dims_h5(tempf,data),dim(tmat))
   
 
-##   trd <- read_array_h5(tempf,"calldata","GT",offsets=c(0L,0L,0L),chunksizes=c(500L,503L,2L))
-## })
+})
+
 
 test_that("can read int matrix rows",{
   tmat <- matrix(sample(1:900),100,9)
   tempf <- tempfile()
-  write_matrix_h5(tempf,"grp","tmat",tmat)
+  write_matrix_h5(tempf,"grp/grp2","tmat",tmat)
   ind <- c(1,3,5)
   ttmat <- tmat[ind,]
-  rd <- read_matrix_h5(tempf,"grp","tmat",subset_rows = ind)
-  expect_equal(ind,c(1,3,5))
-  expect_equal(ttmat,rd)
-  ind <- c(1,2,3,2,100,4)
+  rd <- read_matrix_h5(tempf,"grp/grp2","tmat",subset_rows = ind)
+  nttmat <- tmat[,ind]
+  rd <- read_matrix_h5(tempf,"grp/grp2","tmat",subset_cols = ind)
+  expect_equal(nttmat,rd)
+  # expect_equal(ind,c(1,3,5))
+  # expect_equal(ttmat,rd)
+  ind <- c(1,3,2,100,4)
   ttmat <- tmat[ind,]
-  rd <- read_matrix_h5(tempf,"grp","tmat",subset_rows = ind)
-  expect_equal(ind,c(1,2,3,2,100,4))
+  rd <- read_matrix(tempf,"grp/grp2/tmat",subset_rows = ind)
+  # expect_equal(ind,c(1,2,3,2,100,4))
   expect_equal(ttmat,rd)
 })
+
+
 test_that("can read int matrix cols",{
   tmat <- matrix(sample(1:900),100,9)
   tempf <- tempfile()
   write_matrix_h5(tempf,"grp","tmat",tmat)
   ind <- c(3,1,5)
   ttmat <- tmat[,ind]
-  rd <- read_matrix_h5(tempf,"grp","tmat",subset_cols = ind)
+  rd <- read_matrix(tempf,"grp/tmat",subset_cols = ind)
   expect_equal(ttmat,rd)
   ind <- c(1,2,7,3)
   ttmat <- tmat[,ind]
-  rd <- read_matrix_h5(tempf,"grp","tmat",subset_cols = ind)
+  rd <- read_matrix(tempf,"grp/tmat",subset_cols = ind)
   expect_equal(ttmat,rd)
 })
 
-test_that("can read int matrix rows",{
-  tmat <- matrix(sample(1:900),100,9)
-  tempf <- tempfile()
-  write_matrix_h5(tempf,"grp","tmat",tmat)
-  ttmat <- tmat[c(1,3,5),]
-  rd <- read_matrix_h5(tempf,"grp","tmat",subset_rows = c(1,3,5))
-  expect_equal(ttmat,rd)
-})
 
 
 test_that("can read int matrix rows & cols",{
@@ -102,7 +191,7 @@ test_that("can read int matrix rows & cols",{
   tempf <- tempfile()
   write_matrix_h5(tempf,"grp","tmat",tmat)
   ttmat <- tmat[c(5,3,1),c(3,5,6)]
-  rd <- read_matrix_h5(tempf,"grp","tmat",
+  rd <- read_matrix(tempf,"grp/tmat",
                        subset_rows = c(5,3,1),
                        subset_cols=c(3,5,6))
   expect_equal(ttmat,rd)
@@ -146,22 +235,10 @@ test_that("can read string vector",{
                         data = tvec
   )
   rd <- read_vector_h5(tempf,"grp","tdat")
-  check_dtype(tempf,"grp","tdat")
+  typeof_h5(tempf,"grp","tdat")
   expect_equal(rd,tvec)
 })
 
-# test_that("writing a matrix works as in RcppEigenH5",{
-#   
-#   tmat <- matrix(runif(9*10),9,10)
-#   tempf <- tempfile()
-#   write_matrix_h5(tempf,groupname = "testg",dataname = "testd",data = tmat,doTranspose = T)  
-#   sub_t <- tmat[,c(1,3,5)]
-#   rmat <- read_matrix_h5(tempf,"testg","testd",subset_cols = c(1,3,5))
-#   expect_equal(rmat,sub_t)  
-#   write_matrix_h5(tempf,groupname = "testg",dataname = "testd2",data = tmat,doTranspose = F)  
-#   rmat <- read_matrix_h5(tempf,"testg","testd2",subset_cols=c(1L,3L,5L))
-#   expect_equal(rmat,sub_t)
-# })
 
 test_that("can read and write NA",{
   
@@ -188,7 +265,7 @@ test_that("writing 2 matrix blocks works",{
   write_matrix_h5(filename = tempf,
                      groupname = "testg",
                      dataname = "testd",
-                     data = sub_mat,offsets = c(0,0))
+                     data = sub_mat,offsets = c(0,0),subset_rows = 1:5,subset_cols = 1:2)
   r_sub_mat <- read_matrix_h5(filename = tempf,groupname = "testg",dataname = "testd",offsets = c(0L,0L),c(5L,2L))
   expect_equal(sub_mat,r_sub_mat)
   sub_mat <- tmat[-(1:5),-(1:2),drop=F]
@@ -200,7 +277,7 @@ test_that("writing 2 matrix blocks works",{
   write_matrix_h5(filename = tempf,
                   groupname = "testg",
                   dataname = "testd",
-                  data = sub_mat,offsets = c(0,2))
+                  data = sub_mat,subset_cols = c(3L),subset_rows = 1:5)
   sub_mat <- tmat[-(1:5),(1:2),drop=F]
   write_matrix_h5(filename = tempf,
                   groupname = "testg",
@@ -229,9 +306,9 @@ test_that("writing matrix blocks works ",{
   
   tmat <- matrix(runif(9*3),9,3)
   tempf <- tempfile()
-  create_matrix_h5(filename = tempf,groupname = "/",dataname = "testd",data=numeric(),dims = c(9L,3L),doTranspose = F)
+  create_matrix_h5(filename = tempf,groupname = "/",dataname = "testd",data=numeric(),dims = c(9L,3L))
   sub_mat <- tmat[3:5,2:3]
-  write_matrix_h5(filename = tempf,groupname = "/",dataname = "testd",data = sub_mat,offsets = c(2L,1L),chunksizes = c(3L,2L))
+  write_matrix_h5(filename = tempf,groupname = "/",dataname = "testd",data = sub_mat,offsets = c(2L,1L))
   r_sub_mat <- read_matrix_h5(tempf,"/","testd",offsets = c(2L,1L),chunksizes = c(3L,2L))
   expect_equal(sub_mat,r_sub_mat)
 })
@@ -239,8 +316,8 @@ test_that("writing 2 matrix blocks works ",{
   
   tmat <- matrix(runif(9*3),9,3)
   tempf <- tempfile()
-  create_matrix_h5(filename = tempf,groupname = "testg",dataname = "testd0",data=numeric(),dims = c(9L,3L),doTranspose = F)
-  write_matrix_h5(filename = tempf,groupname = "testg",dataname = "testd0",data = tmat,offsets = c(0L,0L),doTranspose = F)
+  create_matrix_h5(filename = tempf,groupname = "testg",dataname = "testd0",data=numeric(),dims = c(9L,3L))
+  write_matrix_h5(filename = tempf,groupname = "testg",dataname = "testd0",data = tmat,offsets = c(0L,0L))
   r_sub_mat <- read_matrix_h5(tempf,"testg","testd0")
   expect_equal(tmat,r_sub_mat)
   
@@ -255,21 +332,21 @@ test_that("writing 2 matrix blocks works ",{
   
 })
 
-test_that("writing a vector chunk works",{
-  tvec <- runif(200)
-  tempf <- tempfile()
-  create_vector_h5(tempf,"testg","test",200L)
-  sub_t <- tvec[5:195]
-  write_vec_chunk_h5(filename = tempf,groupname = "testg",dataname = "test",data = sub_t,offsets = 4,chunksizes = 191)
-  retvec <- read_vector_h5(tempf,"testg","test",offset = 4L,chunksize = 191L)
-  expect_equal(retvec,sub_t)
-})
+# test_that("writing a vector chunk works",{
+#   tvec <- runif(200)
+#   tempf <- tempfile()
+#   create_vector_h5(tempf,"testg","test",200L)
+#   sub_t <- tvec[5:195]
+#   write_vector(filename = tempf,groupname = "testg",dataname = "test",data = sub_t,offsets = 4,chunksizes = 191)
+#   retvec <- read_vector_h5(tempf,"testg","test",offset = 4L,chunksize = 191L)
+#   expect_equal(retvec,sub_t)
+# })
 
 
 test_that("can create nested groups",{
-  tvec <- runif(200)
+  tvec <- matrix(runif(9*3),9,3)
   tempf <- tempfile()
-  write_matrix_h5(tempf,"testg/tg2","test",data =matrix(runif(9*3),9,3))
+  write_matrix_h5(tempf,"testg/tg2","test",data =tvec)
   rvec <- read_matrix_h5(tempf,"testg/tg2","test")
   expect_equal(tvec,rvec)
 })

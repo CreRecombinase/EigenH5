@@ -9,6 +9,8 @@
 #pragma once
 
 #include <string>
+#include <experimental/filesystem>
+#include <variant>
 
 namespace HighFive {
 
@@ -28,7 +30,7 @@ class NodeTraits {
     DataSet createDataSet(const std::string &dataset_name,
                           const DataSpace &space,
                           const DataType &dtype,
-                          hid_t create_params);
+                          const Filter &filter);
     ///
     /// \brief createDataSet Create a new dataset in the current file of
     /// datatype type and of size space
@@ -59,7 +61,9 @@ class NodeTraits {
     /// \param dataset_name
     /// \return return the named dataset, or throw exception if not found
     ///
-    DataSet getDataSet(const std::string& dataset_name) const;
+  DataSet getDataSet(const std::string& dataset_name) const;
+  std::optional<DataSet> openDataSet(const std::string& dataset_name) const;
+
 
     ///
     /// \brief create a new group with the name group_name
@@ -75,37 +79,49 @@ class NodeTraits {
     /// \param group_name
     /// \return the group object
     ///
-    Group getGroup(const std::string& group_name) const;
+  Group getGroup(const std::string& group_name) const;
+  std::optional<Group> openGroup(const std::string& group_name) const;
 
-    Group createOrGetGroup(const std::string &group_name);
+  Group createOrGetGroup(const std::string &group_name);
 
-    ///
-    /// \brief return the number of leaf objects of the node / group
-    /// \return number of leaf objects
-    size_t getNumberObjects() const;
+  ///
+  /// \brief return the number of leaf objects of the node / group
+  /// \return number of leaf objects
+  size_t getNumberObjects() const;
 
-    ///
-    /// \brief return the name of the object with the given index
-    /// \return the name of the object
-    std::string getObjectName(size_t index) const;
+  ///
+  /// \brief return the name of the object with the given index
+  /// \return the name of the object
+  std::string getObjectName(size_t index) const;
 
-    ///
-    /// \brief list all leaf objects name of the node / group
-    /// \return number of leaf objects
-    std::vector<std::string> listObjectNames() const;
+  ///
+  /// \brief list all leaf objects name of the node / group
+  /// \return number of leaf objects
+  std::vector<std::string> listObjectNames() const;
 
-    ///
-    /// \brief check a dataset or group exists in the current node / group
-    ///
-    /// \param dataset/group name to check
-    /// \return true if a dataset/group with the asssociated name exist, or
-    /// false
-    bool exist(const std::string& node_name) const;
+  ///
+  /// \brief return either a group or dataset
+  /// \return variant containing either a group or dataset
+  std::variant<DataSet,Group> getObject(const std::string & object_name) const;
+  std::optional<std::variant<DataSet,Group>> openObject(const std::string & object_name) const;
 
-    Group createGroups_rec(const std::vector<std::string> &group_names, const std::string &group_name);
-  private:
+  ///
+  /// \brief return all leaf objects
+  /// \return zero or more objects (represented as std::variants)
+  std::vector<std::variant<DataSet,Group> > getObjects() const;
 
-    typedef Derivate derivate_type;
+  ///
+  /// \brief check a dataset or group exists in the current node / group
+  ///
+  /// \param dataset/group name to check
+  /// \return true if a dataset/group with the asssociated name exist, or
+  /// false
+  bool exist(const std::string& node_name) const;
+
+  Group createGroups_rec(std::experimental::filesystem::path::const_iterator g_name,const std::experimental::filesystem::path::const_iterator g_end);
+private:
+
+  typedef Derivate derivate_type;
 };
 }
 

@@ -47,22 +47,28 @@
 
 // context("Reading and writing Eigen Matrices"){
 
-//   std::vector<int> dims ={2,3};
-//   std::vector<std::string> mv =	{"won't","you",
-// 				 "spend","some",
-// 				 "time", "with"};
-//   std::vector<std::string> tr(6);
-//   Eigen::Map<Eigen::Matrix<std::string,Eigen::Dynamic,Eigen::Dynamic> > temp_wmat(mv.data(),2,3);
-//   Eigen::Map<Eigen::Matrix<std::string,Eigen::Dynamic,Eigen::Dynamic> > temp_rmat(tr.data(),2,3);
+//   std::vector<int> dims ={3,4};
+//   Eigen::MatrixXd wmat(3,4);
+//   double ti=0;
+//   for(int i=0;i<3;i++){
+//     for(int j=0;j<4;j++){
+//       wmat(i,j)=ti;
+//       ti=ti+1;
+//     }
+//   }
+
 //   std::string fname = std::tmpnam(nullptr);
 //   std::string groupname = "testg";
 //   std::string dataname = "test";
 //   using namespace HighFive;
+
+
 //   HighFive::File file(fname,HighFive::File::ReadWrite|HighFive::File::Create);
 
 //   //  auto grp = file.createOrGetGroups(groupname);
-//   auto  dataset = file.createDataSet< std::string >("/dataset_one",  DataSpace::From(temp_wmat));
-//   auto  ndataset = file.createDataSet< std::string >("/dataset_two",  DataSpace::From(mv));
+//   auto  dataset = file.createDataSet< std::string >("/dataset_one",  DataSpace::From(wmat));
+//   //  auto  ndataset = file.createDataSet< std::string >("/dataset_two",  DataSpace::From(mv));
+
 //   std::vector<std::string> ntv;
 //   dataset.write(temp_wmat);
 //   dataset.read(temp_rmat);

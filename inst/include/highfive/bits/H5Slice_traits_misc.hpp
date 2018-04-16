@@ -101,7 +101,8 @@ inline ElementSet::ElementSet(const std::vector<std::size_t>& element_ids)
   template<size_t Dims>
   inline Selection
   SliceTraits<Derivate>::selectRanges(const std::vector<std::array<size_t,Dims> > &offset,
-				      const std::vector<std::array<size_t,Dims> > &count) const {
+				      const std::vector<std::array<size_t,Dims> > &count,
+				      const std::array<size_t,Dims> &space_dim) const {
     // hsize_t type convertion
     const size_t num_ranges=offset.size();
     const size_t vec_size=Dims;
@@ -118,8 +119,9 @@ inline ElementSet::ElementSet(const std::vector<std::size_t>& element_ids)
 
     std::array<hsize_t,Dims>  offset_local;
     std::array<hsize_t,Dims> count_local;
-    std::array<size_t,Dims> count_total;
-    count_total.fill(0);
+    std::vector<size_t> count_total(Dims);
+    std::copy(space_dim.begin(),space_dim.end(),count_total.begin());
+    //    count_total.fill(0);
 
 
     const DataSpace& space = static_cast<const Derivate*>(this)->getSpace();
@@ -133,12 +135,12 @@ inline ElementSet::ElementSet(const std::vector<std::size_t>& element_ids)
         std::copy(offset[i].begin(), offset[i].end(), offset_local.begin());
         std::copy(count[i].begin(), count[i].end(), count_local.begin());
 
-	for(size_t j=0; j<Dims;j++){
-	  count_total[j]=count_total[j]+count_local[j];
-	}
+	// for(size_t j=0; j<Dims;j++){
+	//   count_total[j]=count_total[j]+count_local[j];
+	// }
 
 
-        if (H5Sselect_hyperslab(space.getId(), H5S_SELECT_SET, offset_local.data(),
+        if (H5Sselect_hyperslab(space.getId(),H5S_SELECT_OR, offset_local.data(),
                                 nullptr,
                                 count_local.data(), NULL) < 0) {
             HDF5ErrMapper::ToException<DataSpaceException>(
@@ -294,17 +296,17 @@ SliceTraits<Derivate>::select(const ElementSet& elements) const {
 
 template <typename Derivate>
 inline std::vector<size_t> SliceTraits<Derivate>::getDataDimensions() const {
-    const bool doTranspose = details::get_dataset(static_cast<const Derivate *>(this)).isTransposed();
-    if(doTranspose){
-      HDF5ErrMapper::ToException<DataSpaceException>(
-						     "Transposed data has been deprecated");
-    }
-    std::vector<size_t> dims =static_cast<const Derivate*>(this)->getSpace().getDimensions();
-        if (doTranspose) {
-            std::reverse(dims.begin(), dims.end());
-        }
-        return (dims);
-    }
+  const bool doTranspose = details::get_dataset(static_cast<const Derivate *>(this)).isTransposed();
+  // if(doTranspose){
+  //   HDF5ErrMapper::ToException<DataSpaceException>(
+  // 						     "Transposed data has been deprecated");
+  // }
+  std::vector<size_t> dims =static_cast<const Derivate*>(this)->getMemSpace().getDimensions();
+  if (doTranspose) {
+    std::reverse(dims.begin(), dims.end());
+  }
+  return (dims);
+}
 
 template <typename Derivate>
 template <typename T>

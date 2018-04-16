@@ -31,17 +31,18 @@ class File : public Object,
              public AnnotateTraits<File> {
   public:
     /// Open flag: Read only access
-    static const int ReadOnly = 0x00;
+  static const int ReadOnly = 0x00;
     /// Open flag: Read Write access
-    static const int ReadWrite = 0x01;
+  static const int ReadWrite = 0x01;
     /// Open flag: Truncate a file if already existing
-    static const int Truncate = 0x02;
+  static const int Truncate = 0x02;
     /// Open flag: Open will fail if file already exist
-    static const int Excl = 0x04;
+  static const int Excl = 0x04;
     /// Open flag: Open in debug mode
-    static const int Debug = 0x08;
+  static const int Debug = 0x08;
     /// Open flag: Create non existing file
-    static const int Create = 0x10;
+  static const int Create = 0x10;
+  static const int SWMR_Write = 0x16;
 
     ///
     /// \brief File
@@ -49,14 +50,15 @@ class File : public Object,
     /// \param openFlags: Open mode / flags ( ReadOnly, ReadWrite)
     ///
     /// Open or create a new HDF5 file
-    explicit File(const std::string& filename, int openFlags = ReadOnly,
-                  const FileDriver& driver = DefaultFileDriver());
-
+  explicit File(const std::string& filename, int openFlags = ReadOnly,
+		const FileDriver& driver = DefaultFileDriver());
+  bool start_swmr();
     ///
     /// \brief Return the name of the file
     ///
     const std::string& getName() const;
-
+  static std::optional<File> openFile(const std::string& filename, int openFlags = ReadOnly,
+				      const FileDriver& driver = DefaultFileDriver());
     ///
     /// \brief flush
     ///
