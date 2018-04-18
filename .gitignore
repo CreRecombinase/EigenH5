@@ -8,5 +8,6 @@ src/*.dll
 inst/doc
 GPATH
 GTAGS
+.cquery*
 GRTAGS
 **~

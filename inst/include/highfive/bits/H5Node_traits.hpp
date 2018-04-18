@@ -11,6 +11,7 @@
 #include <string>
 #include <experimental/filesystem>
 #include <variant>
+#include <optional>
 
 namespace HighFive {
 
@@ -72,8 +73,6 @@ class NodeTraits {
     ///
     Group createGroup(const std::string& group_name);
 
-    Group createOrGetGroups(const std::string &group_name);
-
     ///
     /// \brief open an existing group with the name group_name
     /// \param group_name
@@ -82,9 +81,12 @@ class NodeTraits {
   Group getGroup(const std::string& group_name) const;
   std::optional<Group> openGroup(const std::string& group_name) const;
 
-  Group createOrGetGroup(const std::string &group_name);
 
-  ///
+  bool isGroup(const std::string& group_name) const;
+  bool isDataSet(const std::string& group_name) const;
+
+
+
   /// \brief return the number of leaf objects of the node / group
   /// \return number of leaf objects
   size_t getNumberObjects() const;
@@ -117,10 +119,7 @@ class NodeTraits {
   /// \return true if a dataset/group with the asssociated name exist, or
   /// false
   bool exist(const std::string& node_name) const;
-
-  Group createGroups_rec(std::experimental::filesystem::path::const_iterator g_name,const std::experimental::filesystem::path::const_iterator g_end);
 private:
-
   typedef Derivate derivate_type;
 };
 }

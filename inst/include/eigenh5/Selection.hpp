@@ -99,7 +99,7 @@ public:
     }
   }
 
-
+  static std::vector<dim_sel> parse_chunk_list(const Rcpp::List &list,std::vector<size_t> datadims);
   dim_sel(const int in_start_,const int in_stop_,const int out_start_,const int out_stop_,const size_t dimsize){
     if(in_stop_<0){
       in_stop=dimsize-in_stop;
@@ -167,6 +167,34 @@ public:
     chunksize(1),
     sorted(true){}
 };
+
+inline std::vector<dim_sel> dim_sel::parse_chunk_list(const Rcpp::List &list,std::vector<size_t> datadims){
+    using int_o = std::optional<int>;
+
+  const size_t num_dims= datadims.size();
+  if(num_dims>2){
+    Rcpp::stop("Datasets with Dims>2 currently not supported");
+  }
+  std::vector<dim_sel> retvec(num_dims);
+
+  std::vector<int_o> offset_v =	parse_option(list,datadims,"offset");
+  std::vector<int_o> offsets_v =	parse_option(list,datadims,"offsets");
+  
+  std::vector<int_o> chunksize_v =parse_option(list,datadims,"chunksize");
+  std::vector<int_o> chunksizes_v =parse_option(list,datadims,"chunksizes");
+  
+  for(int i=0; i<num_dims;i++){
+    int o_o = offset_v[i].value_or(offsets_v[i].value_or(0));
+    int c_o = chunksize_v[i].value_or(chunksizes_v[i].value_or(datadims[i]-o_o));
+    retvec[i]=dim_sel(o_o,c_o,datadims[i]);
+  }
+  return(retvec);
+}
+
+
+
+
+
 
 class DimRange{
 
@@ -244,7 +272,8 @@ public:
     all_sorted(dim_sels[0].sorted),
     isRepeated_(false){}
 
-
+static DimRange construct_dimrange(std::optional<dim_sel> chunk,
+				   std::optional<Rcpp::IntegerVector> subset);
 
 
   size_t get_n_elem() const{
@@ -272,6 +301,13 @@ private:
 
 };
 
+inline DimRange DimRange::construct_dimrange(std::optional<dim_sel> chunk,
+			    std::optional<Rcpp::IntegerVector> subset){
+  if(subset){
+    return(DimRange(subset->begin(),subset->end()));
+  }
+  return(DimRange(chunk.value_or(dim_sel())));
+}
 
 
 template<size_t Dims>
@@ -352,6 +388,9 @@ public:
     }
   }
 
+  static DatasetSelection<Dims>	ProcessList(const Rcpp::List options, std::vector<size_t> dims);
+
+
   template<typename T,int Options,int RN,int CN>
   void flipRows(Eigen::Map<Eigen::Matrix<T,RN,CN,Options> > retmat,
 					       const std::array<size_t,Dims> &offset,
@@ -385,12 +424,29 @@ private:
   template<typename T,int Options,int RN,int CN>
   void flipMat(Eigen::Map<Eigen::Matrix<T,RN,CN,Options> >& retmat)const;
 
-
-
 };
 
 template<size_t Dims>
-HighFive::Selection DatasetSelection<Dims>::makeSelection(const HighFive::DataSet &dset) const{
+inline DatasetSelection<Dims> DatasetSelection<Dims>::ProcessList(const Rcpp::List options, std::vector<size_t> dims){
+
+  auto dchunk_v = dim_sel::parse_chunk_list(options,dims);
+  auto dslice_v = parse_subset_list(options,dims);
+  if constexpr(Dims==2){
+      std::array<size_t,2>tdims={dims[0],dims[1]};
+      return(DatasetSelection<Dims>({
+	    DimRange::construct_dimrange(dchunk_v[0],dslice_v[0]),
+	      DimRange::construct_dimrange(dchunk_v[1],dslice_v[1])},tdims));
+    }
+  if constexpr(Dims==1){
+      std::array<size_t,1>tdims={dims[0]};
+      return(DatasetSelection<1>({
+	    DimRange::construct_dimrange(dchunk_v[0],dslice_v[0])},tdims));
+    }
+}
+
+
+template<size_t Dims>
+inline HighFive::Selection DatasetSelection<Dims>::makeSelection(const HighFive::DataSet &dset) const{
   if(offsets_in.empty()){
     std::vector<size_t>	t_offsets(Dims,0);
     std::vector<size_t>	t_chunksizes = dset.getDataDimensions();

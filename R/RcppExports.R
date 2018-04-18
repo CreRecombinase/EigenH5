@@ -2,75 +2,75 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 start_blosc <- function() {
-    invisible(.Call('_EigenH5_start_blosc', PACKAGE = 'EigenH5'))
+    invisible(.Call(`_EigenH5_start_blosc`))
 }
 
 check_blosc <- function() {
-    .Call('_EigenH5_check_blosc', PACKAGE = 'EigenH5')
+    .Call(`_EigenH5_check_blosc`)
 }
 
 is_transposed <- function(filename, groupname, dataname) {
-    .Call('_EigenH5_is_transposed', PACKAGE = 'EigenH5', filename, groupname, dataname)
+    .Call(`_EigenH5_is_transposed`, filename, groupname, dataname)
 }
 
 len <- function(x) {
-    .Call('_EigenH5_len', PACKAGE = 'EigenH5', x)
+    .Call(`_EigenH5_len`, x)
 }
 
 read_vector <- function(filename, datapath, subset) {
-    .Call('_EigenH5_read_vector', PACKAGE = 'EigenH5', filename, datapath, subset)
+    .Call(`_EigenH5_read_vector`, filename, datapath, subset)
 }
 
 read_matrix <- function(filename, datapath, subset) {
-    .Call('_EigenH5_read_matrix', PACKAGE = 'EigenH5', filename, datapath, subset)
+    .Call(`_EigenH5_read_matrix`, filename, datapath, subset)
 }
 
-update_matrix <- function(filename, datapath, data, options) {
-    .Call('_EigenH5_update_matrix', PACKAGE = 'EigenH5', filename, datapath, data, options)
+update_matrix <- function(data, filename, datapath, options) {
+    .Call(`_EigenH5_update_matrix`, data, filename, datapath, options)
 }
 
 update_vector <- function(data, filename, datapath, options) {
-    .Call('_EigenH5_update_vector', PACKAGE = 'EigenH5', data, filename, datapath, options)
+    .Call(`_EigenH5_update_vector`, data, filename, datapath, options)
 }
 
 create_dataset <- function(filename, datapath, data, options) {
-    .Call('_EigenH5_create_dataset', PACKAGE = 'EigenH5', filename, datapath, data, options)
+    .Call(`_EigenH5_create_dataset`, filename, datapath, data, options)
 }
 
 split_ldd <- function(region_ids) {
-    .Call('_EigenH5_split_ldd', PACKAGE = 'EigenH5', region_ids)
+    .Call(`_EigenH5_split_ldd`, region_ids)
 }
 
 guess_chunks <- function(dimsize) {
-    .Call('_EigenH5_guess_chunks', PACKAGE = 'EigenH5', dimsize)
+    .Call(`_EigenH5_guess_chunks`, dimsize)
 }
 
 exists_h5 <- function(filename, groupname = "/", dataname = "") {
-    .Call('_EigenH5_exists_h5', PACKAGE = 'EigenH5', filename, groupname, dataname)
+    .Call(`_EigenH5_exists_h5`, filename, groupname, dataname)
 }
 
 isObject <- function(filename, dataname) {
-    .Call('_EigenH5_isObject', PACKAGE = 'EigenH5', filename, dataname)
+    .Call(`_EigenH5_isObject`, filename, dataname)
 }
 
 isDataSet <- function(filename, dataname) {
-    .Call('_EigenH5_isDataSet', PACKAGE = 'EigenH5', filename, dataname)
+    .Call(`_EigenH5_isDataSet`, filename, dataname)
+}
+
+isGroup <- function(filename, dataname) {
+    .Call(`_EigenH5_isGroup`, filename, dataname)
 }
 
 ls_h5 <- function(h5filepath, groupname = as.character( c("/")), full_names = FALSE) {
-    .Call('_EigenH5_ls_h5', PACKAGE = 'EigenH5', h5filepath, groupname, full_names)
+    .Call(`_EigenH5_ls_h5`, h5filepath, groupname, full_names)
 }
 
 typeof_h5 <- function(filename, datapath) {
-    .Call('_EigenH5_typeof_h5', PACKAGE = 'EigenH5', filename, datapath)
-}
-
-isGroup <- function(filename, groupname) {
-    .Call('_EigenH5_isGroup', PACKAGE = 'EigenH5', filename, groupname)
+    .Call(`_EigenH5_typeof_h5`, filename, datapath)
 }
 
 dim_h5 <- function(filename, datapath) {
-    .Call('_EigenH5_dim_h5', PACKAGE = 'EigenH5', filename, datapath)
+    .Call(`_EigenH5_dim_h5`, filename, datapath)
 }
 
 # Register entry points for exported C++ functions

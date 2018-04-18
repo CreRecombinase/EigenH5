@@ -56,7 +56,7 @@ class File : public Object,
     ///
     /// \brief Return the name of the file
     ///
-    const std::string& getName() const;
+  const std::string& getName() const;
   static std::optional<File> openFile(const std::string& filename, int openFlags = ReadOnly,
 				      const FileDriver& driver = DefaultFileDriver());
     ///

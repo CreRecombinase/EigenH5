@@ -251,7 +251,11 @@ public:
         if(!dyn_create){
           mtg = m_group_map.emplace_hint(mtg,std::move(g_arr),std::make_shared<Group>(mtf->second->getGroup(tgn)));
         }else{
-          mtg = m_group_map.emplace_hint(mtg,std::move(g_arr),std::make_shared<Group>(mtf->second->createOrGetGroups(tgn)));
+	  if(!mtf->second->exist(tgn)){
+	    mtg = m_group_map.emplace_hint(mtg,std::move(g_arr),std::make_shared<Group>(mtf->second->createGroup(tgn)));
+	  }else{
+	    mtg = m_group_map.emplace_hint(mtg,std::move(g_arr),std::make_shared<Group>(mtf->second->getGroup(tgn)));
+	  }
         }
       }
 

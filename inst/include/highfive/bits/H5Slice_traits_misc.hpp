@@ -169,6 +169,7 @@ inline ElementSet::ElementSet(const std::vector<std::size_t>& element_ids)
         std::vector<hsize_t> offset_local(offset.size());
         std::vector<hsize_t> count_local(count.size());
         std::vector<hsize_t> stride_local(stride.size());
+
         std::copy(offset.begin(), offset.end(), offset_local.begin());
         std::copy(count.begin(), count.end(), count_local.begin());
         std::copy(stride.begin(), stride.end(), stride_local.begin());
@@ -308,6 +309,61 @@ inline std::vector<size_t> SliceTraits<Derivate>::getDataDimensions() const {
   return (dims);
 }
 
+
+// template <typename Derivate>
+// template <SEXPTYPE RTYPE,typename T>
+// inline void SliceTraits<Derivate>::readR(Rcpp::Vector<RTYPE> dat) {
+
+  // const size_t dim_array = details::array_dims<T>::value;
+  // DataSpace space = static_cast<const Derivate*>(this)->getSpace();
+  // DataSpace mem_space = static_cast<const Derivate*>(this)->getMemSpace();
+  
+  // if (!details::checkDimensions(mem_space, dim_array)) {
+  //   std::ostringstream ss;
+  //   ss << "Impossible to read DataSet of dimensions "
+  //      << mem_space.getNumberDimensions() << " into arrays of dimensions "
+  //      << dim_array;
+  //   throw DataSpaceException(ss.str());
+  // }
+  
+  // Apply pre read convertions (these will depend on the dataset, unfortunately)
+//   const size_t dat_s = dat_s.size();
+//   void* rdata= nullptr;
+//   if constexpr(RTYPE==STRSXP){
+//       std::vector<char*> wvec(dat_s,nullptr);;
+//       for(int i=0; i<dat_s; i++){
+// 	wvec[i]=CHAR(STRING_ELT(dat, i));
+//       }
+//       rdata=wvec.data();
+//     }
+//   if constexpr(
+//   
+//   // details::data_converter<T> converter(array, mem_space);
+//   // Create mem datatype
+//   const AtomicType<typename details::type_of_array<T>::type>
+//     array_datatype;
+//   
+//   auto mem_datatype = array_datatype.getId();
+//   
+//   
+//   if (H5Dread(
+// 	      details::get_dataset(static_cast<const Derivate *>(this)).getId(),
+// 	      mem_datatype,
+// 	      details::get_memspace_id((static_cast<const Derivate *>(this))),
+// 	      space.getId(), H5P_DEFAULT,
+// 	      static_cast<void *>(converter.transform_read(array))) < 0) {
+//     HDF5ErrMapper::ToException<DataSetException>(
+// 						 "Error during HDF5 Read: ");
+//   }
+//   
+//   // re-arrange results
+//   converter.process_result(array);
+// }
+// 
+// 
+// }
+
+  
 template <typename Derivate>
 template <typename T>
 inline void SliceTraits<Derivate>::read(T &array) {

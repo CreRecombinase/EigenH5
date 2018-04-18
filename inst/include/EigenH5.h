@@ -24,11 +24,13 @@
 #include <lzf/lzf_filter.h>
 #include<H5Tpublic.h>
 #include <eigenh5/MatSlices.hpp>
+
+
+
+std::vector<std::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix);
+std::vector<std::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims);
 #include <eigenh5/Selection.hpp>
 #include <RcppEigen.h>
-
-
-
 
 #if __has_include(<filesystem>)
 

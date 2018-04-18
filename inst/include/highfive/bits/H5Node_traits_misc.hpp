@@ -92,12 +92,24 @@ NodeTraits<Derivate>::createDataSet(const std::string& dataset_name,
 template <typename Derivate>
 inline DataSet
 NodeTraits<Derivate>::getDataSet(const std::string& dataset_name) const {
+  namespace fs = std::experimental::filesystem;
+  fs::path p = dataset_name;
     DataSet set;
-    if ((set._hid = H5Dopen2(static_cast<const Derivate*>(this)->getId(),
-                             dataset_name.c_str(), H5P_DEFAULT)) < 0) {
+    if(!p.has_parent_path()){
+      if ((set._hid = H5Dopen2(static_cast<const Derivate*>(this)->getId(),
+			       dataset_name.c_str(), H5P_DEFAULT)) < 0) {
         HDF5ErrMapper::ToException<DataSetException>(
-            std::string("Unable to open the dataset \"") + dataset_name +
-            "\":");
+						     std::string("Unable to open the dataset \"") + dataset_name +
+						     "\":");
+      }
+    }else{
+      auto group = this->getGroup(p.parent_path());
+      if ((set._hid = H5Dopen2(group.getId(),
+			       p.filename().c_str(), H5P_DEFAULT)) < 0) {
+        HDF5ErrMapper::ToException<DataSetException>(
+						     std::string("Unable to open the dataset \"") + dataset_name +
+						     "\":");
+      }
     }
     set.doTranspose = set.isTransposed();
     return set;
@@ -106,101 +118,70 @@ NodeTraits<Derivate>::getDataSet(const std::string& dataset_name) const {
 template <typename Derivate>
 inline std::optional<DataSet>
 NodeTraits<Derivate>::openDataSet(const std::string& dataset_name) const {
-  DataSet set;
-  SilenceHDF5 silence;
-  if ((set._hid = H5Dopen2(static_cast<const Derivate*>(this)->getId(),
-			   dataset_name.c_str(), H5P_DEFAULT)) < 0) {
+
+  if(!this->exist(dataset_name)){
     return(std::nullopt);
+  }else{
+    return(this->getDataSet(dataset_name));
   }
-  set.doTranspose = set.isTransposed();
-  return set;
 }
-
-
-  template <typename Derivate>
-  inline Group NodeTraits<Derivate>::createGroup(const std::string& group_name) {
-    Group group;
-    if ((group._hid = H5Gcreate2(static_cast<Derivate*>(this)->getId(),
-				 group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT,
-				 H5P_DEFAULT)) < 0) {
-      HDF5ErrMapper::ToException<GroupException>(
-						 std::string("Unable to create the group \"") + group_name + "\":");
-    }
-    return group;
-  }
-
-  template<typename Derivate>
-  inline Group NodeTraits<Derivate>::createOrGetGroup(const std::string &group_name) {
-    if(group_name=="/" ){
-      return(this->getGroup("/"));
-    }
-    if (this->exist(group_name)) {
-      return (this->getGroup(group_name));
-    } else {
-      return (this->createGroup(group_name));
-    }
-  }
-
-
-  template<typename Derivate>
-  inline Group
-  NodeTraits<Derivate>::createGroups_rec(std::experimental::filesystem::path::const_iterator g_name,const std::experimental::filesystem::path::const_iterator g_end) {
-    Group group = this->createOrGetGroup(*g_name);
-    g_name++;
-    if(g_name==g_end){
-      return(group);
-    }else{
-      return(group.createGroups_rec(g_name,g_end));
-    }
-  }
-
-
-    template<typename Derivate>
-    inline Group NodeTraits<Derivate>::createOrGetGroups(const std::string &group_name) {
-        if(group_name=="/"){
-            return(this->getGroup("/"));
-        }
-	namespace fs = std::experimental::filesystem;
-	fs::path p = group_name;
-	return(this->createGroups_rec(p.begin(),p.end()));
-    }
 
 
 template <typename Derivate>
 inline Group
 NodeTraits<Derivate>::getGroup(const std::string& group_name) const {
 
-    Group group;
-    if(group_name=="." || group_name==""){
-      group._hid=static_cast<const Derivate*>(this)->getId();
-    }else{
-      if ((group._hid = H5Gopen2(static_cast<const Derivate*>(this)->getId(),
-				 group_name.c_str(), H5P_DEFAULT)) < 0) {
-        HDF5ErrMapper::ToException<GroupException>(
-						   std::string("Unable to open the group \"") + group_name + "\":");
-      }
-    }
-    return group;
+  Group group;
+  if ((group._hid = H5Gopen2(static_cast<const Derivate*>(this)->getId(),
+			     group_name.c_str(), H5P_DEFAULT)) < 0) {
+    HDF5ErrMapper::ToException<GroupException>(
+					       std::string("Unable to open the group \"") + group_name + "\":");
+  }
+  return group;
 }
+
+
 template <typename Derivate>
 inline std::optional<Group>
 NodeTraits<Derivate>::openGroup(const std::string& group_name) const {
-  SilenceHDF5 silence;
-  Group group;
-  if(group_name=="." || group_name==""){
-    group._hid=static_cast<const Derivate*>(this)->getId();
+  if(!this->exist(group_name)){
+    return(std::nullopt);
+  }else{
+    return(this->getGroup(group_name));
+  }
+}
+
+template <typename Derivate>
+inline Group NodeTraits<Derivate>::createGroup(const std::string& group_name) {
+  namespace fs = std::experimental::filesystem;
+  fs::path p = group_name;
+  if(p.empty()){
+    HDF5ErrMapper::ToException<GroupException>(
+					       std::string("Cannot create empty group"));
+  }
+
+  Group group =	this->getGroup(".");
+
+  for(auto &tp:p){
+    if(group.exist(tp)){
+      group=group.getGroup(tp);
     }else{
-      if ((group._hid = H5Gopen2(static_cast<const Derivate*>(this)->getId(),
-				 group_name.c_str(), H5P_DEFAULT)) < 0) {
-	return(std::nullopt);
+      if ((group._hid = H5Gcreate2(group.getId(),
+				   tp.c_str(), H5P_DEFAULT, H5P_DEFAULT,
+				   H5P_DEFAULT)) < 0) {
+	  HDF5ErrMapper::ToException<GroupException>(
+						     std::string("Unable to create the group \"") + std::string(tp) + "\":");
       }
     }
-    return group;
+  }
+  return group;
 }
 
 
+
+
 template <typename Derivate>
-inline size_t NodeTraits<Derivate>::getNumberObjects() const {
+inline size_t NodeTraits<Derivate>::getNumberObjects() const{
     hsize_t res;
     if (H5Gget_num_objs(static_cast<const Derivate*>(this)->getId(), &res) <
         0) {
@@ -212,11 +193,57 @@ inline size_t NodeTraits<Derivate>::getNumberObjects() const {
 
 
 
+    template<typename Derivate>
+      inline bool NodeTraits<Derivate>::isGroup(const std::string & object_name) const{
+      namespace fs = std::experimental::filesystem;
+      fs::path p = object_name;
+      std::string pp = p.has_parent_path() ? p.parent_path() : ".";
+      if(auto group = this->openGroup(pp)){
+	if(group->exist(p.filename())){
+	  H5O_info_t tid;
+	  if(H5Oget_info_by_name(group->getId(),p.filename().c_str(),&tid,H5P_DEFAULT)<0){
+	    HDF5ErrMapper::ToException<DataSetException>(
+							 std::string("Unable to open the object \"") + std::string(p.filename()) +
+							 "\":");
+	  }
+	  return(tid.type==H5O_TYPE_GROUP);
+	}
+      }
+      HDF5ErrMapper::ToException<DataSetException>(
+						   std::string("Object does not exist \"") + object_name +
+						   "\":");
+            return(false);
+    }
+
+    template<typename Derivate>
+      inline bool NodeTraits<Derivate>::isDataSet(const std::string & object_name) const{
+      namespace fs = std::experimental::filesystem;
+      fs::path p = object_name;
+      std::string pp = p.has_parent_path() ? p.parent_path() : ".";
+      if(auto group = this->openGroup(pp)){
+	if(group->exist(p.filename())){
+	  H5O_info_t tid;
+	  if(H5Oget_info_by_name(group->getId(),p.filename().c_str(),&tid,H5P_DEFAULT)<0){
+	    HDF5ErrMapper::ToException<DataSetException>(
+							 std::string("Unable to open the object \"") + std::string(p.filename()) +
+							 "\":");
+	  }
+	  return(tid.type==H5O_TYPE_DATASET);
+	}
+      }
+      HDF5ErrMapper::ToException<DataSetException>(
+						   std::string("Object does not exist \"") + object_name +
+						   "\":");
+      return(false);
+    }
+
+
   template<typename Derivate>
   inline std::variant<DataSet,Group> NodeTraits<Derivate>::getObject(const std::string & object_name) const{
     namespace fs = std::experimental::filesystem;
     fs::path p = object_name;
-    Group tg = this->getGroup(p.parent_path());
+    std::string pp = p.has_parent_path() ? p.parent_path() : ".";
+    Group tg = this->getGroup(pp);
     if(p.filename()=="."){
       return(tg);
     }else{
@@ -243,26 +270,10 @@ inline size_t NodeTraits<Derivate>::getNumberObjects() const {
 
   template<typename Derivate>
   inline std::optional<std::variant<DataSet,Group> > NodeTraits<Derivate>::openObject(const std::string & object_name) const{
-    namespace fs = std::experimental::filesystem;
-      SilenceHDF5 silence;
-    fs::path p = object_name;
-    Group tg = this->getGroup(p.parent_path());
-    if(p.filename()=="."){
-      return(tg);
+    if(this->exist(object_name)){
+      return(this->getObject(object_name));
     }else{
-      H5O_info_t tid;
-      if(H5Oget_info_by_name(tg.getId(),p.filename().c_str(),&tid,H5P_DEFAULT)<0){
-	return(std::nullopt);
-      }
-      if(tid.type==H5O_TYPE_GROUP){
-	return(tg.getGroup(p.filename()));
-      }else{
-	if(tid.type==H5O_TYPE_DATASET){
-	  return(tg.getDataSet(p.filename()));
-	}else{
-	  return(std::nullopt);
-	}
-      }
+      return(std::nullopt);
     }
   }
   template <typename Derivate>
@@ -316,19 +327,56 @@ inline std::vector<std::string> NodeTraits<Derivate>::listObjectNames() const {
     return names;
 }
 
+
 template <typename Derivate>
 inline bool NodeTraits<Derivate>::exist(const std::string& node_name) const {
+  if(node_name=="."){
+    return(true);
+  }
   namespace fs = std::experimental::filesystem;
-  //    fs::path p = node_name;
-    htri_t val = H5Lexists(static_cast<const Derivate*>(this)->getId(),
-                     node_name.c_str(), H5P_DEFAULT);
-    if( val < 0){
-        HDF5ErrMapper::ToException<GroupException>(
-            std::string("Invalid link for exist() "));
+  fs::path p = node_name;
+  if(p.empty()){
+    HDF5ErrMapper::ToException<GroupException>(
+					       std::string("Cannot check for existence of an empty path"));
+  }
+  auto ttid=static_cast<const Derivate*>(this)->getId();
+  auto tid=ttid;
+  for(auto &tp:p){
+    if(tp=="."){
+      return(true);
     }
-
-    return (val > 0 );
+    if(tp!="/"){
+      htri_t val = H5Lexists(tid,tp.c_str(), H5P_DEFAULT);
+      if(val==0){
+	if(tid!=ttid){
+	  H5Oclose(tid);
+	}
+	return(false);
+      }
+    }
+    auto otid=tid;
+    tid = H5Oopen( tid , tp.c_str(), H5P_DEFAULT);
+    if(otid!=ttid){
+      H5Oclose(otid);
+    }
+  }
+  return(true);
 }
 
-}
 
+// template <typename Derivate>
+// inline bool NodeTraits<Derivate>::exist(const std::string& node_name) const {
+//   namespace fs = std::experimental::filesystem;
+//   //    fs::path p = node_name;
+
+//     htri_t val = H5Lexists(static_cast<const Derivate*>(this)->getId(),
+//                      node_name.c_str(), H5P_DEFAULT);
+//     if( val < 0){
+//         HDF5ErrMapper::ToException<GroupException>(
+//             std::string("Invalid link for exist() "));
+//     }
+
+//     return (val > 0 );
+// }
+
+}

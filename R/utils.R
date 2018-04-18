@@ -2,20 +2,6 @@
   start_blosc()
 }
 
-read_df_h5 <- function(h5filepath,groupname,subcols = character(),filtervec = integer(),offset=c(0L),chunksize=NA_integer_){
-  stopifnot(file.exists(h5filepath))
-  dsets <- ls_h5(h5filepath,groupname = groupname)
-  if(length(subcols)>0){
-    dsets <- dsets[dsets %in% subcols]
-  }
-  if(groupname=="/"){
-    groupname <- ""
-  }
-  dsp <- normalizePath(paste(groupname,dsets,sep="/"),mustWork = F)
-  names(dsp) <- basename(dsp)
-  return(purrr::map_dfc(dsp,~read_vector(h5filepath,datapath = .x,offset = offset,chunksize = chunksize,subset = filtervec)))
-  #return(tibble::as_data_frame(read_l_h5(h5filepath = normalizePath(h5filepath),groupname = groupname,subcols = subcols,offset = offset,chunksize = chunksize,filtervec = filtervec)))
-}
 
 
 construct_data_path <- function(...){
@@ -26,7 +12,10 @@ construct_data_path <- function(...){
 }
 
 gen_matslice_chunk_df <- function(input_rows,chunksize=10000,...){
-    input_df <- BBmisc::chunk(input_rows,chunk.size=chunksize) %>% purrr::map_df(~data_frame(row_offsets=.x[1]-1,row_chunksizes=length(.x))) %>% dplyr::mutate(...)
+    input_df <- BBmisc::chunk(input_rows,chunk.size=chunksize)  %>% purrr::map_df(function(x){
+      stopifnot(all(x==seq(x[1],x[length(x)])))
+      return(data_frame(row_offsets=x[1]-1,row_chunksizes=length(x)))
+      }) %>% dplyr::mutate(...)
     return(input_df)
 }
 
@@ -37,11 +26,6 @@ gen_matslice_df <- function(filename,group_prefix,dataname){
                     groupnames=paste0(group_prefix,"/",sub_grps),
                     datanames=dataname) %>% arrange(as.integer(sub_grps))
   return(retdf)
-}
-
-write_df_h5 <- function(df,groupname="/",h5filepath){
-  # stopifnot(file.exists(h5filepath))
-  purrr::iwalk(df,~write_vector(h5filepath = h5filepath,datapath = normalizePath(paste(groupname,.y,sep="/"),mustWork = F),data=.x))
 }
 
 
@@ -112,145 +96,6 @@ write_l_h5 <- function(h5filepath,datapath,datal){
 
 
 
-write_vector_h5 <- function(data,h5filepath,datapath,...){
-    argl <- list(...)
-    ssr <- FALSE
-    ssc <- FALSE
-    
-    if(!isObject(h5filepath,datapath)){
-        create_dataset(h5filepath,datapath,data,argl)
-    }
-    
-    if(!is.null(argl[["subset_rows"]])){
-        ssr <- T
-        stopifnot(!any(duplicated(argl[["subset_rows"]])))
-        ossr <- order(argl[["subset_rows"]])
-
-        argl[["subset_rows"]] <- sort(argl[["subset_rows"]])
-
-    }
-    if(!is.null(argl[["subset_cols"]])){
-        ssc <- T
-        stopifnot(!any(duplicated(argl[["subset_cols"]])))
-        ossc <- order(argl[["subset_cols"]])
-        argl[["subset_cols"]] <- sort(argl[["subset_cols"]])
-    }
-    if(ssc && ssr){
-        stop("arguments subset_rows and subset_cols cannot both be specified in `write_vector`")
-    }
-    if(ssr){
-        return(update_vector(data[ossr],h5filepath,datapath,argl))
-    }
-    if(ssc){
-        return(update_vector(data[ossc],h5filepath,datapath,argl))
-    }
-    return(update_vector(data,h5filepath,datapath,argl))
-}
-
-
-read_matrix_h5 <- function(h5filepath,datapath,...){
-    argl <- list(...)
-    ssr <- FALSE
-    ssc <- FALSE
-    if(!is.null(argl[["subset_rows"]])){
-        ssr <- T
-        stopifnot(!any(duplicated(argl[["subset_rows"]])))
-        ossr <- order(argl[["subset_rows"]])
-
-        argl[["subset_rows"]] <- sort(argl[["subset_rows"]])
-
-    }
-    if(!is.null(argl[["subset_cols"]])){
-        ssc <- T
-        stopifnot(!any(duplicated(argl[["subset_cols"]])))
-        ossc <- order(argl[["subset_cols"]])
-        argl[["subset_cols"]] <- sort(argl[["subset_cols"]])
-    }
-    if(ssr && ssc){
-        return(read_matrix(filename =  h5filepath,datapath,argl)[ossr,ossc])
-    }
-    if(ssr){
-        return(read_matrix(filename =  h5filepath,datapath,argl)[ossr,])
-    }
-    if(ssc){
-        return(read_matrix(filename =  h5filepath,datapath,argl)[,ossc])
-    }
-    return(read_matrix(filename =  h5filepath,datapath,argl))
-}
-
-
-read_vector_h5 <- function(h5filepath,datapath,...){
-    argl <- list(...)
-    ssr <- FALSE
-    ssc <- FALSE
-    if(!is.null(argl[["subset_rows"]])){
-        ssr <- T
-        stopifnot(!any(duplicated(argl[["subset_rows"]])))
-        ossr <- order(argl[["subset_rows"]])
-
-        argl[["subset_rows"]] <- sort(argl[["subset_rows"]])
-
-    }
-    if(!is.null(argl[["subset_cols"]])){
-        ssc <- T
-        stopifnot(!any(duplicated(argl[["subset_cols"]])))
-        ossc <- order(argl[["subset_cols"]])
-        argl[["subset_cols"]] <- sort(argl[["subset_cols"]])
-    }
-    if(ssr && ssc){
-        stop("arguments subset_rows and subset_cols cannot both be specified in `write_vector`")
-    }
-    if(ssr){
-        return(read_vector(filename =  h5filepath,datapath,argl)[ossr])
-    }
-    if(ssc){
-        return(read_vector(filename =  h5filepath,datapath,argl)[ossc])
-    }
-    return(read_vector(filename =  h5filepath,
-                       datapath,argl))
-}
-
-
-
-
-write_matrix_h5 <- function(data,h5filepath,datapath,...){
-    argl <- list(...)
-    ssr <- FALSE
-    ssc <- FALSE
-    if(!isObject(h5filepath,datapath)){
-        create_dataset(h5filepath,datapath,data,argl)
-    }
-    
-    if(!is.null(argl[["subset_rows"]])){
-        ssr <- T
-        stopifnot(!any(duplicated(argl[["subset_rows"]])))
-        ossr <- order(argl[["subset_rows"]])
-
-        argl[["subset_rows"]] <- sort(argl[["subset_rows"]])
-
-    }
-    if(!is.null(argl[["subset_cols"]])){
-        ssc <- T
-        stopifnot(!any(duplicated(argl[["subset_cols"]])))
-        ossc <- order(argl[["subset_cols"]])
-        argl[["subset_cols"]] <- sort(argl[["subset_cols"]])
-    }
-    ## offsets=c(0L,0L),chunksizes=c(NA_integer_,NA_integer_),
-    ## subset_rows=as.integer(c()),
-    ## subset_cols=as.integer(c())){
-    if(ssr && ssc){
-        return(update_matrix(data[ossr,ossc],filename =  h5filepath,datapath,argl))
-    }
-    if(ssr){
-        return(update_matrix(data[ossr,],filename =  h5filepath,datapath,argl))
-    }
-    if(ssc){
-        return(update_matrix(data[,ossc],filename =  h5filepath,datapath,argl))
-    }
-    return(update_matrix(data,filename =  h5filepath,datapath,argl))
-}
-
-
 
 
 
@@ -318,37 +163,6 @@ read_l_h5 <- function(filename,h5path="/"){
   })
 }
 
-read_h5 <- function(filename,h5path="/",subset=list()){
-  groupname <- dirname(h5path)
-  dataname <- basename(h5path)
-  if(dataname==""){
-    dataname <- groupname
-  }
-  if(isGroup(filename = filename,groupname = h5path)){
-    read_l_h5(filename,h5path=h5path)
-  }else{
-    get_dims_h5()
-  }
-  objs <- ls_h5(filename,groupname=groupname,full_names = T)
-  groups <- purrr::map_lgl(objs,~isGroup(filename,.x))
-  
-  # obj_dim <- get_dims_h5(filename,groupname,dataname)
-
-  isvec <- length(obj_dim)==1
-  if(isvec){
-    stopifnot(is.null(subset_cols))
-    return(read_vector_h5(filename,groupname,dataname,filtervec=subset_rows))
-  }else{
-    if(is.null(subset_rows)){
-      subset_rows <- integer()
-    }
-    if(is.null(subset_cols)){
-      subset_cols <- integer()
-    }
-    return(read_matrix_h5(filename,groupname,dataname,subset_rows = subset_rows,subset_cols=subset_cols))
-  }
-}
-
 
 create_mat_l <- function(dff){
   tl <- list(integer=integer(),numeric=numeric())
@@ -370,47 +184,6 @@ create_mat_l <- function(dff){
       dims=c(row_chunksizes,col_chunksizes),
       chunksizes=c(row_c_chunksizes,col_c_chunksizes))
   }))
-}
-
-datatype_h5 <- function(h5filename,groupname,dataname){
-  dt <- check_dtype(h5filename,groupname,dataname)
-  if(dt==14){
-    return(numeric())
-  }
-  return(integer())
-}
-
-concat_cols_h5 <- function(input_filenames,output_filename,groupname,dataname,input_rows=NULL){
-  all_dims <- purrr::map(input_filenames,~get_dims_h5(.x,groupname=groupname,dataname=dataname))
-  all_p <- purrr::map_int(all_dims,~.x[1])
-  p <- unique(all_p)
-  stopifnot(length(p)==1)
-  all_colno <- purrr::map_int(all_dims,~.x[2])
-  tot_colno <- sum(all_colno)
-  if(is.null(input_rows)){
-    input_rows <- purrr::rerun(length(input_filenames),1:p)
-  }
-  create_matrix_h5(filename = output_filename,
-                   groupname = groupname,
-                   dataname = dataname,
-                   data = datatype_h5(h5filename = input_filenames[1],groupname = groupname,dataname = dataname),
-                   doTranspose = F,
-                   dims = c(p,tot_colno))
-  cur_N <- 0
-  for(i in 1:length(input_filenames)){
-    tinf <- input_filenames[i]
-    tinr <- input_rows[[i]]
-    if(is.null(tinr)){
-      tinr <- integer()
-    }
-    stopifnot(min(tinr)>0)
-    tmat <- read_matrix_h5(filename = tinf,groupname = groupname,dataname = dataname,subset_rows = tinr)
-    write_matrix_h5(filename = output_filename,groupname = groupname,dataname = dataname,data = tmat,doTranspose = F,offsets = c(0L,cur_N))
-    cur_N <- cur_N+ncol(tmat)
-    gc()
-  }
-  
-  
 }
 
 

@@ -9,6 +9,7 @@
 #pragma once
 
 #include <H5Ipublic.h>
+#include <H5Opublic.h>
 
 namespace HighFive {
 
@@ -34,10 +35,12 @@ class Object {
     ///  provided for C API compatibility
     ///
     hid_t getId() const;
+  haddr_t getAddr() const;
 
   protected:
     // empty constructor
     Object();
+
 
     // copy constructor, increase reference counter
     Object(const Object& other);

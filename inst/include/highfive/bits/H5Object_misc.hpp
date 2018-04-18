@@ -34,6 +34,9 @@ inline Object& Object::operator=(const Object& other) {
     return *this;
 }
 
+
+
+
 inline Object::~Object() {
     if (isValid() && H5Idec_ref(_hid) < 0) {
         std::cerr << "HighFive::~Object: reference counter decrease failure"
@@ -46,5 +49,14 @@ inline bool Object::isValid() const {
 }
 
 inline hid_t Object::getId() const { return _hid; }
-}
 
+
+inline haddr_t Object::getAddr() const{
+   H5O_info_t tid;
+   if(H5Oget_info(_hid,&tid)<0){
+     throw ObjectException("Unable to obtain object info");
+   }else{
+     return(tid.addr);
+   }
+}
+}

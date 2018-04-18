@@ -7,4 +7,4 @@ PKG_LIBS+=$(shell echo 'libblosc::pkgconfig("PKG_LIBS_static")' |\
 "${R_HOME}/bin/R" --vanilla --slave)    
 PKG_LIBS += $(RHDF5_LIBS) -lstdc++fs
 PKG_LIBS += $(shell ${R_HOME}/bin/Rscript -e "RcppParallel::RcppParallelLibs()") 
-PKG_CPPFLAGS += -I../inst/include -Wno-deprecated-declarations -Wno-ignored-attributes ${BLOSC_CFLAGS} -DUSE_BLOSC -DH5_USE_EIGEN -DEIGEN_PERMANENLY_DISABLE_STUPID_WARNINGS=1
+PKG_CPPFLAGS += -g -I../inst/include -Wno-deprecated-declarations -Wno-ignored-attributes ${BLOSC_CFLAGS} -DUSE_BLOSC -DH5_USE_EIGEN -DEIGEN_PERMANENLY_DISABLE_STUPID_WARNINGS=1

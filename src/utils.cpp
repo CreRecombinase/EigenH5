@@ -41,13 +41,8 @@ bool exists_h5(const std::string filename,
 //[[Rcpp::export]]
 bool isObject(const std::string filename, std::string dataname){
   namespace fs = std::experimental::filesystem;
-  fs::path d_path = dataname;
   if(auto file = file_r(filename)){
-    if(auto grp = file->openGroup(d_path.parent_path())){
-      if(auto obj = grp->openObject(d_path.filename())){
-	return(true);
-      }
-    }
+    return(file->exist(dataname));
   }
   return(false);
 }
@@ -56,26 +51,32 @@ bool isObject(const std::string filename, std::string dataname){
 //[[Rcpp::export]]
 bool isDataSet(const std::string filename, std::string dataname){
 
-  // if(groupname=="."){
-  //   groupname="/";
-  // }
   namespace fs = std::experimental::filesystem;
   fs::path d_path = dataname;
 
 
   if(auto file = file_r(filename)){
-    auto grp = file->getGroup(d_path.parent_path());
-    try{
-      HighFive::SilenceHDF5 silence;
-      grp.getDataSet(d_path.filename());
-      return(true);
-    }catch (HighFive::Exception& err) {
-      // Rcpp::StringVector retvec(1);
-      return(false);
+    if(file->exist(dataname)){
+      return(file->isDataSet(dataname));
     }
-  }else{
-    Rcpp::stop("unable to open file for reading!");
   }
+    Rcpp::stop("unable to open file for reading!");
+}
+
+
+//[[Rcpp::export]]
+bool isGroup(const std::string filename, std::string dataname){
+
+  namespace fs = std::experimental::filesystem;
+  fs::path d_path = dataname;
+
+
+  if(auto file = file_r(filename)){
+    if(file->exist(dataname)){
+      return(file->isGroup(dataname));
+    }
+  }
+  Rcpp::stop("unable to open file for reading!");
 }
 
 //[[Rcpp::export]]
@@ -115,8 +116,7 @@ Rcpp::StringVector typeof_h5(const std::string &filename,
     return(Rcpp::StringVector::create("list"));
   }
   HighFive::File file(filename,HighFive::File::ReadOnly);
-  fs::path d_path = datapath;
-  auto arg = file.getGroup(d_path.parent_path()).getDataSet(d_path.filename());
+  auto arg = file.getDataSet(datapath);
   SEXPTYPE h2t = h2r_T(arg.getDataType().getId());
   if (h2t == REALSXP){
     return(Rcpp::StringVector::create("double"));
@@ -131,21 +131,7 @@ Rcpp::StringVector typeof_h5(const std::string &filename,
 }
 
 
-//[[Rcpp::export]]
-bool isGroup(const std::string filename, std::string groupname){
-  if(groupname=="."){
-    groupname="/";
-  }
-  HighFive::File file(filename,HighFive::File::ReadOnly);
-  try{
-    HighFive::SilenceHDF5 silence;
-    file.getGroup(groupname);
-    return(true);
-  }catch (HighFive::Exception& err) {
-    // Rcpp::StringVector retvec(1);
-    return(false);
-  }
-}
+
 
 
 
@@ -155,15 +141,6 @@ bool isGroup(const std::string filename, std::string groupname){
 Rcpp::IntegerVector dim_h5(const std::string &filename,const std::string datapath){
 
   namespace fs = std::experimental::filesystem;
-  fs::path d_path = datapath;
   HighFive::File file(filename,HighFive::File::ReadOnly);
-  auto grp = file.getGroup(d_path.parent_path());
-  try{
-    HighFive::SilenceHDF5 silence;
-    return(Rcpp::wrap(grp.getDataSet(d_path.filename()).getDataDimensions()));
-  }catch (HighFive::Exception& err) {
-    // Rcpp::StringVector retvec(1);
-    return(Rcpp::IntegerVector::create());
-  }
-  // return(Rcpp::wrap(HighFive::File(filename,HighFive::File::ReadOnly).getGroup(groupname).getDataSet(dataname).getDataDimensions()));
+  return(Rcpp::wrap(file.getDataSet(datapath).getDataDimensions()));
 }
