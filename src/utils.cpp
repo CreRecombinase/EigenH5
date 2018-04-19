@@ -133,7 +133,26 @@ Rcpp::StringVector typeof_h5(const std::string &filename,
 
 
 
+//[[Rcpp::export]]
+Rcpp::DataFrame file_acc_ct(const std::string filename){
+  using namespace Rcpp;
+  auto file = file_r(filename);
+  return(Rcpp::DataFrame::create(
+      _["count"]=Rcpp::IntegerVector::create(
+        file->getObjCount(H5F_OBJ_FILE),
+        file->getObjCount(H5F_OBJ_DATASET),
+        file->getObjCount(H5F_OBJ_GROUP),
+        file->getObjCount(H5F_OBJ_DATATYPE),
+        file->getObjCount(H5F_OBJ_ATTR)),
+        _["type"]=Rcpp::StringVector::create(
+          "Files",
+          "DataSets",
+          "Groups",
+          "DataTypes",
+          "Attributes"
+        )));
 
+}
 
 
 

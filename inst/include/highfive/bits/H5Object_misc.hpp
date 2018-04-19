@@ -48,6 +48,9 @@ inline bool Object::isValid() const {
     return (_hid != H5I_INVALID_HID) && (H5Iis_valid(_hid) != false);
 }
 
+  inline int Object::getRefCt()const{
+    return(H5Iget_ref( _hid));
+  }
 inline hid_t Object::getId() const { return _hid; }
 
 

@@ -69,6 +69,10 @@ typeof_h5 <- function(filename, datapath) {
     .Call(`_EigenH5_typeof_h5`, filename, datapath)
 }
 
+file_acc_ct <- function(filename) {
+    .Call(`_EigenH5_file_acc_ct`, filename)
+}
+
 dim_h5 <- function(filename, datapath) {
     .Call(`_EigenH5_dim_h5`, filename, datapath)
 }

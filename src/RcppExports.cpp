@@ -520,6 +520,36 @@ RcppExport SEXP _EigenH5_typeof_h5(SEXP filenameSEXP, SEXP datapathSEXP) {
     UNPROTECT(1);
     return rcpp_result_gen;
 }
+// file_acc_ct
+Rcpp::DataFrame file_acc_ct(const std::string filename);
+static SEXP _EigenH5_file_acc_ct_try(SEXP filenameSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< const std::string >::type filename(filenameSEXP);
+    rcpp_result_gen = Rcpp::wrap(file_acc_ct(filename));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _EigenH5_file_acc_ct(SEXP filenameSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_EigenH5_file_acc_ct_try(filenameSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
 // dim_h5
 Rcpp::IntegerVector dim_h5(const std::string& filename, const std::string datapath);
 static SEXP _EigenH5_dim_h5_try(SEXP filenameSEXP, SEXP datapathSEXP) {
@@ -572,6 +602,7 @@ static int _EigenH5_RcppExport_validate(const char* sig) {
         signatures.insert("bool(*isGroup)(const std::string,std::string)");
         signatures.insert("Rcpp::StringVector(*ls_h5)(const std::string,Rcpp::CharacterVector,bool)");
         signatures.insert("Rcpp::StringVector(*typeof_h5)(const std::string&,const std::string&)");
+        signatures.insert("Rcpp::DataFrame(*file_acc_ct)(const std::string)");
         signatures.insert("Rcpp::IntegerVector(*dim_h5)(const std::string&,const std::string)");
     }
     return signatures.find(sig) != signatures.end();
@@ -595,6 +626,7 @@ RcppExport SEXP _EigenH5_RcppExport_registerCCallable() {
     R_RegisterCCallable("EigenH5", "_EigenH5_isGroup", (DL_FUNC)_EigenH5_isGroup_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_ls_h5", (DL_FUNC)_EigenH5_ls_h5_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_typeof_h5", (DL_FUNC)_EigenH5_typeof_h5_try);
+    R_RegisterCCallable("EigenH5", "_EigenH5_file_acc_ct", (DL_FUNC)_EigenH5_file_acc_ct_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_dim_h5", (DL_FUNC)_EigenH5_dim_h5_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_RcppExport_validate", (DL_FUNC)_EigenH5_RcppExport_validate);
     return R_NilValue;
@@ -620,6 +652,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_EigenH5_isGroup", (DL_FUNC) &_EigenH5_isGroup, 2},
     {"_EigenH5_ls_h5", (DL_FUNC) &_EigenH5_ls_h5, 3},
     {"_EigenH5_typeof_h5", (DL_FUNC) &_EigenH5_typeof_h5, 2},
+    {"_EigenH5_file_acc_ct", (DL_FUNC) &_EigenH5_file_acc_ct, 1},
     {"_EigenH5_dim_h5", (DL_FUNC) &_EigenH5_dim_h5, 2},
     {"_EigenH5_RcppExport_registerCCallable", (DL_FUNC) &_EigenH5_RcppExport_registerCCallable, 0},
     {"run_testthat_tests",                    (DL_FUNC) &run_testthat_tests,                    0},

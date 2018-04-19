@@ -328,6 +328,25 @@ namespace EigenH5 {
         return Rcpp::as<Rcpp::StringVector >(rcpp_result_gen);
     }
 
+    inline Rcpp::DataFrame file_acc_ct(const std::string filename) {
+        typedef SEXP(*Ptr_file_acc_ct)(SEXP);
+        static Ptr_file_acc_ct p_file_acc_ct = NULL;
+        if (p_file_acc_ct == NULL) {
+            validateSignature("Rcpp::DataFrame(*file_acc_ct)(const std::string)");
+            p_file_acc_ct = (Ptr_file_acc_ct)R_GetCCallable("EigenH5", "_EigenH5_file_acc_ct");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_file_acc_ct(Shield<SEXP>(Rcpp::wrap(filename)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::DataFrame >(rcpp_result_gen);
+    }
+
     inline Rcpp::IntegerVector dim_h5(const std::string& filename, const std::string datapath) {
         typedef SEXP(*Ptr_dim_h5)(SEXP,SEXP);
         static Ptr_dim_h5 p_dim_h5 = NULL;

@@ -43,6 +43,7 @@ class NodeTraits {
     DataSet createDataSet(const std::string& dataset_name,
                           const DataSpace& space, const DataType& type);
 
+
     ///
     /// \brief createDataSet create a new dataset in the current file with a
     /// size specified by space
@@ -120,6 +121,10 @@ class NodeTraits {
   /// false
   bool exist(const std::string& node_name) const;
 private:
+  static Group grpCreate(const hid_t root_id, const char* name);
+
+
+  std::variant<DataSet,Group> getObj(const hid_t root_id, const char* name) const;
   typedef Derivate derivate_type;
 };
 }

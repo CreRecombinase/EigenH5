@@ -102,14 +102,36 @@ context("traversing datapath"){
   test_that("We can check for existence of groups"){
 
     auto tf = test_file_w();
+    auto tf2 = test_file_w();
+    expect_true(tf.getObjCount(H5F_OBJ_FILE)==1);
+    expect_true(tf.getObjCount(H5F_OBJ_GROUP)==0);
     expect_false(tf.exist("test"));
+    expect_true(tf.getObjCount(H5F_OBJ_GROUP)==0);
     expect_false(tf.openGroup("test"));
+    expect_true(tf.getObjCount(H5F_OBJ_GROUP)==0);
+    expect_true(tf.getRefCt()==1);
+  }
 
-    auto tgrp =	tf.createGroup("test");
+
+  test_that("We can create groups and maintain ref ct"){
+    auto tf = test_file_w();
+    auto tf2 = test_file_w();
+    auto tgrp2 =	tf2.createGroup("test/test2/test3");
+    expect_true(tf2.getObjCount(H5F_OBJ_GROUP)==1);
+    expect_true(tgrp2.getRefCt()==1);
+    auto ttgrp2 = tgrp2.getGroup(".");
+    auto tgrp =	tf.createGroup("/test");
+    expect_true(tf.getObjCount(H5F_OBJ_GROUP)==1);
+
+
+
     expect_true(tf.isGroup("test"));
+    expect_true(tf.getObjCount(H5F_OBJ_GROUP)==1);
     expect_true(tf.isGroup("/test"));
     expect_true(tf.openGroup("test"));
+    expect_true(tf.getObjCount(H5F_OBJ_GROUP)==1);
     expect_false(tf.getGroup("test").exist("test"));
+
     auto ttgrp = tf.getGroup("test");
     expect_true(tgrp.getAddr()==ttgrp.getAddr());
     ttgrp = tf.getGroup("/test");
@@ -128,6 +150,7 @@ context("traversing datapath"){
     expect_true(ttgrp.getAddr()==tgrp.getAddr());
 
   }
+
   test_that("We can check for existence of datasets"){
     auto tf = test_file_w();
     std::vector<int> tvec = {1,2,3};

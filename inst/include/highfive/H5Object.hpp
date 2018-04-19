@@ -11,6 +11,7 @@
 #include <H5Ipublic.h>
 #include <H5Opublic.h>
 
+
 namespace HighFive {
 
 template <typename Derivate>
@@ -34,10 +35,10 @@ class Object {
     /// \return iternal HDF5 id to the object
     ///  provided for C API compatibility
     ///
-    hid_t getId() const;
+  hid_t getId() const;
   haddr_t getAddr() const;
-
-  protected:
+  int getRefCt() const;
+protected:
     // empty constructor
     Object();
 
@@ -48,6 +49,11 @@ class Object {
     Object& operator=(const Object& other);
 
     hid_t _hid;
+
+
+
+
+
 
   private:
     template <typename Derivate>

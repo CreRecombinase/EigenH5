@@ -690,7 +690,7 @@ bool update_vector(RObject data,
  // 		    Rcpp::List options){
  //  using namespace HighFive;
  //  using namespace HighFive;
- //  namespace fs = stdx::filesystem;
+ //  
  //  fs::path dp=datapath;
  //  HighFive::File file(filename,);
  //  if(dim.size()!=1){

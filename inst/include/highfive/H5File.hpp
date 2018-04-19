@@ -57,6 +57,7 @@ class File : public Object,
     /// \brief Return the name of the file
     ///
   const std::string& getName() const;
+  size_t getObjCount(unsigned int types) const;
   static std::optional<File> openFile(const std::string& filename, int openFlags = ReadOnly,
 				      const FileDriver& driver = DefaultFileDriver());
     ///

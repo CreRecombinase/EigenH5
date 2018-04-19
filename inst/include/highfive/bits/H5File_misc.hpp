@@ -43,6 +43,12 @@ inline int convert_open_flag(int openFlags) {
     return(H5Fstart_swmr_write(_hid) < 0);
   }
 
+  inline size_t File::getObjCount(unsigned int types) const{
+    return (H5Fget_obj_count( _hid,types ));
+  }
+
+
+
 inline File::File(const std::string& filename, int openFlags,
                   const FileDriver& driver)
     : _filename(filename) {

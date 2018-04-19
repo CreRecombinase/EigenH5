@@ -8,8 +8,12 @@ test_that("can write string vector",{
   tvec <- c("allb","allc","alld")
   tempf <- tempfile()
   testthat::expect_true(EigenH5::write_vector_h5(tempf,datapath="grp/dat",data=tvec))
+  file_acc_ct(tempf)
   expect_equal(typeof_h5(tempf,"grp"),"list")
+  file_acc_ct(tempf)
   expect_equal(typeof_h5(tempf,"grp/dat"),"character")
+  file_acc_ct(tempf)
+  
   expect_equal(get_dims_h5(tempf,"grp/dat"),length(tvec))
   expect_equal(get_dims_h5(tempf,"grp/dat"),length(tvec))
   rd <- read_vector_h5(tempf,datapath="grp/dat")
