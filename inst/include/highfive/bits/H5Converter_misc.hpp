@@ -35,10 +35,8 @@
 #include "../H5DataType.hpp"
 
 #include "H5Utils.hpp"
-
-#if H5_USE_CXX11
 #include <type_traits>
-#endif
+
 
 namespace HighFive {
 
@@ -55,64 +53,6 @@ namespace HighFive {
       }
     }
 
-    // copy multi dimensional vector in C++ in one C-style multi dimensional buffer
-    template <typename T>
-    inline void vectors_to_single_buffer(const std::vector<T>& vec_single_dim,
-					 const std::vector<size_t>& dims,
-					 size_t current_dim,
-					 std::vector<T>& buffer) {
-
-      check_dimensions_vector(vec_single_dim.size(), dims[current_dim],
-			      current_dim);
-      buffer.insert(buffer.end(), vec_single_dim.begin(), vec_single_dim.end());
-    }
-
-    template <typename T>
-    inline void
-    vectors_to_single_buffer(const std::vector<T>& vec_multi_dim,
-			     const std::vector<size_t>& dims, size_t current_dim,
-			     std::vector<typename type_of_array<T>::type>& buffer) {
-
-      check_dimensions_vector(vec_multi_dim.size(), dims[current_dim],
-			      current_dim);
-      for (typename std::vector<T>::const_iterator it = vec_multi_dim.begin();
-	   it < vec_multi_dim.end(); ++it) {
-        vectors_to_single_buffer(*it, dims, current_dim + 1, buffer);
-      }
-    }
-
-    // copy single buffer to multi dimensional vector, following dimensions
-    // specified
-    template <typename T>
-    inline typename std::vector<T>::iterator
-    single_buffer_to_vectors(typename std::vector<T>::iterator begin_buffer,
-			     typename std::vector<T>::iterator end_buffer,
-			     const std::vector<size_t>& dims, size_t current_dim,
-			     std::vector<T>& vec_single_dim) {
-      const size_t n_elems = dims[current_dim];
-      typename std::vector<T>::iterator end_copy_iter =
-        std::min(begin_buffer + n_elems, end_buffer);
-      vec_single_dim.assign(begin_buffer, end_copy_iter);
-      return end_copy_iter;
-    }
-
-    template <typename T, typename U>
-    inline typename std::vector<T>::iterator
-    single_buffer_to_vectors(typename std::vector<T>::iterator begin_buffer,
-			     typename std::vector<T>::iterator end_buffer,
-			     const std::vector<size_t>& dims, size_t current_dim,
-			     std::vector<U>& vec_multi_dim) {
-
-      const size_t n_elems = dims[current_dim];
-      vec_multi_dim.resize(n_elems);
-
-      for (typename std::vector<U>::iterator it = vec_multi_dim.begin();
-	   it < vec_multi_dim.end(); ++it) {
-        begin_buffer = single_buffer_to_vectors(begin_buffer, end_buffer, dims,
-                                                current_dim + 1, *it);
-      }
-      return begin_buffer;
-    }
 
     // apply conversion operations to basic scalar type
     template <typename Scalar, class Enable = void>
@@ -521,51 +461,6 @@ namespace HighFive {
 
 #endif
 
-    // apply conversion for vectors nested vectors
-    template <typename T>
-    struct data_converter<std::vector<T>,
-			  typename enable_if<(is_container<T>::value)>::type> {
-      inline data_converter(std::vector<T> &vec, DataSpace &space, size_t dim = 0)
-        : _dims(space.getDimensions()), _dim(dim), _vec_align() {
-        (void)vec;
-      }
-
-      inline typename type_of_array<T>::type*
-      transform_read(std::vector<T>& vec) {
-        (void)vec;
-        _vec_align.resize(get_total_size());
-        return &(_vec_align[0]);
-      }
-
-      inline typename type_of_array<T>::type*
-      transform_write(std::vector<T>& vec) {
-        _vec_align.reserve(get_total_size());
-        vectors_to_single_buffer<T>(vec, _dims, 0, _vec_align);
-        return &(_vec_align[0]);
-      }
-
-      inline void process_result(std::vector<T>& vec) {
-        single_buffer_to_vectors<typename type_of_array<T>::type, T>(
-								     _vec_align.begin(), _vec_align.end(), _dims, 0, vec);
-      }
-
-      inline size_t get_total_size() {
-        return std::accumulate(_dims.begin(), _dims.end(), 1,
-                               std::multiplies<size_t>());
-      }
-
-      std::vector<size_t> _dims;
-      size_t _dim;
-      std::vector<typename type_of_array<T>::type> _vec_align;
-    };
-
-
-
-
-
-
-  
-
     // apply conversion to scalar string
     template <>
     struct data_converter<std::string, void> {
@@ -655,26 +550,19 @@ namespace HighFive {
       const size_t dim_;
       DataSpace &_space;
     };
+
     // template<>
-    // struct data_converter<, void> {
+    // struct data_converter<std::vector<char*>, void> {
     //   inline data_converter(std::vector<char*> &vec, DataSpace &space,const size_t dim=0)
     // 	: _space(space) {
     // 	(void) vec;
     //   }
-
-    //   create a C vector adapted to HDF5
-    //   fill last element with NULL to identify end
+    //   // create a C vector adapted to HDF5
+    //   // fill last element with NULL to identify end
     //   inline char *transform_read(std::vector<char*> &vec) {
     // 	(void) vec;
-
     // 	vec.resize(_space.getDimensions()[0],nullptr);
-
-    // 	_c_vec.resize(_space.getDimensions()[0], NULL);
-    // 	return (_c_vec.data());
-    //   }
-
-    //   static inline char *char_converter(const std::string &str) {
-    //   	return const_cast<char *>(str.c_str());
+    // 	return (vec.data());
     //   }
 
     //   inline char **transform_write(std::vector<char*> &vec) {

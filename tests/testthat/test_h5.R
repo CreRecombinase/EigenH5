@@ -2,6 +2,12 @@ context("h5")
 
 
 
+test_that("check out singleton class",{
+  ms <- get_singleton()
+
+})
+
+
 test_that("can write string vector",{
   library(testthat)
   library(EigenH5)
@@ -139,6 +145,8 @@ test_that("check for groups/datasets",{
   expect_false(isDataSet(tempf,"grp/grp2/"))
   expect_true(isGroup(tempf,"grp"))
   expect_true(isGroup(tempf,"grp/grp2"))
+  expect_true(isGroup(tempf,"grp/grp2/"))
+  
   expect_true(isGroup(tempf,"/"))
   expect_false(isGroup(tempf,"grp/grp2/tmat"))
   expect_true(isDataSet(tempf,"grp/grp2/tmat"))

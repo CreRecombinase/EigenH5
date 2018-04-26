@@ -40,12 +40,13 @@ inline int convert_open_flag(int openFlags) {
     // }
 
   inline bool File::start_swmr(){
-    return(H5Fstart_swmr_write(_hid) < 0);
+    return(H5Fstart_swmr_write(_hid) > 0);
   }
 
   inline size_t File::getObjCount(unsigned int types) const{
     return (H5Fget_obj_count( _hid,types ));
   }
+
 
 
 
@@ -66,7 +67,7 @@ inline File::File(const std::string& filename, int openFlags,
 
     openFlags = convert_open_flag(openFlags);
 
-    //    H5Pset_libver_bounds(fapl_id, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
+    //    auto fapl=    H5Pset_libver_bounds(fapl_id, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
 
 
     if (openFlags & H5F_ACC_CREAT) {

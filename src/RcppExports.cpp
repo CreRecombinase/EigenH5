@@ -37,6 +37,35 @@ RcppExport SEXP _EigenH5_start_blosc() {
     UNPROTECT(1);
     return rcpp_result_gen;
 }
+// print_filemanager
+void print_filemanager(const Rcpp::XPtr<FileManager> fm);
+static SEXP _EigenH5_print_filemanager_try(SEXP fmSEXP) {
+BEGIN_RCPP
+    Rcpp::traits::input_parameter< const Rcpp::XPtr<FileManager> >::type fm(fmSEXP);
+    print_filemanager(fm);
+    return R_NilValue;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _EigenH5_print_filemanager(SEXP fmSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_EigenH5_print_filemanager_try(fmSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
 // check_blosc
 bool check_blosc();
 static SEXP _EigenH5_check_blosc_try() {
@@ -258,24 +287,24 @@ RcppExport SEXP _EigenH5_update_vector(SEXP dataSEXP, SEXP filenameSEXP, SEXP da
     UNPROTECT(1);
     return rcpp_result_gen;
 }
-// create_dataset
-bool create_dataset(const std::string& filename, const std::string datapath, const RObject& data, Rcpp::List options);
-static SEXP _EigenH5_create_dataset_try(SEXP filenameSEXP, SEXP datapathSEXP, SEXP dataSEXP, SEXP optionsSEXP) {
+// create_dataset_h5
+bool create_dataset_h5(const std::string& filename, const std::string datapath, const RObject& data, Rcpp::List options);
+static SEXP _EigenH5_create_dataset_h5_try(SEXP filenameSEXP, SEXP datapathSEXP, SEXP dataSEXP, SEXP optionsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
     Rcpp::traits::input_parameter< const std::string >::type datapath(datapathSEXP);
     Rcpp::traits::input_parameter< const RObject& >::type data(dataSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type options(optionsSEXP);
-    rcpp_result_gen = Rcpp::wrap(create_dataset(filename, datapath, data, options));
+    rcpp_result_gen = Rcpp::wrap(create_dataset_h5(filename, datapath, data, options));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
 }
-RcppExport SEXP _EigenH5_create_dataset(SEXP filenameSEXP, SEXP datapathSEXP, SEXP dataSEXP, SEXP optionsSEXP) {
+RcppExport SEXP _EigenH5_create_dataset_h5(SEXP filenameSEXP, SEXP datapathSEXP, SEXP dataSEXP, SEXP optionsSEXP) {
     SEXP rcpp_result_gen;
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_EigenH5_create_dataset_try(filenameSEXP, datapathSEXP, dataSEXP, optionsSEXP));
+        rcpp_result_gen = PROTECT(_EigenH5_create_dataset_h5_try(filenameSEXP, datapathSEXP, dataSEXP, optionsSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -458,22 +487,22 @@ RcppExport SEXP _EigenH5_isGroup(SEXP filenameSEXP, SEXP datanameSEXP) {
     return rcpp_result_gen;
 }
 // ls_h5
-Rcpp::StringVector ls_h5(const std::string h5filepath, Rcpp::CharacterVector groupname, bool full_names);
-static SEXP _EigenH5_ls_h5_try(SEXP h5filepathSEXP, SEXP groupnameSEXP, SEXP full_namesSEXP) {
+Rcpp::StringVector ls_h5(const std::string filename, Rcpp::CharacterVector groupname, bool full_names);
+static SEXP _EigenH5_ls_h5_try(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP full_namesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< const std::string >::type h5filepath(h5filepathSEXP);
+    Rcpp::traits::input_parameter< const std::string >::type filename(filenameSEXP);
     Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type groupname(groupnameSEXP);
     Rcpp::traits::input_parameter< bool >::type full_names(full_namesSEXP);
-    rcpp_result_gen = Rcpp::wrap(ls_h5(h5filepath, groupname, full_names));
+    rcpp_result_gen = Rcpp::wrap(ls_h5(filename, groupname, full_names));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
 }
-RcppExport SEXP _EigenH5_ls_h5(SEXP h5filepathSEXP, SEXP groupnameSEXP, SEXP full_namesSEXP) {
+RcppExport SEXP _EigenH5_ls_h5(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP full_namesSEXP) {
     SEXP rcpp_result_gen;
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_EigenH5_ls_h5_try(h5filepathSEXP, groupnameSEXP, full_namesSEXP));
+        rcpp_result_gen = PROTECT(_EigenH5_ls_h5_try(filenameSEXP, groupnameSEXP, full_namesSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -587,6 +616,7 @@ static int _EigenH5_RcppExport_validate(const char* sig) {
     static std::set<std::string> signatures;
     if (signatures.empty()) {
         signatures.insert("void(*start_blosc)()");
+        signatures.insert("void(*print_filemanager)(const Rcpp::XPtr<FileManager>)");
         signatures.insert("bool(*check_blosc)()");
         signatures.insert("bool(*is_transposed)(const std::string,const std::string,const std::string)");
         signatures.insert("int(*len)(RObject)");
@@ -594,7 +624,7 @@ static int _EigenH5_RcppExport_validate(const char* sig) {
         signatures.insert("SEXP(*read_matrix)(std::string,std::string,const Rcpp::List)");
         signatures.insert("bool(*update_matrix)(RObject,const std::string,const std::string,const Rcpp::List&)");
         signatures.insert("bool(*update_vector)(RObject,std::string,std::string,Rcpp::List)");
-        signatures.insert("bool(*create_dataset)(const std::string&,const std::string,const RObject&,Rcpp::List)");
+        signatures.insert("bool(*create_dataset_h5)(const std::string&,const std::string,const RObject&,Rcpp::List)");
         signatures.insert("Rcpp::IntegerVector(*guess_chunks)(const std::vector<int>)");
         signatures.insert("bool(*exists_h5)(const std::string,const std::string,const std::string)");
         signatures.insert("bool(*isObject)(const std::string,std::string)");
@@ -611,6 +641,7 @@ static int _EigenH5_RcppExport_validate(const char* sig) {
 // registerCCallable (register entry points for exported C++ functions)
 RcppExport SEXP _EigenH5_RcppExport_registerCCallable() { 
     R_RegisterCCallable("EigenH5", "_EigenH5_start_blosc", (DL_FUNC)_EigenH5_start_blosc_try);
+    R_RegisterCCallable("EigenH5", "_EigenH5_print_filemanager", (DL_FUNC)_EigenH5_print_filemanager_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_check_blosc", (DL_FUNC)_EigenH5_check_blosc_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_is_transposed", (DL_FUNC)_EigenH5_is_transposed_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_len", (DL_FUNC)_EigenH5_len_try);
@@ -618,7 +649,7 @@ RcppExport SEXP _EigenH5_RcppExport_registerCCallable() {
     R_RegisterCCallable("EigenH5", "_EigenH5_read_matrix", (DL_FUNC)_EigenH5_read_matrix_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_update_matrix", (DL_FUNC)_EigenH5_update_matrix_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_update_vector", (DL_FUNC)_EigenH5_update_vector_try);
-    R_RegisterCCallable("EigenH5", "_EigenH5_create_dataset", (DL_FUNC)_EigenH5_create_dataset_try);
+    R_RegisterCCallable("EigenH5", "_EigenH5_create_dataset_h5", (DL_FUNC)_EigenH5_create_dataset_h5_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_guess_chunks", (DL_FUNC)_EigenH5_guess_chunks_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_exists_h5", (DL_FUNC)_EigenH5_exists_h5_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_isObject", (DL_FUNC)_EigenH5_isObject_try);
@@ -636,6 +667,7 @@ RcppExport SEXP run_testthat_tests();
 
 static const R_CallMethodDef CallEntries[] = {
     {"_EigenH5_start_blosc", (DL_FUNC) &_EigenH5_start_blosc, 0},
+    {"_EigenH5_print_filemanager", (DL_FUNC) &_EigenH5_print_filemanager, 1},
     {"_EigenH5_check_blosc", (DL_FUNC) &_EigenH5_check_blosc, 0},
     {"_EigenH5_is_transposed", (DL_FUNC) &_EigenH5_is_transposed, 3},
     {"_EigenH5_len", (DL_FUNC) &_EigenH5_len, 1},
@@ -643,7 +675,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_EigenH5_read_matrix", (DL_FUNC) &_EigenH5_read_matrix, 3},
     {"_EigenH5_update_matrix", (DL_FUNC) &_EigenH5_update_matrix, 4},
     {"_EigenH5_update_vector", (DL_FUNC) &_EigenH5_update_vector, 4},
-    {"_EigenH5_create_dataset", (DL_FUNC) &_EigenH5_create_dataset, 4},
+    {"_EigenH5_create_dataset_h5", (DL_FUNC) &_EigenH5_create_dataset_h5, 4},
     {"_EigenH5_split_ldd", (DL_FUNC) &_EigenH5_split_ldd, 1},
     {"_EigenH5_guess_chunks", (DL_FUNC) &_EigenH5_guess_chunks, 1},
     {"_EigenH5_exists_h5", (DL_FUNC) &_EigenH5_exists_h5, 3},

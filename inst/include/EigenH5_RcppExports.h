@@ -43,6 +43,24 @@ namespace EigenH5 {
             throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
     }
 
+    inline void print_filemanager(const Rcpp::XPtr<FileManager> fm) {
+        typedef SEXP(*Ptr_print_filemanager)(SEXP);
+        static Ptr_print_filemanager p_print_filemanager = NULL;
+        if (p_print_filemanager == NULL) {
+            validateSignature("void(*print_filemanager)(const Rcpp::XPtr<FileManager>)");
+            p_print_filemanager = (Ptr_print_filemanager)R_GetCCallable("EigenH5", "_EigenH5_print_filemanager");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_print_filemanager(Shield<SEXP>(Rcpp::wrap(fm)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+    }
+
     inline bool check_blosc() {
         typedef SEXP(*Ptr_check_blosc)();
         static Ptr_check_blosc p_check_blosc = NULL;
@@ -176,17 +194,17 @@ namespace EigenH5 {
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
-    inline bool create_dataset(const std::string& filename, const std::string datapath, const RObject& data, Rcpp::List options) {
-        typedef SEXP(*Ptr_create_dataset)(SEXP,SEXP,SEXP,SEXP);
-        static Ptr_create_dataset p_create_dataset = NULL;
-        if (p_create_dataset == NULL) {
-            validateSignature("bool(*create_dataset)(const std::string&,const std::string,const RObject&,Rcpp::List)");
-            p_create_dataset = (Ptr_create_dataset)R_GetCCallable("EigenH5", "_EigenH5_create_dataset");
+    inline bool create_dataset_h5(const std::string& filename, const std::string datapath, const RObject& data, Rcpp::List options) {
+        typedef SEXP(*Ptr_create_dataset_h5)(SEXP,SEXP,SEXP,SEXP);
+        static Ptr_create_dataset_h5 p_create_dataset_h5 = NULL;
+        if (p_create_dataset_h5 == NULL) {
+            validateSignature("bool(*create_dataset_h5)(const std::string&,const std::string,const RObject&,Rcpp::List)");
+            p_create_dataset_h5 = (Ptr_create_dataset_h5)R_GetCCallable("EigenH5", "_EigenH5_create_dataset_h5");
         }
         RObject rcpp_result_gen;
         {
             RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_create_dataset(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(data)), Shield<SEXP>(Rcpp::wrap(options)));
+            rcpp_result_gen = p_create_dataset_h5(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(data)), Shield<SEXP>(Rcpp::wrap(options)));
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
@@ -290,7 +308,7 @@ namespace EigenH5 {
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
-    inline Rcpp::StringVector ls_h5(const std::string h5filepath, Rcpp::CharacterVector groupname = Rcpp::CharacterVector::create("/"), bool full_names = false) {
+    inline Rcpp::StringVector ls_h5(const std::string filename, Rcpp::CharacterVector groupname = Rcpp::CharacterVector::create("/"), bool full_names = false) {
         typedef SEXP(*Ptr_ls_h5)(SEXP,SEXP,SEXP);
         static Ptr_ls_h5 p_ls_h5 = NULL;
         if (p_ls_h5 == NULL) {
@@ -300,7 +318,7 @@ namespace EigenH5 {
         RObject rcpp_result_gen;
         {
             RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_ls_h5(Shield<SEXP>(Rcpp::wrap(h5filepath)), Shield<SEXP>(Rcpp::wrap(groupname)), Shield<SEXP>(Rcpp::wrap(full_names)));
+            rcpp_result_gen = p_ls_h5(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(groupname)), Shield<SEXP>(Rcpp::wrap(full_names)));
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();

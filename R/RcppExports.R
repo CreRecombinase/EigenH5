@@ -5,6 +5,10 @@ start_blosc <- function() {
     invisible(.Call(`_EigenH5_start_blosc`))
 }
 
+print_filemanager <- function(fm) {
+    invisible(.Call(`_EigenH5_print_filemanager`, fm))
+}
+
 check_blosc <- function() {
     .Call(`_EigenH5_check_blosc`)
 }
@@ -33,8 +37,8 @@ update_vector <- function(data, filename, datapath, options) {
     .Call(`_EigenH5_update_vector`, data, filename, datapath, options)
 }
 
-create_dataset <- function(filename, datapath, data, options) {
-    .Call(`_EigenH5_create_dataset`, filename, datapath, data, options)
+create_dataset_h5 <- function(filename, datapath, data, options) {
+    .Call(`_EigenH5_create_dataset_h5`, filename, datapath, data, options)
 }
 
 split_ldd <- function(region_ids) {
@@ -61,8 +65,8 @@ isGroup <- function(filename, dataname) {
     .Call(`_EigenH5_isGroup`, filename, dataname)
 }
 
-ls_h5 <- function(h5filepath, groupname = as.character( c("/")), full_names = FALSE) {
-    .Call(`_EigenH5_ls_h5`, h5filepath, groupname, full_names)
+ls_h5 <- function(filename, groupname = as.character( c("/")), full_names = FALSE) {
+    .Call(`_EigenH5_ls_h5`, filename, groupname, full_names)
 }
 
 typeof_h5 <- function(filename, datapath) {

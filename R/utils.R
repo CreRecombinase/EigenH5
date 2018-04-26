@@ -1,5 +1,6 @@
 .onLoad <- function(libname, pkgname){
-  start_blosc()
+    start_blosc()
+    # start_singleton()
 }
 
 
@@ -11,13 +12,29 @@ construct_data_path <- function(...){
     return(retpath)
 }
 
-gen_matslice_chunk_df <- function(input_rows,chunksize=10000,...){
-    input_df <- BBmisc::chunk(input_rows,chunk.size=chunksize)  %>% purrr::map_df(function(x){
-      stopifnot(all(x==seq(x[1],x[length(x)])))
-      return(data_frame(row_offsets=x[1]-1,row_chunksizes=length(x)))
-      }) %>% dplyr::mutate(...)
-    return(input_df)
+lockf <- function(filename){
+  return(paste0(filename,".lck"))
 }
+
+isObject_h5 <- function(filename,datapath){
+  tf <- lockf(filename)
+  stopifnot(file.exists(filename))
+  if(!hasArg(timeout)){
+    timeout <- Inf
+  }
+  ml <- filelock::lock(tf,exclusive = F,timeout=timeout)
+  ret <- isObject(filename,datapath)
+  filelock::unlock(ml)
+  return(ret)
+}
+
+## gen_matslice_chunk_l <- function(input_rows,chunksize=10000,...){
+##     output_l <- BBmisc::chunk(input_rows,chunk.size=chunksize)  %>% purrr::map(~tibble::data_frame(input_rows=.x)afunction(x){
+##       stopifnot(all(x==seq(x[1],x[length(x)])))
+##       return(data_frame(row_offsets=x[1]-1,row_chunksizes=length(x)))
+##       }) %>% dplyr::mutate(...)
+##     return(input_df)
+## }
 
 
 gen_matslice_df <- function(filename,group_prefix,dataname){
@@ -148,20 +165,20 @@ write_l_h5 <- function(h5filepath,datapath,datal){
 # }
 
 
-read_l_h5 <- function(filename,h5path="/"){
-  all_objs <- ls_h5(filename,h5path,full_names = T)
-  names(all_objs) <- basename(all_objs)
-  purrr::map(all_objs,function(fp){
-    if(isGroup(filename,fp)){
-      return(read_l_h5(filename,fp))
-    }
-    md <- dims_h5(filename,fp)
-    if(length(md)>1){
-      return(read_matrix(filename,fp))
-    }
-    return(read_vector(h5filepath = filename,datapath = fp))
-  })
-}
+## read_l_h5 <- function(filename,h5path="/",...){
+##   all_objs <- ls_h5(filename,h5path,full_names = T)
+##   names(all_objs) <- basename(all_objs)
+##   purrr::map(all_objs,function(fp){
+##     if(isGroup(filename,fp)){
+##       return(read_l_h5(filename,fp))
+##     }
+##     md <- dims_h5(filename,fp)
+##     if(length(md)>1){
+##       return(read_matrix(filename,fp))
+##     }
+##     return(read_vector(filename,datapath = fp))
+##   })
+## }
 
 
 create_mat_l <- function(dff){

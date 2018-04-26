@@ -22,20 +22,25 @@ namespace {
 
 class DefaultFileDriver : public FileDriver {
   public:
-  inline DefaultFileDriver() : FileDriver(H5Pcreate(H5P_FILE_ACCESS)) {
-    }
+  inline DefaultFileDriver() : FileDriver(versioned_id()) {
+  }
+protected:
+  inline hid_t versioned_id(){
+      hid_t _hid = H5Pcreate(H5P_FILE_ACCESS);
+      H5Pset_libver_bounds(_hid, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
+      return(_hid);
+  }
 };
 }
 
 // file access property
 inline FileDriver::FileDriver() {
   _hid = H5Pcreate(H5P_FILE_ACCESS);
-  H5Pset_libver_bounds(_hid, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
 }
 
 inline FileDriver::FileDriver(hid_t fapl) {
   _hid = fapl;
-  H5Pset_libver_bounds(_hid, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
+
 }
 
 template <typename Comm, typename Info>

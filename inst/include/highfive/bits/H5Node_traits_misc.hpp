@@ -381,13 +381,15 @@ inline bool NodeTraits<Derivate>::exist(const std::string& node_name) const {
   auto ip = p.begin();
   fs::path tp;
   do{
-    tp/=*ip;
-    if(tp!="/"){
-      htri_t val = H5Lexists(ttid,tp.c_str(), H5P_DEFAULT);
-      if(val<0){
-	HDF5ErrMapper::ToException<GroupException>(std::string("Invalid path while checking for existence of "+node_name));
-      }if(val==0){
-	return(false);
+    if(*ip!="."){
+      tp/=*ip;
+      if(tp!="/"){
+	htri_t val = H5Lexists(ttid,tp.c_str(), H5P_DEFAULT);
+	if(val<0){
+	  HDF5ErrMapper::ToException<GroupException>(std::string("Invalid path while checking for existence of "+node_name));
+	}if(val==0){
+	  return(false);
+	}
       }
     }
     ip++;

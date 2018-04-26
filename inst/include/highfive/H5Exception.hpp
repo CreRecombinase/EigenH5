@@ -61,7 +61,7 @@ class Exception : public std::exception {
 
   protected:
     std::string _errmsg;
-    details::Mem::shared_ptr<Exception> _next;
+    std::shared_ptr<Exception> _next;
     hid_t _err_major, _err_minor;
 
     friend struct HDF5ErrMapper;

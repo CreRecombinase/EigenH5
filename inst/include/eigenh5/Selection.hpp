@@ -1,6 +1,13 @@
 #pragma once
 #include <boost/icl/interval_set.hpp>
+#include <range/v3/core.hpp>
+#include <range/v3/view.hpp>
+#include <range/v3/action.hpp>
+#include "highfive/highfive.hpp"
+#include <RcppEigen.h>
+#include <Rcpp.h>
 //#include "Interval.hpp"
+
 
 struct IntegerVector_range
   : ranges::view_facade<IntegerVector_range>
@@ -190,6 +197,9 @@ inline std::vector<dim_sel> dim_sel::parse_chunk_list(const Rcpp::List &list,std
   }
   return(retvec);
 }
+
+
+
 
 
 
@@ -402,6 +412,9 @@ public:
 					       const std::array<size_t,Dims> &chunksize)const ;
 
   HighFive::Selection makeSelection(const HighFive::DataSet &dset)const;
+
+
+
   template<typename T,int Options,int RN,int CN>
   void readEigen(HighFive::Selection &selection,
 		 Eigen::Map<Eigen::Matrix<T,RN,CN,Options> >& retmat)const;
@@ -428,6 +441,21 @@ private:
 
 template<size_t Dims>
 inline DatasetSelection<Dims> DatasetSelection<Dims>::ProcessList(const Rcpp::List options, std::vector<size_t> dims){
+  // if(dims.empty()){
+  //   if(auto fn = get_list_scalar<std::string>(options,"filename")){
+  //     if(auto dsn =get_list_scalar<std::string>(options,"datapath")){
+  // 	if (auto tfile = file_r(fn.value())){
+  // 	  if(auto tdataset = tfile->openDataSet(dsn.value())){
+  // 	    dims = tdataset->getDataDimensions();
+  // 	  }
+  // 	}
+  //     }
+  //   }
+  // }
+
+  if(dims.size()!=Dims){
+    Rcpp::stop("dims must be either equal in size to Dims, or must be empty and accompany  valid filename+datapath arguments ");
+  }
 
   auto dchunk_v = dim_sel::parse_chunk_list(options,dims);
   auto dslice_v = parse_subset_list(options,dims);
@@ -445,6 +473,47 @@ inline DatasetSelection<Dims> DatasetSelection<Dims>::ProcessList(const Rcpp::Li
 }
 
 
+
+
+inline std::vector<dim_sel> DimRange::find_cont(Rcpp::IntegerVector::const_iterator itb,Rcpp::IntegerVector::const_iterator ite){
+  using namespace Rcpp;
+  using namespace ranges;
+  
+  
+  // auto tar=view::transform(ir,[](int i){
+  //     return(i-1);
+  //   });
+  if(!std::is_sorted(itb,ite)){
+    Rcpp::stop("subset_indices must be sorted");
+  }
+  std::vector<dim_sel> sub_ranges;
+  const int n_elem = ite-itb;
+  sub_ranges.reserve(n_elem/2);
+  auto itbb=itb;
+  auto it = itb;
+  int tot_dist=0;
+  while(it!=ite){
+    it = std::adjacent_find(itb,ite,[](int i,int j){
+      // Rcpp::Rcout<<"i is : "<<i<<std::endl;
+      // Rcpp::Rcout<<"j is : "<<j<<std::endl;
+      return(std::abs(j-i)!=1);
+    });
+    int iti = (it==ite ? *(it-1) : *(it))-1;
+    //    int itb_pos = itb-itbb;
+    int reg_size = it==ite ? it-itb : (it-itb+1);
+    sub_ranges.push_back(dim_sel((*itb)-1,iti,tot_dist,tot_dist+reg_size-1));
+    //			 piarray{{{*itb,iti}},{{tot_dist,tot_dist+reg_size-1}}});
+    if(it!=ite){
+      it++;
+    }
+    tot_dist=tot_dist+reg_size;
+    itb=it;
+  }
+  return(sub_ranges);
+}
+
+
+
 template<size_t Dims>
 inline HighFive::Selection DatasetSelection<Dims>::makeSelection(const HighFive::DataSet &dset) const{
   if(offsets_in.empty()){
@@ -454,7 +523,6 @@ inline HighFive::Selection DatasetSelection<Dims>::makeSelection(const HighFive:
   }
   return(dset.selectRanges(offsets_in,chunksizes,n_elem));
 
-  //  return();
 }
 
 template<size_t Dims>

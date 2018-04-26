@@ -1,32 +1,82 @@
-#ifndef RCPP_MATSLICES_H
-#define RCPP_MATSLICES_H
-
-
-//[[depends(RcppEigen)]]
-//[[Rcpp::plugins(cpp11)]]
-// [[Rcpp::depends(RcppProgress)]]
+#pragma once
 #include <progress.hpp>
 #include <array>
 
 
-
-
-// class MatSelection{
-//   std::vector<std::array<size_t,2> > offsets;
-//   std::vector<std::array<size_t,2> > chunksizes;
-//   std::vector<std::array<bool,2> > flips;
-//   size_t rownum;
-//   size_t colnum;
-//   MatSelection(Rcpp::IntegerVector row_selection,
-
-// }
+#include "highfive/highfive.hpp"
+#include <memory>
 
 
 
+template<size_t Dims> class DatasetSelection;
+class FileManager;
 
+template<size_t	Dims,typename T>
+class DataQueue{
+  std::vector< DatasetSelection<Dims> >	selections;
+  FileManager &f_map;
+  std::unordered_map<std::string,std::shared_ptr<HighFive::DataSet> > dataset_map;
+  std::vector<std::string> file_selections;
 
+  const size_t num_selections;
 
+  const bool readOnly;
 
+  std::shared_ptr<HighFive::DataSet> get_dataset(const std::string &fn,const std::string &dfn){
+    using namespace HighFive;
+    auto mtd = dataset_map.find(fn+dfn);
+    if(mtd==dataset_map.end()){
+      auto mtf = f_map.get_file(fn);
+      mtd = dataset_map.emplace_hint(mtd,fn+dfn,std::make_shared<HighFive::DataSet>(mtf.getDataSet(dfn)));
+    }
+    return(mtd->second);
+  }
+public:
+  DataQueue(Rcpp::List options,const bool isreadOnly,FileManager &f_map_):num_selections(options.size()),
+									  readOnly(isreadOnly),
+									  f_map(f_map_){
+    selections.reserve(num_selections);
+    file_selections.reserve(num_selections);
+    for(int i=0; i<num_selections;i++){
+      auto fn =	get_list_scalar<std::string>(options(i),"filename");
+      auto dn =	get_list_scalar<std::string>(options(i),"datapath");
+      if(!(fn && dn)){
+	Rcpp::stop("filename + datapath must be specified for each list element");
+      }
+      auto td = get_dataset(*fn,*dn);
+      std::vector<size_t> tdims	= td->getDataDimensions();
+      selections.push_back(DatasetSelection<Dims>::ProcessList(options(i),tdims));
+      file_selections.push_back(*fn+*dn);
+    }
+  }
+
+  std::pair<std::shared_ptr<HighFive::DataSet>,DatasetSelection<Dims> > get_index(const size_t i){
+    return(std::make_pair(dataset_map.find(file_selections[i])->second,selections.at(i)));
+  }
+
+  template<int Options = Eigen::ColMajor>
+  void readMat(const size_t i,Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> &datamat,bool doTranspose=false){
+
+    auto [dataset,data_sel] = get_index(i);
+    auto file_sel = data_sel.makeSelection(*dataset);
+    auto n_elem = file_sel.getDataDimensions();
+    const size_t elem_total= std::accumulate(n_elem.begin(),n_elem.end(),1,std::multiplies<size_t>());
+    datamat.resize(n_elem[0],n_elem[1]);
+    Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,Options> > retd(datamat.data(),n_elem[0],n_elem[1]);
+    data_sel.readEigen(file_sel,retd);
+    if(doTranspose){
+      datamat.transposeInPlace();
+    }
+  }
+  template<int Options = Eigen::ColMajor>
+  void writeMat(const size_t i,Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,Options>  &retmat){
+    auto [dataset,data_sel] = get_index(i);
+    auto file_sel = data_sel.makeSelection(*dataset);
+    Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,Options> >  tretmat(retmat.data(),retmat.rows(),retmat.cols());
+    data_sel.writeEigen(file_sel,tretmat);
+  }
+
+};
 
 
 
@@ -366,5 +416,3 @@ public:
   int p;
   int N;
   };
-
-#endif
