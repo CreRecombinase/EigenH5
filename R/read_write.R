@@ -265,13 +265,13 @@ read_matrix_h5 <- function(filename,groupname="/",dataname,...){
     argl[["subset_cols"]] <- sort(argl[["subset_cols"]])
   }
   if(ssr && ssc){
-    retr <- read_matrix(filename =  filename,datapath,argl)[ossr,ossc]
+    retr <- read_matrix(filename =  filename,datapath,argl)[ossr,ossc,drop=F]
   }else{
     if(ssr){
-    retr <- read_matrix(filename =  filename,datapath,argl)[ossr,]
+    retr <- read_matrix(filename =  filename,datapath,argl)[ossr,,drop=F]
     }else{
       if(ssc){
-        retr <- read_matrix(filename =  filename,datapath,argl)[,ossc]
+        retr <- read_matrix(filename =  filename,datapath,argl)[,ossc,drop=F]
       }else{
         retr <- read_matrix(filename =  filename,datapath,argl)
       }

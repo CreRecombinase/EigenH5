@@ -102,7 +102,7 @@ inline const std::string& File::getName() const {
     return _filename;
 }
 
-inline void File::flush() {
+inline void File::flush()const  {
     if (H5Fflush(_hid, H5F_SCOPE_GLOBAL) < 0) {
         HDF5ErrMapper::ToException<FileException>(
             std::string("Unable to flush file " + _filename));

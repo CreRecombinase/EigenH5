@@ -138,6 +138,19 @@ test_that("can read int matrix",{
   expect_equal(tmat,rd)
 })
 
+
+test_that("can read int matrix(one column)",{
+  library(EigenH5)
+  tmat <- matrix(sample(1:900),100,9)
+  smat <- tmat[,3,drop=F]
+  tempf <- tempfile()
+  #write_matrix_h5(tempf,"grp","tmat_t",tmat,doTranspose = T)
+  write_matrix_h5(tempf,"/","tmat",tmat)
+  rd <- read_matrix_h5(tempf,"/","tmat",subset_cols=3)
+  expect_equal(get_dims_h5(tempf,"/","tmat"),c(100,9))
+  expect_equal(tmat,rd)
+})
+
 test_that("check for groups/datasets",{
   tmat <- matrix(sample(1:900),100,9)
   tempf <- tempfile()

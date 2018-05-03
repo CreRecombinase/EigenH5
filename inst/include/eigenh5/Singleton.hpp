@@ -20,6 +20,10 @@
 //   return(gr->file_w(filename));
 // }
 
+
+inline std::unordered_map<std::string,HighFive::File >::const_iterator  FileManager::get_files() const{
+  return(file_map.begin());
+}
 inline FileManager::FileManager(const Rcpp::StringVector filenames, const bool isReadOnly_):isReadOnly(isReadOnly_){
   using namespace HighFive;
   const size_t num_files = filenames.size();

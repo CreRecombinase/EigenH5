@@ -65,7 +65,7 @@ class File : public Object,
     ///
     /// Flushes all buffers associated with a file to disk
     ///
-    void flush();
+    void flush() const;
 
   private:
     std::string _filename;

@@ -11,7 +11,7 @@
 #include "highfive/highfive.hpp"
 #include "blosc_filter.h"
 #include "lzf/lzf_filter.h"
-#include<H5Tpublic.h>
+#include <H5Tpublic.h>
 
 
 class FileManager{
@@ -23,6 +23,7 @@ public:
   FileManager(const Rcpp::StringVector filenames, const bool isReadOnly_);
   HighFive::File get_file(const std::string &f);
   void file_k(const std::string filename);
+  std::unordered_map<std::string,HighFive::File >::const_iterator  get_files() const;
   void print()const;
 };
 #include "EigenH5_RcppExports.h"

@@ -328,6 +328,43 @@ namespace HighFive {
 
     };
 
+        template<typename Scalar, int RowsAtCompileTime, int Options>
+    struct data_converter<Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, 1, Options>>, void> {
+      typedef Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, 1, Options>> Matrix;
+
+      inline data_converter(Matrix &matrix, DataSpace &space, size_t dim = 0)
+	: disk_dims(space.getDimensions()),
+	  mem_dims(disk_dims) {
+	assert(disk_dims.size() <= 2);
+	(void)
+	  dim;
+	(void)
+	  matrix;
+      }
+
+
+      inline typename type_of_array<Scalar>::type *transform_read(Matrix &matrix) {
+
+	assert(mem_dims[0] == (unsigned long) matrix.rows());
+	auto return_pointer = matrix.data();
+	return return_pointer;
+
+      }
+
+      inline typename type_of_array<Scalar>::type *transform_write(Matrix &matrix) {
+	auto return_pointer = matrix.data();
+	return return_pointer;
+
+      }
+
+      inline void process_result(Matrix &matrix) {
+      }
+
+      std::vector<size_t> disk_dims;
+      std::vector<size_t> mem_dims;
+
+    };
+
 
 #endif
 

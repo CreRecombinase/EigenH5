@@ -17,8 +17,8 @@ class DataQueue{
   FileManager &f_map;
   std::unordered_map<std::string,std::shared_ptr<HighFive::DataSet> > dataset_map;
   std::vector<std::string> file_selections;
-
   const size_t num_selections;
+  
 
   const bool readOnly;
 
@@ -49,7 +49,9 @@ public:
       file_selections.push_back(*fn+*dn);
     }
   }
-
+  size_t getNumSelections(){
+    return(num_selections);
+  }
   std::pair<std::shared_ptr<HighFive::DataSet>,DatasetSelection<Dims> > get_index(const size_t i){
     return(std::make_pair(dataset_map.find(file_selections[i])->second,selections.at(i)));
   }
@@ -68,12 +70,32 @@ public:
       datamat.transposeInPlace();
     }
   }
+  // void flush(const size_t i){
+  //   auto mtf = f_map.get_file(fn);
+  // }
+  void readVector(const size_t i,Eigen::Matrix<T,Eigen::Dynamic,1> &datamat){
+    
+    auto [dataset,data_sel] = get_index(i);
+    auto file_sel = data_sel.makeSelection(*dataset);
+    auto n_elem = file_sel.getDataDimensions();
+    const size_t elem_total= std::accumulate(n_elem.begin(),n_elem.end(),1,std::multiplies<size_t>());
+    datamat.resize(n_elem[0]);
+    Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,1> > retd(datamat.data(),n_elem[0]);
+    data_sel.readEigen(file_sel,retd);
+  }
+  
   template<int Options = Eigen::ColMajor>
   void writeMat(const size_t i,Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,Options>  &retmat){
     auto [dataset,data_sel] = get_index(i);
     auto file_sel = data_sel.makeSelection(*dataset);
     Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,Options> >  tretmat(retmat.data(),retmat.rows(),retmat.cols());
     data_sel.writeEigen(file_sel,tretmat);
+  }
+  void writeVector(const size_t i,Eigen::Matrix<T,Eigen::Dynamic,1>  &retmat){
+    auto [dataset,data_sel] = get_index(i);
+    auto file_sel = data_sel.makeSelection(*dataset);
+    Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,1> >  tretmat(retmat.data(),retmat.size());
+    data_sel.template writeEigen<T,Eigen::ColMajor,Eigen::Dynamic,1>(file_sel,tretmat);
   }
 
 };
