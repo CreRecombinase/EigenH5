@@ -123,6 +123,28 @@ int len(RObject x)
 }
 
 
+//[[Rcpp::export]]
+Rcpp::List permutation_order(const Rcpp::List options, Rcpp::IntegerVector dims){
+  std::vector<size_t> tdims(dims.size());
+  std::copy(dims.begin(),dims.end(),tdims.begin());
+  using namespace Rcpp;
+  if(dims.size()==1){
+    auto ds = DatasetSelection<1>::ProcessList(options,tdims);
+
+    return(List::create(_["order"]=wrap(ds.sels[0].permutation_order())));
+  }else{
+    if(dims.size()==2){
+      auto ds=DatasetSelection<2>::ProcessList(options,tdims);
+    return(List::create(_["rows"]=wrap(ds.sels[0].permutation_order()),
+			_["cols"]=wrap(ds.sels[1].permutation_order())));
+    }else{
+      Rcpp::stop("dims must be length 1 or 2");
+    }
+  }
+
+
+
+}
 
 
 template <SEXPTYPE RTYPE,typename T= typename r2cpp_t<RTYPE>::type>
@@ -130,6 +152,9 @@ Matrix<RTYPE> read_elem_m_h5(HighFive::Selection &file_sel,
 			     DatasetSelection<2> &mem_sel){
 
   auto r_size =	file_sel.getDataDimensions();
+  if(mem_sel.doTranspose){
+    std::reverse(r_size.begin(),r_size.end());
+  }
   if(r_size.size()!=2){
     Rcpp::Rcerr<<"Dataset is of rank: "<<r_size.size()<<std::endl;
     Rcpp::stop("Cannot read matrix dataset unless it is rank 2");
@@ -239,7 +264,49 @@ SEXPTYPE typeof_h5_dset(HighFive::DataSet &dset){
 
 
 
+// SEXP read_h5(const Rcpp::List &file_l){
 
+//   auto fn = get_list_scalar<std::string>(file_l,"filename");
+//   if(!fn){
+//     Rcpp::stop("Cannot find \"filename\" in	input file_l");
+//   }
+//   auto fm = std::make_unique<FileManager<true> >(Rcpp::wrap(*fn));
+//   auto dset = getDataSet<true>(file_l,fm);
+//   auto my_t = typeof_h5_dset(dset);
+//   auto tdims = dset.getDataDimensions();
+//   const size_t tdim_d = tdims.size();
+//   if(tdim_d>2){
+//     Rcpp::stop("reading datasets with dimension larger than 2 currently not supported");
+//   }
+//   if(tdim_d==1)
+//     auto datasel = DatasetSelection<2>::ProcessList(file_l,tdims);
+//   auto file_sel=datasel.makeSelection(dset);
+//   auto ret = read_elem_m_h5<INTSXP>(file_sel,datasel);
+//   switch (my_t){
+//   case INTSXP: {
+//     if(tdim_d==1){
+//       DataQueue<1,int>(file_l
+//     return(group.createDataSet(dataname, space, HighFive::AtomicType<int>(), filter));
+//   }
+//   case REALSXP: {
+//     return(group.createDataSet(dataname, space, HighFive::AtomicType<double>(), filter));
+//   }
+//   case STRSXP: {
+//     return(group.createDataSet(dataname, space, HighFive::AtomicType<std::string>(), filter));
+//   }
+//   default: {
+//     warning(
+// 	    "Invalid SEXPTYPE %d.\n",
+// 	    my_t
+// 	    );
+//     Rcpp::stop("Can't create type");
+//   }
+
+//   auto datasel = DatasetSelection<2>::ProcessList(subset,dims);
+//   if(tdim==1){
+//     dset.getDataType()
+
+//       }
 
 
 
@@ -402,6 +469,20 @@ SEXP read_vector(std::string filename,
     
 //   }
   
+// }
+
+
+
+
+// SEXP read_dataqueue_mat( const Rcpp::List file_l){
+
+//   FileManager<true> rf(Rcpp::StringVector::create());
+
+//   DataQueue<2,double> X_f(file_l,true,rf);
+
+//   const int num_reg = X_f.getNumSelections();
+
+
 // }
 
 

@@ -95,7 +95,7 @@ inline ElementSet::ElementSet(const std::vector<std::size_t>& element_ids)
                          details::get_dataset(static_cast<const Derivate *>(this)));
     }
 
-#ifdef H5_USE_EIGEN
+
 
   template<typename Derivate>
   template<size_t Dims>
@@ -187,7 +187,7 @@ inline ElementSet::ElementSet(const std::vector<std::size_t>& element_ids)
                          details::get_dataset(static_cast<const Derivate *>(this)));
     }
 
-#endif
+
     template <typename Derivate>
     inline Selection
     SliceTraits<Derivate>::select(const std::vector<size_t>& columns) const {
@@ -367,9 +367,6 @@ inline std::vector<size_t> SliceTraits<Derivate>::getDataDimensions() const {
 template <typename Derivate>
 template <typename T>
 inline void SliceTraits<Derivate>::read(T &array) {
-    // typedef typename details::remove_const<T>::type type_no_const;
-
-    // type_no_const& nocv_array = const_cast<type_no_const&>(array);
 
     bool isTranspose = details::get_dataset(static_cast<const Derivate *>(this)).isTransposed();
     if(isTranspose){

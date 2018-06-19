@@ -22,11 +22,10 @@
 #endif
 
 
-#ifdef H5_USE_EIGEN
+
 
 #include <Eigen/Core>
 
-#endif
 
 #include <H5Dpublic.h>
 #include <H5Ppublic.h>
@@ -153,7 +152,7 @@ namespace HighFive {
     //   size_t _dim;
     // };
 
-#ifdef H5_USE_EIGEN
+
 
     // apply conversion to eigen vector
     template<typename Scalar>
@@ -366,7 +365,7 @@ namespace HighFive {
     };
 
 
-#endif
+
 
 
 

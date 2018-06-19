@@ -158,6 +158,34 @@ context("PermutationMatrices"){
     Eigen::PermutationMatrix<Eigen::Dynamic> pm(perm_i.matrix());
     expect_true(sub_mat*pm==true_sub_mat);
   }
+
+
+  test_that("Permutation works the way I think it works (large non-trivial permutation)"){
+    const int l_n=20;
+    const int l_p=50;
+
+    Eigen::MatrixXi l_test_mat(l_n,l_p);
+    int ttj=0;
+    for(int j=0; j<l_p;j++){
+	for(int i=0; i<l_n;i++){
+	  l_test_mat(i,j)=ttj++;
+	}
+    }
+
+
+    Rcpp::IntegerVector my_ints = {1,5,3,2,6};
+    Eigen::ArrayXi true_sub(5);
+    Eigen::ArrayXi perm_i(5);
+    perm_i<<0,3,2,1,4;
+    true_sub<<0,4,3,1,5;
+    auto sub_mat=slow_subset_cols(test_mat,true_sub,true);
+    auto true_sub_mat=slow_subset_cols(test_mat,true_sub,false);
+    Eigen::PermutationMatrix<Eigen::Dynamic> pm(perm_i.matrix());
+    expect_true(sub_mat*pm==true_sub_mat);
+  }
+
+
+
   test_that("(simple) Permutation works on vectors"){
     Eigen::Matrix<int,4,1> testv {2,3,4,5};
     Eigen::Matrix<int,4,1> resv	{5,4,3,2};

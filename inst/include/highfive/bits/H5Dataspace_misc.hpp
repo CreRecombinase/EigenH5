@@ -112,8 +112,6 @@ inline DataSpace DataSpace::From(const std::vector<Value>& container) {
     return DataSpace(details::get_dim_vector<Value>(container));
 }
 
-#ifdef H5_USE_EIGEN
-
     template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
     inline DataSpace
     DataSpace::From(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> &mat) {
@@ -136,8 +134,6 @@ inline DataSpace DataSpace::From(const std::vector<Value>& container) {
     }
 
 
-
-#endif
 
 
 

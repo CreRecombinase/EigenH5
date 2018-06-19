@@ -20,11 +20,13 @@
 //   return(gr->file_w(filename));
 // }
 
-
-inline std::unordered_map<std::string,HighFive::File >::const_iterator  FileManager::get_files() const{
+template<bool isReadOnly>
+inline std::unordered_map<std::string,HighFive::File >::const_iterator  FileManager<isReadOnly>::get_files() const{
   return(file_map.begin());
 }
-inline FileManager::FileManager(const Rcpp::StringVector filenames, const bool isReadOnly_):isReadOnly(isReadOnly_){
+
+template<bool isReadOnly>
+inline FileManager<isReadOnly>::FileManager(const Rcpp::StringVector filenames){
   using namespace HighFive;
   const size_t num_files = filenames.size();
   file_map.reserve(num_files);
@@ -38,14 +40,14 @@ inline FileManager::FileManager(const Rcpp::StringVector filenames, const bool i
       flag_map.insert(std::make_pair(tfn,flags));
       mtf = file_map.emplace_hint(mtf,tfn,File(tfn,flags));
     }else{
-      Rcpp::stop("Duplicate file names not allowed when constructing FileManager");
+      //Rcpp::stop("Duplicate file names not allowed when constructing FileManager");
     }
   }
 }
 
 
-
-inline HighFive::File FileManager::get_file(const std::string &fn){
+template<bool isReadOnly>
+inline HighFive::File FileManager<isReadOnly>::get_file(const std::string &fn){
   using namespace HighFive;
   int flags = isReadOnly ? HighFive::File::ReadOnly : HighFive::File::ReadWrite | HighFive::File::Create;
   auto mtf = file_map.find(fn);
@@ -61,7 +63,8 @@ inline HighFive::File FileManager::get_file(const std::string &fn){
   return(mtf->second);
 }
 
-inline void FileManager::print() const{
+template<bool isReadOnly>
+inline void FileManager<isReadOnly>::print() const{
   using namespace Rcpp;
   const size_t num_files = file_map.size();
 
@@ -85,17 +88,18 @@ inline void FileManager::print() const{
 }
 
 
-// inline HighFive::File FileManager::file_r(const std::string filename){
+// inline HighFive::File FileManager<isReadOnly>::file_r(const std::string filename){
 //   return(get_file(filename,HighFive::File::ReadOnly,true));
 // }
-// inline Rcpp::XPtr<HighFive::File> FileManager::file_cw(const std::string filename){
+// inline Rcpp::XPtr<HighFive::File> FileManager<isReadOnly>::file_cw(const std::string filename){
 //   return(get_file(filename,HighFive::File::ReadWrite | HighFive::File::Create,false));
 // }
-// inline Rcpp::XPtr<HighFive::File> FileManager::file_w(const std::string filename){
+// inline Rcpp::XPtr<HighFive::File> FileManager<isReadOnly>::file_w(const std::string filename){
 //   return(get_file(filename,HighFive::File::ReadWrite ,false));
 // }
 
-inline void FileManager::file_k(const std::string filename){
+template<bool isReadOnly>
+inline void FileManager<isReadOnly>::file_k(const std::string filename){
   auto mtf = file_map.find(filename);
   auto ff = flag_map.find(filename);
   if(mtf == file_map.end()){

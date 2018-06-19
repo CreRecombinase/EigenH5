@@ -14,7 +14,6 @@
 
 
 
-
 //[[Rcpp::export]]
 Rcpp::IntegerVector guess_chunks(const std::vector<int> dimsize){
   std::vector<size_t> tdims(dimsize.begin(),dimsize.end());
@@ -179,3 +178,58 @@ Rcpp::IntegerVector dim_h5(const std::string &filename,const std::string datapat
   auto ret =Rcpp::wrap(file.getDataSet(datapath).getDataDimensions());
   return(ret);
 }
+
+
+//[[Rcpp::export]]
+void concat_mats(const std::string newfile, const std::string newpath, Rcpp::List selections, int margin=0){
+
+  FileManager<false> fm;
+  DataQueue<2,double,false> dq(selections,fm);
+  using namespace HighFive;
+  const size_t num_sel=dq.getNumSelections();
+  Rcpp::Rcout<<"There are "<<num_sel<<" selections";
+  std::vector<std::vector<size_t> > source_dim(num_sel);
+  std::vector<size_t> tot_dim;
+
+  for(int i=0; i<num_sel;i++){
+    if(i==0){
+      tot_dim= dq.get_index_selection(i).getDataDimensions();
+    }else{
+      tot_dim[margin]+=dq.get_index_selection(i).getDataDimensions()[margin];
+    }
+  }
+  //  Rcpp::Rcout<<"total_dim is: "<<tot_dim[0]<<"x"<<tot_dim[1]<<std::endl;
+  auto dcpl = H5Pcreate(H5P_DATASET_CREATE);
+  auto virt_space = DataSpace(tot_dim);
+  std::vector<size_t> offset(tot_dim.size(),0);
+
+  for(int i=0; i<num_sel;i++){
+    auto msel = dq.get_index_selection(i);
+    auto msel_dim=dq.get_index_selection(i).getDataDimensions();
+    auto fn =	get_list_scalar<std::string>(selections(i),"filename");
+    auto dn =	get_list_scalar<std::string>(selections(i),"datapath");
+    if(!(fn && dn)){
+      Rcpp::stop("filename + datapath must be specified for each list element in selections");
+    }
+    std::vector<hsize_t> offset_local(offset.size());
+    std::vector<hsize_t> count_local(msel_dim.size());
+    std::copy(offset.begin(),offset.end(),offset_local.begin());
+    std::copy(msel_dim.begin(),msel_dim.end(),count_local.begin());
+    H5Sselect_hyperslab(virt_space.getId(),H5S_SELECT_SET,offset_local.data(),NULL,count_local.data(),NULL);
+    H5Pset_virtual(dcpl,virt_space.getId(),fn->c_str(),dn->c_str(),msel.getMemSpace().getId());
+    offset[margin]+=msel_dim[margin];
+  }
+
+  auto maf= fm.get_file(newfile);
+  auto dset = H5Dcreate2(maf.getId(),
+			 newpath.c_str(),
+			 AtomicType<double>().getId(),
+			 virt_space.getId(),
+			 H5P_DEFAULT,
+			 dcpl,H5P_DEFAULT);
+  H5Dclose(dset);
+
+}
+
+
+

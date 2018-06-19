@@ -43,6 +43,20 @@ class NodeTraits {
     DataSet createDataSet(const std::string& dataset_name,
                           const DataSpace& space, const DataType& type);
 
+      ///
+    /// \brief createDataSet create a new (virtual) dataset in the current
+    ///  file with a vector of Selections (from this file or other files)
+    /// \param datasets vector of datasets
+    /// \param concat margin margin to concatenate along (default is along first dimension)
+    /// \return DataSet Object
+    ///
+    ///
+    ///
+    // template <typename Type>
+    // DataSet createDataSet(const std::string& dataset_name,
+    //                       const DataSpace& space);
+
+
 
     ///
     /// \brief createDataSet create a new dataset in the current file with a
@@ -122,8 +136,6 @@ class NodeTraits {
   bool exist(const std::string& node_name) const;
 private:
   static Group grpCreate(const hid_t root_id, const char* name);
-
-
   std::variant<DataSet,Group> getObj(const hid_t root_id, const char* name) const;
   typedef Derivate derivate_type;
 };

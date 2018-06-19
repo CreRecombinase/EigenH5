@@ -14,11 +14,11 @@
 #include <boost/numeric/ublas/matrix.hpp>
 #endif
 
-#ifdef H5_USE_EIGEN
+
 
 #include <Eigen/Core>
 
-#endif
+
 
 
 #include "H5Object.hpp"
@@ -60,6 +60,7 @@ class DataSpace : public Object {
     ///  with a different id avaiable for modifications
     DataSpace clone() const;
 
+
     ///
     /// \brief getNumberDimensions
     /// \return the number of dimensions in the current dataspace
@@ -77,7 +78,7 @@ class DataSpace : public Object {
     template <typename ScalarValue>
     static DataSpace From(const ScalarValue& scalar_value);
 
-#ifdef H5_USE_EIGEN
+
 
 
         template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
@@ -91,7 +92,7 @@ class DataSpace : public Object {
         static DataSpace
         From(const Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat);
 
-#endif
+
     /// Create a dataspace matching the container dimensions and size
     /// Supported Containers are:
     ///  - vector of fundamental types

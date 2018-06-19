@@ -50,10 +50,10 @@ void start_blosc(){
 //   }
 // }
 
-//[[Rcpp::export]]
-void print_filemanager(const Rcpp::XPtr<FileManager> fm){
-  fm->print();
-}
+
+// void print_filemanager(const Rcpp::XPtr<FileManager> fm){
+//   fm->print();
+// }
 
 
 

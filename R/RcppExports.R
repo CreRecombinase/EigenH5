@@ -5,10 +5,6 @@ start_blosc <- function() {
     invisible(.Call(`_EigenH5_start_blosc`))
 }
 
-print_filemanager <- function(fm) {
-    invisible(.Call(`_EigenH5_print_filemanager`, fm))
-}
-
 check_blosc <- function() {
     .Call(`_EigenH5_check_blosc`)
 }
@@ -17,8 +13,16 @@ is_transposed <- function(filename, groupname, dataname) {
     .Call(`_EigenH5_is_transposed`, filename, groupname, dataname)
 }
 
+mach2h5 <- function(dosagefile, h5file, datapath, snp_idx, names, p, buffer_size = 10000L, SNPfirst = TRUE) {
+    invisible(.Call(`_EigenH5_mach2h5`, dosagefile, h5file, datapath, snp_idx, names, p, buffer_size, SNPfirst))
+}
+
 len <- function(x) {
     .Call(`_EigenH5_len`, x)
+}
+
+permutation_order <- function(options, dims) {
+    .Call(`_EigenH5_permutation_order`, options, dims)
 }
 
 read_vector <- function(filename, datapath, subset) {
@@ -79,6 +83,10 @@ file_acc_ct <- function(filename) {
 
 dim_h5 <- function(filename, datapath) {
     .Call(`_EigenH5_dim_h5`, filename, datapath)
+}
+
+concat_mats <- function(newfile, newpath, selections, margin = 0L) {
+    invisible(.Call(`_EigenH5_concat_mats`, newfile, newpath, selections, margin))
 }
 
 # Register entry points for exported C++ functions

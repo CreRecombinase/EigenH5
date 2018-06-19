@@ -42,8 +42,8 @@ context("We can read and write matrices using the DataQueue"){
     }
 
 
-    FileManager fm(Rcpp::wrap(fname),true);
-    FileManager fw(Rcpp::wrap(fnamew),false);
+    FileManager<true> fm(Rcpp::wrap(fname));
+    FileManager<false> fw(Rcpp::wrap(fnamew));
 
 
     test_that("We can read matrices (and transposes)"){
@@ -87,8 +87,8 @@ context("We can read and write matrices using the DataQueue"){
       Eigen::MatrixXi tm_t;
       Eigen::VectorXi tm_v;
 
-      DataQueue<2,int> test_queue(ttl,true,fm);
-      DataQueue<1,int> test_queue_v(tlv,false,fw);
+      DataQueue<2,int,true> test_queue(ttl,fm);
+      DataQueue<1,int,false> test_queue_v(tlv,fw);
 
 
       test_queue.readMat(0,tm,false);
@@ -140,7 +140,7 @@ context("We can read and write matrices using the DataQueue"){
       Eigen::MatrixXi tm_tt;
       Eigen::MatrixXi tm_ttt;
       Eigen::MatrixXi tm_tttt;
-      DataQueue<2,int> test_queue(ttl,true,fm);
+      DataQueue<2,int,true> test_queue(ttl,fm);
 
 
       test_queue.readMat(0,tm_t,false);

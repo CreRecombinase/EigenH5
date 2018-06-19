@@ -7,11 +7,11 @@
 #include "H5Object.hpp"
 #include "H5PropertyList.hpp"
 
-#ifdef H5_USE_EIGEN
+
 
 #include <Eigen/Core>
 
-#endif
+
 
 namespace HighFive {
 
@@ -29,9 +29,12 @@ namespace HighFive {
       Filter();
       static std::vector<size_t> guess_chunk(const std::vector<size_t> data_shape);
       static Filter From(const DataSpace &dataspace,const hid_t filter_id);
-#ifdef H5_USE_EIGEN
 
-#endif
+      //      Filter(bool isVirtual){
+
+
+
+
         hid_t getId() const;
       std::vector<size_t> get_chunksizes()const;
 

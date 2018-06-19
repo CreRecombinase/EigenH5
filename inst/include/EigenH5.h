@@ -14,23 +14,26 @@
 #include <H5Tpublic.h>
 
 
+template<bool isReadOnly>
 class FileManager{
-  bool isReadOnly;
   std::unordered_map<std::string,HighFive::File >  file_map;
   std::unordered_map<std::string,int>  flag_map;
 public:
-  FileManager():isReadOnly(false){};
-  FileManager(const Rcpp::StringVector filenames, const bool isReadOnly_);
+  FileManager(){};
+  FileManager(const Rcpp::StringVector filenames);
   HighFive::File get_file(const std::string &f);
   void file_k(const std::string filename);
   std::unordered_map<std::string,HighFive::File >::const_iterator  get_files() const;
   void print()const;
 };
+
 #include "EigenH5_RcppExports.h"
+
+
 
 #if __has_include(<filesystem>)
 
-#   include <filesystem >
+#include <filesystem>
 namespace stdx {
   using namespace ::std;
 }
@@ -44,9 +47,15 @@ namespace stdx {
 #   error <experimental/filesystem> and <filesystem> not found
 #endif
 
+
 template <typename T>
 struct cpp2r{
  static const SEXPTYPE data_t = NILSXP;
+};
+
+template <>
+struct cpp2r<bool>{
+ static const SEXPTYPE data_t = LGLSXP;
 };
 
 template<>
@@ -65,32 +74,9 @@ struct cpp2r<std::string>{
 };
 
 
-
-
-
-
-
-
-std::vector<std::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix);
 template<SEXPTYPE RTYPE> std::optional<Rcpp::Vector<RTYPE> > get_list_element(const Rcpp::List &list, const std::string name,const bool empty_is_false = true);
 template<typename T,SEXPTYPE RTYPE = cpp2r<T>::data_t > std::optional<T> get_list_scalar(const Rcpp::List &list, const std::string name);
-std::vector<std::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix);
 std::vector<std::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims);
-#include <eigenh5/Singleton.hpp>
-#include <eigenh5/Selection.hpp>
-#include <eigenh5/MatSlices.hpp>
-
-
-
-
-
-
-
-
-
-
-SEXPTYPE h2r_T(hid_t htype);
-bool isGroup(const std::string filename, std::string groupname);
 
 
 inline std::vector<std::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix){
@@ -125,6 +111,32 @@ inline std::vector<std::optional<int> > parse_option(const Rcpp::List &list, std
 
 
 
+
+//std::vector<std::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix);
+
+
+//std::vector<std::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix);
+//std::vector<std::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims);
+
+
+
+
+
+
+
+
+
+
+
+SEXPTYPE h2r_T(hid_t htype);
+bool isGroup(const std::string filename, std::string groupname);
+
+
+
+
+
+
+
 template<SEXPTYPE RTYPE>
 inline std::optional<Rcpp::Vector<RTYPE> > get_list_element(const Rcpp::List &list, const std::string name,const bool empty_is_false){
   Rcpp::RObject rnames =	list.names();
@@ -149,14 +161,11 @@ inline std::optional<Rcpp::Vector<RTYPE> > get_list_element(const Rcpp::List &li
   return(std::nullopt);
 }
 
-
-
-
 inline std::vector<std::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims){
   using rvec_o = std::optional<Rcpp::IntegerVector>;
   const size_t num_dims= datadims.size();
-  
-  
+
+
   if(num_dims>2){
     Rcpp::stop("Datasets with Dims>2 currently not supported");
   }
@@ -171,7 +180,7 @@ inline std::vector<std::optional<Rcpp::IntegerVector> > parse_subset_list(const 
     }
     return(retvec);
   }
-  
+
   auto subset_ro =get_list_element<INTSXP>(list,"subset_rows");
   auto subset_co =get_list_element<INTSXP>(list,"subset_cols");
   if(subset_ro && subset_co){
@@ -195,11 +204,56 @@ inline std::vector<std::optional<Rcpp::IntegerVector> > parse_subset_list(const 
 template<typename T,SEXPTYPE RTYPE>
 inline std::optional<T> get_list_scalar(const Rcpp::List &list, const std::string name){
   if(auto rel = get_list_element<RTYPE>(list,name)){
-    return(Rcpp::as<T>(*(rel->begin())));
+    T rel_b = *(Rcpp::as< std::vector<T> >(*rel).begin());
+    return(rel_b);
   }else{
     return(std::nullopt);
   }
 }
+
+template<typename T,SEXPTYPE RTYPE>
+  inline std::optional<T> list_get_any(const Rcpp::List &list, const std::vector<std::string> name_opts){
+  for( auto &name : name_opts){
+    auto trel =	get_list_scalar<T>(list,name);
+    if(trel){
+      return(trel);
+    }
+  }
+  return(std::nullopt);
+}
+
+
+
+
+
+
+
+std::string get_datapath(const Rcpp::List &list);
+std::string get_filepath(const Rcpp::List &list);
+
+template<bool isReadOnly>
+inline HighFive::DataSet getDataSet (const Rcpp::List file_l, std::unique_ptr<FileManager<isReadOnly> > &fm){
+  auto fn = get_list_scalar<std::string>(file_l,"filename");
+
+  if(!fn){
+    Rcpp::stop("Cannot find \"filename\" in	input file_l");
+  }
+
+  if(!fm){
+    fm = std::make_unique<FileManager<isReadOnly> >(Rcpp::wrap(*fn));
+  }
+  auto file =fm->get_file(*fn);
+  auto dsn = get_datapath(file_l);
+  return(file.getDataSet(dsn));
+}
+
+
+#include <eigenh5/Singleton.hpp>
+#include <eigenh5/Selection.hpp>
+#include <eigenh5/MatSlices.hpp>
+
+
+
 
 
 

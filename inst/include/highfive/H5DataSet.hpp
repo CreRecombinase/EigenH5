@@ -23,6 +23,10 @@ class SliceTraits;
 class DataType;
 class DataSpace;
 
+
+
+
+
 class DataSet : public Object,
                 public SliceTraits<DataSet>,
                 public AnnotateTraits<DataSet> {
@@ -55,12 +59,18 @@ class DataSet : public Object,
 
   private:
     DataSet();
-
     bool doTranspose;
     template <typename Derivate>
     friend class ::HighFive::NodeTraits;
 };
+
+
+  // class VirtualDataSet : DataSet {
+
+  // };
 }
+
+
 
 #include "bits/H5DataSet_misc.hpp"
 

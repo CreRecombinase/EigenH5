@@ -8,19 +8,29 @@
 
 
 
+
+// template<typename T>
+// class DataHandle{
+//   std::unordered_map<std::string,std::shared_ptr<T> > dataset_map;
+// }
+  
+
+
 template<size_t Dims> class DatasetSelection;
+template<bool isReadOnly>
 class FileManager;
 
-template<size_t	Dims,typename T>
+
+template<size_t	Dims,typename T,bool isReadOnly>
 class DataQueue{
+public:
   std::vector< DatasetSelection<Dims> >	selections;
-  FileManager &f_map;
+private:
+  FileManager<isReadOnly> &f_map;
   std::unordered_map<std::string,std::shared_ptr<HighFive::DataSet> > dataset_map;
   std::vector<std::string> file_selections;
   const size_t num_selections;
-  
 
-  const bool readOnly;
 
   std::shared_ptr<HighFive::DataSet> get_dataset(const std::string &fn,const std::string &dfn){
     using namespace HighFive;
@@ -32,8 +42,8 @@ class DataQueue{
     return(mtd->second);
   }
 public:
-  DataQueue(Rcpp::List options,const bool isreadOnly,FileManager &f_map_):num_selections(options.size()),
-									  readOnly(isreadOnly),
+
+  DataQueue(Rcpp::List options,FileManager<isReadOnly> &f_map_):num_selections(options.size()),
 									  f_map(f_map_){
     selections.reserve(num_selections);
     file_selections.reserve(num_selections);
@@ -49,12 +59,24 @@ public:
       file_selections.push_back(*fn+*dn);
     }
   }
+  std::vector<std::array<size_t,Dims> > get_selection_dims() const{
+    std::vector<std::array<size_t,Dims> > retvec(num_selections);
+    for(int i=0; i<num_selections;i++){
+      retvec[i]=selections[i].get_selection_dim();
+    }
+    return(retvec);
+  }
   size_t getNumSelections(){
     return(num_selections);
   }
   std::pair<std::shared_ptr<HighFive::DataSet>,DatasetSelection<Dims> > get_index(const size_t i){
     return(std::make_pair(dataset_map.find(file_selections[i])->second,selections.at(i)));
   }
+
+  HighFive::Selection get_index_selection(const size_t i){
+    return(selections.at(i).makeSelection(*(dataset_map.find(file_selections[i])->second)));
+  }
+
 
   template<int Options = Eigen::ColMajor>
   void readMat(const size_t i,Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> &datamat,bool doTranspose=false){
@@ -70,11 +92,7 @@ public:
       datamat.transposeInPlace();
     }
   }
-  // void flush(const size_t i){
-  //   auto mtf = f_map.get_file(fn);
-  // }
   void readVector(const size_t i,Eigen::Matrix<T,Eigen::Dynamic,1> &datamat){
-    
     auto [dataset,data_sel] = get_index(i);
     auto file_sel = data_sel.makeSelection(*dataset);
     auto n_elem = file_sel.getDataDimensions();
@@ -86,12 +104,14 @@ public:
   
   template<int Options = Eigen::ColMajor>
   void writeMat(const size_t i,Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,Options>  &retmat){
+    static_assert(isReadOnly ==false,"cannot write to a readOnly DataQueue!");
     auto [dataset,data_sel] = get_index(i);
     auto file_sel = data_sel.makeSelection(*dataset);
     Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,Options> >  tretmat(retmat.data(),retmat.rows(),retmat.cols());
     data_sel.writeEigen(file_sel,tretmat);
   }
   void writeVector(const size_t i,Eigen::Matrix<T,Eigen::Dynamic,1>  &retmat){
+    static_assert(isReadOnly ==false,"cannot write to a readOnly DataQueue!");
     auto [dataset,data_sel] = get_index(i);
     auto file_sel = data_sel.makeSelection(*dataset);
     Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,1> >  tretmat(retmat.data(),retmat.size());

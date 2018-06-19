@@ -293,7 +293,6 @@ inline Eigen::ArrayXi DimRange::permutation_order() const {
       auto rit= retvec.data();
       for(auto &t_sel : dim_sels){
 	const size_t t_size = t_sel.out_stop - t_sel.out_start + 1;
-	// const size_t beg =  t_sel.sorted ? t_sel.out_start : t_sel.out_stop;
 	auto nrit = std::generate_n(rit, t_size, [n = static_cast<int>(t_sel.out_start)] () mutable { return n++; });
 	if(!t_sel.sorted){
 	  std::reverse(rit,nrit);
@@ -326,12 +325,13 @@ public:
   std::vector<std::array<size_t,Dims> > offsets_in;
   std::vector<std::array<size_t,Dims> > offsets_out;
   std::vector<std::array<size_t,Dims> > chunksizes;
+  const bool doTranspose;
 
   bool all_dim_compact;
   bool all_dim_sorted;
 
 
-  DatasetSelection (std::array<size_t,Dims> dataset_dimensions_):dataset_dimensions(dataset_dimensions_){
+  DatasetSelection (std::array<size_t,Dims> dataset_dimensions_,bool doTranspose_=false):dataset_dimensions(dataset_dimensions_),doTranspose(doTranspose_){
 
     for(int i=0;i<Dims;i++){
       sels[i]=DimRange(dataset_dimensions[i]);
@@ -344,7 +344,8 @@ public:
 
 
 
-  DatasetSelection (std::array<DimRange,Dims> sels_, std::array<size_t,Dims> dataset_dimensions_):sels(sels_),
+  DatasetSelection (std::array<DimRange,Dims> sels_,
+		    std::array<size_t,Dims> dataset_dimensions_,const bool doTranspose_=false):sels(sels_),doTranspose(doTranspose_),
 											       dataset_dimensions(dataset_dimensions_){
 
     if constexpr(Dims > 2){
@@ -415,7 +416,9 @@ public:
   template<typename T>
   void writeVector(HighFive::Selection &selection,
 		   std::vector<T> wvec)const;
-
+  std::array<size_t,Dims> get_selection_dim()const{
+    return(n_elem);
+  }
 private:
   template<typename T>
   void flipVec(std::vector<T> &mvec) const;
@@ -435,12 +438,13 @@ inline DatasetSelection<Dims> DatasetSelection<Dims>::ProcessList(const Rcpp::Li
   }
 
   auto dchunk_v = dim_sel::parse_chunk_list(options,dims);
+  bool doTranspose_ =	get_list_scalar<bool>(options,"doTranspose").value_or(false);
   auto dslice_v = parse_subset_list(options,dims);
   if constexpr(Dims==2){
       std::array<size_t,2>tdims={dims[0],dims[1]};
       return(DatasetSelection<Dims>({
 	    DimRange::construct_dimrange(dchunk_v[0],dslice_v[0]),
-	      DimRange::construct_dimrange(dchunk_v[1],dslice_v[1])},tdims));
+	    DimRange::construct_dimrange(dchunk_v[1],dslice_v[1])},tdims,doTranspose_));
     }
   if constexpr(Dims==1){
       std::array<size_t,1>tdims={dims[0]};
@@ -601,7 +605,7 @@ inline void DatasetSelection<Dims>::flipMat(Eigen::Map<Eigen::Matrix<T,RN,CN,Opt
       if(sels[1].isCompact()){
 	retmat.rowwise().reverseInPlace();
       }else{
-	retmat=retmat*Eigen::PermutationMatrix<Eigen::Dynamic>(sels[1].permutation_order().matrix());
+	retmat=retmat*(Eigen::PermutationMatrix<Eigen::Dynamic>(sels[1].permutation_order().matrix()).transpose());
       }
     }
   }
@@ -618,10 +622,26 @@ inline void DatasetSelection<Dims>::readEigen(HighFive::Selection &selection,
   const size_t elem_total= std::accumulate(n_elem.begin(),n_elem.end(),1,std::multiplies<size_t>());
   if(elem_total!=retmat.size()){
     Rcpp::Rcerr<<"retmat is "<<retmat.size()<<" and elem_total is "<<elem_total<<std::endl;
+    Rcpp::Rcerr<<"retmat is "<<retmat.rows()<<" x "<<retmat.cols()<<std::endl;
+    Rcpp::Rcerr<<"selection is  is "<<n_elem[0]<<" x "<<n_elem[1]<<std::endl;
     Rcpp::stop("retmat must have same number of elements as dataset selection");
   }
-  selection.read(retmat);
-  flipMat(retmat);
+  if(doTranspose){
+    if constexpr(Options==Eigen::RowMajor){
+      Eigen::Map<Eigen::Matrix<T,RN,CN,Eigen::ColMajor> > tretmat(retmat.data(),retmat.cols(),retmat.rows());
+      selection.read(tretmat);
+      flipMat(tretmat);
+      }else{
+      if constexpr(Options==Eigen::ColMajor && CN!=1){
+	  Eigen::Map<Eigen::Matrix<T,RN,CN,Eigen::RowMajor> > tretmat(retmat.data(),retmat.cols(),retmat.rows());
+	  selection.read(tretmat);
+	  flipMat(tretmat);
+	}
+    }
+  }else{
+    selection.read(retmat);
+    flipMat(retmat);
+  }
 }
 
 
@@ -666,7 +686,9 @@ inline void DatasetSelection<Dims>::writeEigen(HighFive::Selection &selection,
   const size_t elem_total= std::accumulate(n_elem.begin(),n_elem.end(),1,std::multiplies<size_t>());
   if(elem_total!=retmat.size()){
     Rcpp::Rcerr<<"retmat is "<<retmat.size()<<" and elem_total is "<<elem_total<<std::endl;
-    Rcpp::stop("retmat must have same number of elements as dataset selection");
+    Rcpp::Rcerr<<"retmat is "<<retmat.rows()<<" x "<<retmat.cols()<<std::endl;
+    Rcpp::Rcerr<<"selection is  is "<<n_elem[0]<<" x "<<n_elem[1]<<std::endl;
+    Rcpp::stop("retmat must have same number of elements as dataset selection in WriteEigen");
   }
   flipMat(retmat);
   selection.write(retmat);
