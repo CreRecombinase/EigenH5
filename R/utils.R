@@ -12,19 +12,19 @@ construct_data_path <- function(...){
     return(retpath)
 }
 
-lockf <- function(filename){
-  return(paste0(filename,".lck"))
-}
+## lockf <- function(filename){
+##   return(paste0(filename,".lck"))
+## }
 
 isObject_h5 <- function(filename,datapath){
-  tf <- lockf(filename)
+
   stopifnot(file.exists(filename))
   if(!hasArg(timeout)){
     timeout <- Inf
   }
-  ml <- filelock::lock(tf,exclusive = F,timeout=timeout)
+
   ret <- isObject(filename,datapath)
-  filelock::unlock(ml)
+
   return(ret)
 }
 
