@@ -16,12 +16,9 @@ void start_blosc(){
   auto rr = register_lzf();
   bv[0]=rr==1;
   env["..lzf"]=bv;
-
-
-  // Rcpp::LogicalVector bv = env["..blosc"];
-  //Rcout << "Stooge Nb 2 is: " << v[1] << std::endl;
-
-
+  auto nr = register_zstd();
+  bv[0]=nr==1;
+  env["..zstd"]=bv;
 
 }
 

@@ -232,6 +232,44 @@ namespace EigenH5 {
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
+    inline Rcpp::IntegerVector dataset_chunks(const std::string filename, const std::string datapath) {
+        typedef SEXP(*Ptr_dataset_chunks)(SEXP,SEXP);
+        static Ptr_dataset_chunks p_dataset_chunks = NULL;
+        if (p_dataset_chunks == NULL) {
+            validateSignature("Rcpp::IntegerVector(*dataset_chunks)(const std::string,const std::string)");
+            p_dataset_chunks = (Ptr_dataset_chunks)R_GetCCallable("EigenH5", "_EigenH5_dataset_chunks");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_dataset_chunks(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::IntegerVector >(rcpp_result_gen);
+    }
+
+    inline Rcpp::List get_datset_filter(const std::string filename, const std::string datapath) {
+        typedef SEXP(*Ptr_get_datset_filter)(SEXP,SEXP);
+        static Ptr_get_datset_filter p_get_datset_filter = NULL;
+        if (p_get_datset_filter == NULL) {
+            validateSignature("Rcpp::List(*get_datset_filter)(const std::string,const std::string)");
+            p_get_datset_filter = (Ptr_get_datset_filter)R_GetCCallable("EigenH5", "_EigenH5_get_datset_filter");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_get_datset_filter(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::List >(rcpp_result_gen);
+    }
+
     inline Rcpp::IntegerVector guess_chunks(const std::vector<int> dimsize) {
         typedef SEXP(*Ptr_guess_chunks)(SEXP);
         static Ptr_guess_chunks p_guess_chunks = NULL;

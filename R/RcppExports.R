@@ -49,6 +49,14 @@ split_ldd <- function(region_ids) {
     .Call(`_EigenH5_split_ldd`, region_ids)
 }
 
+dataset_chunks <- function(filename, datapath) {
+    .Call(`_EigenH5_dataset_chunks`, filename, datapath)
+}
+
+get_datset_filter <- function(filename, datapath) {
+    .Call(`_EigenH5_get_datset_filter`, filename, datapath)
+}
+
 guess_chunks <- function(dimsize) {
     .Call(`_EigenH5_guess_chunks`, dimsize)
 }

@@ -369,6 +369,68 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// dataset_chunks
+Rcpp::IntegerVector dataset_chunks(const std::string filename, const std::string datapath);
+static SEXP _EigenH5_dataset_chunks_try(SEXP filenameSEXP, SEXP datapathSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< const std::string >::type filename(filenameSEXP);
+    Rcpp::traits::input_parameter< const std::string >::type datapath(datapathSEXP);
+    rcpp_result_gen = Rcpp::wrap(dataset_chunks(filename, datapath));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _EigenH5_dataset_chunks(SEXP filenameSEXP, SEXP datapathSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_EigenH5_dataset_chunks_try(filenameSEXP, datapathSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
+// get_datset_filter
+Rcpp::List get_datset_filter(const std::string filename, const std::string datapath);
+static SEXP _EigenH5_get_datset_filter_try(SEXP filenameSEXP, SEXP datapathSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< const std::string >::type filename(filenameSEXP);
+    Rcpp::traits::input_parameter< const std::string >::type datapath(datapathSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_datset_filter(filename, datapath));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _EigenH5_get_datset_filter(SEXP filenameSEXP, SEXP datapathSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_EigenH5_get_datset_filter_try(filenameSEXP, datapathSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
 // guess_chunks
 Rcpp::IntegerVector guess_chunks(const std::vector<int> dimsize);
 static SEXP _EigenH5_guess_chunks_try(SEXP dimsizeSEXP) {
@@ -696,6 +758,8 @@ static int _EigenH5_RcppExport_validate(const char* sig) {
         signatures.insert("bool(*update_matrix)(RObject,const std::string,const std::string,const Rcpp::List&)");
         signatures.insert("bool(*update_vector)(RObject,std::string,std::string,Rcpp::List)");
         signatures.insert("bool(*create_dataset_h5)(const std::string&,const std::string,const RObject&,Rcpp::List)");
+        signatures.insert("Rcpp::IntegerVector(*dataset_chunks)(const std::string,const std::string)");
+        signatures.insert("Rcpp::List(*get_datset_filter)(const std::string,const std::string)");
         signatures.insert("Rcpp::IntegerVector(*guess_chunks)(const std::vector<int>)");
         signatures.insert("bool(*exists_h5)(const std::string,const std::string,const std::string)");
         signatures.insert("bool(*isObject)(const std::string,std::string)");
@@ -723,6 +787,8 @@ RcppExport SEXP _EigenH5_RcppExport_registerCCallable() {
     R_RegisterCCallable("EigenH5", "_EigenH5_update_matrix", (DL_FUNC)_EigenH5_update_matrix_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_update_vector", (DL_FUNC)_EigenH5_update_vector_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_create_dataset_h5", (DL_FUNC)_EigenH5_create_dataset_h5_try);
+    R_RegisterCCallable("EigenH5", "_EigenH5_dataset_chunks", (DL_FUNC)_EigenH5_dataset_chunks_try);
+    R_RegisterCCallable("EigenH5", "_EigenH5_get_datset_filter", (DL_FUNC)_EigenH5_get_datset_filter_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_guess_chunks", (DL_FUNC)_EigenH5_guess_chunks_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_exists_h5", (DL_FUNC)_EigenH5_exists_h5_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_isObject", (DL_FUNC)_EigenH5_isObject_try);
@@ -752,6 +818,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_EigenH5_update_vector", (DL_FUNC) &_EigenH5_update_vector, 4},
     {"_EigenH5_create_dataset_h5", (DL_FUNC) &_EigenH5_create_dataset_h5, 4},
     {"_EigenH5_split_ldd", (DL_FUNC) &_EigenH5_split_ldd, 1},
+    {"_EigenH5_dataset_chunks", (DL_FUNC) &_EigenH5_dataset_chunks, 2},
+    {"_EigenH5_get_datset_filter", (DL_FUNC) &_EigenH5_get_datset_filter, 2},
     {"_EigenH5_guess_chunks", (DL_FUNC) &_EigenH5_guess_chunks, 1},
     {"_EigenH5_exists_h5", (DL_FUNC) &_EigenH5_exists_h5, 3},
     {"_EigenH5_isObject", (DL_FUNC) &_EigenH5_isObject, 2},

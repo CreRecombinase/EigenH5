@@ -68,6 +68,20 @@ inline DataSpace DataSet::getSpace() const {
     return space;
 }
 
+inline Filter DataSet::getFilter() const {
+    Filter filt;
+    const size_t rank = this->getMemSpace().getNumberDimensions();
+    std::vector<hsize_t> tvec(rank);
+    filt.chunksizes.resize(rank);
+    if ((filt._hid =  H5Dget_create_plist(_hid)) < 0) {
+        HDF5ErrMapper::ToException<DataSetException>("Unable to get Filter out of DataSet");
+    }
+    auto ret = H5Pget_chunk(filt._hid, rank, tvec.data());
+    std::copy(tvec.begin(),tvec.end(),filt.chunksizes.begin());
+
+    return filt;
+}
+
 inline DataSpace DataSet::getMemSpace() const { return getSpace(); }
 }
 

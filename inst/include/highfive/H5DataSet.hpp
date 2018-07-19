@@ -49,6 +49,14 @@ class DataSet : public Object,
     DataSpace getSpace() const;
 
     ///
+    /// \brief getFilter
+    /// \return return the filter(compression) associated with this dataset 
+    ///
+    Filter getFilter() const;
+
+  
+
+    ///
     /// \brief getMemSpace
     /// \return same than getSpace for DataSet, compatibility with Selection
     /// class

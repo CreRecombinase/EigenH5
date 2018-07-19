@@ -44,7 +44,7 @@ test_that("can write string vector",{
   
   rd <- read_vector_h5(tempf,datapath="grp/dat")
   expect_equal(rd,tvec)
-  trd <- read_vector_h5(tempf,datapath="grp/dat",chunksize=2)
+  trd <- read_vector_h5(tempf,datapath="grp/dat",datasize=2)
   expect_equal(head(tvec,2),trd)  
   write_vector_h5(tempf,datapath="/grp/dat2",data=tvec)
   
@@ -120,7 +120,7 @@ test_that("can write REAL vector",{
   expect_equal(dim_h5(tempf,"grp/dat"),length(tvec))
   rd <- read_vector_h5(tempf,"grp","dat")
   expect_equal(rd,tvec)
-  trd <- read_vector_h5(tempf,"grp","dat",chunksize=2)
+  trd <- read_vector_h5(tempf,"grp","dat",datasize=2)
   expect_equal(head(tvec,2),trd)  
   trd <- read_vector_h5(tempf,"grp","dat",subset=2:3)
   expect_equal(tail(tvec,2),trd)  
@@ -184,7 +184,7 @@ test_that("can concatenate matrices virtually (along columns)",{
   purrr::walk2(tfs,mats,~write_matrix_h5(.x$filename,"/","t_temp",t(.y)))
   
   # am <- map(tfs,~update_list(.x,datapath="/temp"))
-  t_tfs <- purrr::map(tfs,~list_modify(.x,datapath="t_temp"))
+  t_tfs <- purrr::map(tfs,~purrr::list_modify(.x,datapath="t_temp"))
   
   nf <- tempfile()
   concat_mats(nf,"all_temp_t",t_tfs,margin = 0)
@@ -392,8 +392,7 @@ test_that("can read and write NA",{
 
 
 test_that("writing 2 matrix blocks works",{
-  
-  tmat <- matrix(runif(9*3),9,3)
+  tmat <- matrix(1:27,9,3)
   tempf <- tempfile()
   create_matrix_h5(tempf,groupname = "testg",dataname = "testd",data=numeric(),dim=c(9,3))
   sub_mat <- tmat[1:5,1:2]
@@ -401,7 +400,7 @@ test_that("writing 2 matrix blocks works",{
                      groupname = "testg",
                      dataname = "testd",
                      data = sub_mat,offsets = c(0,0),subset_rows = 1:5,subset_cols = 1:2)
-  r_sub_mat <- read_matrix_h5(tempf,groupname = "testg",dataname = "testd",offset = c(0L,0L),chunksize=c(5L,2L))
+  r_sub_mat <- read_matrix_h5(tempf,groupname = "testg",dataname = "testd",offset = c(0L,0L),datasize=c(5L,2L))
   expect_equal(sub_mat,r_sub_mat)
   sub_mat <- tmat[-(1:5),-(1:2),drop=F]
   write_matrix_h5( tempf,
@@ -414,7 +413,6 @@ test_that("writing 2 matrix blocks works",{
                   dataname = "testd",
                   data = sub_mat,subset_cols = c(3L),subset_rows = 1:5)
   sub_mat <- tmat[-(1:5),(1:2),drop=F]
-  
   write_matrix_h5(tempf,
                   groupname = "testg",
                   dataname = "testd",
@@ -432,7 +430,7 @@ test_that("can write a chunk smaller than total (disk) data dimension, specifyin
   create_matrix_h5(tempf,groupname = "testg",dataname = "testd",data=numeric(),dim=c(9,3))
   sub_mat <- tmat[1:5,1:2]
   write_matrix_h5(tempf,groupname="testg",dataname="testd",data=sub_mat,offsets=c(0,0))
-  trm <- read_matrix_h5(tempf,"testg","testd",chunksizes=c(5L,2L))
+  trm <- read_matrix_h5(tempf,"testg","testd",datasizes=c(5L,2L))
   expect_equal(sub_mat,trm)
   
   
@@ -447,7 +445,7 @@ test_that("writing matrix blocks works ",{
   create_matrix_h5( tempf,groupname = "testg",dataname = "testd",data=numeric(),dims = c(9L,3L))
   sub_mat <- tmat[3:5,2:3]
   write_matrix_h5(tempf,groupname = "testg",dataname = "testd",data = sub_mat,offsets = c(2L,1L))
-  r_sub_mat <- read_matrix_h5(tempf,"testg","testd",offsets = c(2L,1L),chunksizes = c(3L,2L))
+  r_sub_mat <- read_matrix_h5(tempf,"testg","testd",offsets = c(2L,1L),datasizes = c(3L,2L))
   expect_equal(sub_mat,r_sub_mat)
 })
 
@@ -460,7 +458,7 @@ test_that("writing matrix blocks works ",{
   create_matrix_h5(filename = tempf,groupname = "/",dataname = "testd",data=numeric(),dims = c(9L,3L))
   sub_mat <- tmat[3:5,2:3]
   write_matrix_h5(filename = tempf,groupname = "/",dataname = "testd",data = sub_mat,offsets = c(2L,1L))
-  r_sub_mat <- read_matrix_h5(tempf,"/","testd",offsets = c(2L,1L),chunksizes = c(3L,2L))
+  r_sub_mat <- read_matrix_h5(tempf,"/","testd",offsets = c(2L,1L),datasizes = c(3L,2L))
   expect_equal(sub_mat,r_sub_mat)
 })
 test_that("writing 2 matrix blocks works ",{
@@ -473,8 +471,6 @@ test_that("writing 2 matrix blocks works ",{
   expect_equal(tmat,r_sub_mat)
   
 })
-
-
 
 
 test_that("can create nested groups",{

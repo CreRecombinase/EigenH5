@@ -217,18 +217,20 @@ void write_elem_v_h5(HighFive::Selection &file_sel,
 
 
 
+
+
 HighFive::DataSet create_dataset(HighFive::Group &group,
 				 const std::string &dataname,
 				 const Rcpp::RObject &data,
-				 std::vector<size_t> data_dimensions,
-				 std::vector<size_t> chunk_dimensions){
+				 HighFive::DataSpace &space,
+				 HighFive::Filter &filter){
   using namespace HighFive;
-  const bool use_chunksize = chunk_dimensions.size()>0;
-  if(use_chunksize){
-    chunk_dimensions = Filter::guess_chunk(chunk_dimensions);
-  }
-  DataSpace space = DataSpace(data_dimensions);
-  Filter filter	= use_chunksize ? Filter(chunk_dimensions,FILTER_BLOSC,1) : Filter::From(space,FILTER_BLOSC);
+  // const bool use_chunksize = chunk_dimensions.size()>0;
+  // if(use_chunksize){
+  //   chunk_dimensions = Filter::guess_chunk(chunk_dimensions);
+  // }
+  //  DataSpace space = DataSpace(data_dimensions);
+  //  Filter filter	= use_chunksize ? Filter(chunk_dimensions,FILTER_BLOSC,1) : Filter::From(space,FILTER_BLOSC);
   auto my_t = data.sexp_type();
   switch (my_t){
   case INTSXP: {
@@ -640,6 +642,41 @@ bool update_vector(RObject data,
 }
 
 
+HighFive::Filter create_filter(std::vector<size_t> data_dimensions,
+			       Rcpp::List &options){
+  using namespace HighFive;
+  const std::map<std::string, hid_t> filters{
+					     {"blosc", Filter::blosc},
+					     {"gzip", Filter::gzip},
+					     {"lzf", Filter::lzf},
+					     {"zstd",Filter::zstd}
+  };
+  hid_t	filt = Filter::zstd;
+  if (auto tfilt = get_list_scalar<std::string>(options,"filter")){
+    auto titer = filters.find(*tfilt);
+    if(titer==filters.end()){
+      Rcpp::stop("No registered filter for filter: "+*tfilt);
+    }
+    filt = titer->second;
+  }
+  auto chunksize_d = get_list_element<INTSXP>(options,"chunksizes");
+  if(!chunksize_d){
+    chunksize_d = get_list_element<INTSXP>(options,"chunksize");
+  }
+  std::vector<size_t> chunk_dimensions;
+  if(chunksize_d){
+    chunk_dimensions = Filter::guess_chunk(Rcpp::as<std::vector<size_t> >(*chunksize_d));
+  }else{
+    chunk_dimensions = Filter::guess_chunk(data_dimensions);
+  }
+  auto filter_opts = get_list_element<INTSXP>(options,"filter_options");
+  std::vector<unsigned int> comp_opts;
+  if(filter_opts){
+    comp_opts = Rcpp::as<std::vector<unsigned int> >(*filter_opts);
+  }
+  return(Filter(chunk_dimensions,filt,comp_opts));
+}
+
 
 
 
@@ -660,18 +697,18 @@ bool update_vector(RObject data,
    if(!data_d){
      data_d =get_list_element<INTSXP>(options,"dims");
    }
-   auto chunksize_d = get_list_element<INTSXP>(options,"chunksizes");
-   if(!chunksize_d){
-     chunksize_d = get_list_element<INTSXP>(options,"chunksize");
-   }
+
    std::vector<size_t>	dimvec = Rcpp::as<std::vector<size_t> >(data_d.value_or(Rcpp::wrap(obj_dim(data))));
    Rcpp::IntegerVector tvec;
-   std::vector<size_t>	chunkvec = Rcpp::as<std::vector<size_t> >(chunksize_d.value_or(tvec));
-   create_dataset(group,dp.filename(),data,dimvec,chunkvec);
+   auto	filt = create_filter(dimvec,options);
+   DataSpace space = DataSpace(dimvec);
+   create_dataset(group,dp.filename(),data,space,filt);
    create_success=true;
    file.flush();
   return(create_success);
  }
+
+
 
 
  // void create_vector(const std::string &filename,

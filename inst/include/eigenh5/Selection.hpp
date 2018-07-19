@@ -201,8 +201,8 @@ inline std::vector<dim_sel> dim_sel::parse_chunk_list(const Rcpp::List &list,std
   std::vector<int_o> offset_v =	parse_option(list,datadims,"offset");
   std::vector<int_o> offsets_v = parse_option(list,datadims,"offsets");
   
-  std::vector<int_o> chunksize_v =parse_option(list,datadims,"chunksize");
-  std::vector<int_o> chunksizes_v =parse_option(list,datadims,"chunksizes");
+  std::vector<int_o> chunksize_v =parse_option(list,datadims,"datasize");
+  std::vector<int_o> chunksizes_v =parse_option(list,datadims,"datasizes");
   
   for(int i=0; i<num_dims;i++){
     int o_o = offset_v[i].value_or(offsets_v[i].value_or(0));

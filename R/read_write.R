@@ -104,14 +104,13 @@ write_matrix_h5 <- function(filename,groupname="/",dataname,data,...){
     }else{
         datapath <- argl[["datapath"]]
     }
-    if(!hasArg(chunksizes)){
-        if(hasArg(chunksize)){
-            argl[["chunksizes"]] <- chunksize
+    if(!hasArg(datasizes)){
+        if(hasArg(datasize)){
+            argl[["datasizes"]] <- datasize
         }else{
-            argl[["chunksizes"]] <- dim(data)
+            argl[["datasizes"]] <- dim(data)
         }
     }
-
     if(!file.exists(filename)){
 
         create_dataset_h5(filename,datapath,data,argl)

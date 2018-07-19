@@ -246,7 +246,7 @@ void mach2h5(const std::string dosagefile, const std::string h5file, const std::
     std::reverse(space_dims.begin(),space_dims.end());
   }
   DataSpace space(space_dims);
-  Filter filter	= Filter::From(space,FILTER_BLOSC);
+  Filter filter	= Filter::From(space,FILTER_BLOSC,{});
   auto dset = file.createDataSet(datapath,space,AtomicType<double>(),filter);
 
 

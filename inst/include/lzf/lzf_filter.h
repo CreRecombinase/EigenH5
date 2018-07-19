@@ -27,6 +27,7 @@ extern "C" {
 /* Filter ID registered with the HDF Group as of 2/6/09.  For maintenance
    requests, contact the filter author directly. */
 #define H5PY_FILTER_LZF 32000
+#define FILTER_LZF 32000
 
 /* Register the filter with the library. Returns a negative value on failure, 
    and a non-negative value on success.

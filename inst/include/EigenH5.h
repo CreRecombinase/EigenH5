@@ -11,6 +11,9 @@
 #include "highfive/highfive.hpp"
 #include "blosc_filter.h"
 #include "lzf/lzf_filter.h"
+#include "zstd/zstd_h5plugin.h"
+#include "zstd/zstd.h"
+
 #include <H5Tpublic.h>
 
 
@@ -137,6 +140,7 @@ bool isGroup(const std::string filename, std::string groupname);
 
 
 
+
 template<SEXPTYPE RTYPE>
 inline std::optional<Rcpp::Vector<RTYPE> > get_list_element(const Rcpp::List &list, const std::string name,const bool empty_is_false){
   Rcpp::RObject rnames =	list.names();
@@ -199,8 +203,6 @@ inline std::vector<std::optional<Rcpp::IntegerVector> > parse_subset_list(const 
 
 
 
-
-
 template<typename T,SEXPTYPE RTYPE>
 inline std::optional<T> get_list_scalar(const Rcpp::List &list, const std::string name){
   if(auto rel = get_list_element<RTYPE>(list,name)){
@@ -221,6 +223,7 @@ template<typename T,SEXPTYPE RTYPE>
   }
   return(std::nullopt);
 }
+
 
 
 

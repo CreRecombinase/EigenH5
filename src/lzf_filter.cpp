@@ -88,7 +88,7 @@ int register_lzf(void){
         1,1,
         "lzf",
         NULL,
-        (H5Z_set_local_func_t)(lzf_set_local),
+        NULL,
         (H5Z_func_t)(lzf_filter)
     };
 

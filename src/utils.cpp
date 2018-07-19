@@ -9,6 +9,30 @@
 
 
 
+//[[Rcpp::export]]
+Rcpp::IntegerVector dataset_chunks(const std::string filename,
+				   const std::string datapath){
+  using namespace HighFive;
+  bool ret = false;
+  HighFive::File file(filename,HighFive::File::ReadOnly);
+  return(Rcpp::wrap(file.getDataSet(datapath).getFilter().get_chunksizes()));
+}
+
+
+//[[Rcpp::export]]
+Rcpp::List get_datset_filter(const std::string filename, const std::string datapath){
+  using namespace HighFive;
+  bool ret = false;
+  HighFive::File file(filename,HighFive::File::ReadOnly);
+  auto filt_pair = file.getDataSet(datapath).getFilter().get_filter_info();
+  using namespace Rcpp;
+  return(List::create(_["name"]=wrap(filt_pair.first),
+		      _["options"]=wrap(filt_pair.second)));
+}
+
+
+
+
 
 
 
