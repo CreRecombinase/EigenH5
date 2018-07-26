@@ -44,6 +44,9 @@ class DataSpace : public Object {
     ///  etc...
     explicit DataSpace(const std::vector<size_t> &dims);
 
+  /// create a dataspace of N-dimensions , with	max dimensions
+  explicit DataSpace(const std::vector<size_t> &dims,const std::vector<size_t> &max_dims);
+
     ///
     /// \brief DataSpace create a dataspace of a single dimension and of size
     /// dim1
@@ -71,6 +74,8 @@ class DataSpace : public Object {
     /// \return return a vector of N-element, each element is the size of the
     /// associated dataset dimension
     std::vector<size_t> getDimensions() const;
+
+  std::vector<size_t> getMaxDimensions() const ;
 
     /// Create a dataspace matching a single element of a basic type
     ///  supported type are integrals (int,long), floating points (float,double)

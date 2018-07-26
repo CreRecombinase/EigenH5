@@ -29,6 +29,24 @@ namespace HighFive {
   }
 }
 
+  inline DataSpace::DataSpace(const std::vector<size_t> &dims,const std::vector<size_t> &max_dims) {
+  std::vector<hsize_t> real_dims(dims.size());
+  std::vector<hsize_t> real_max_dims(max_dims.size());
+  std::copy(max_dims.begin(), max_dims.end(), real_max_dims.begin());
+  std::copy(dims.begin(), dims.end(), real_dims.begin());
+  if(max_dims.empty()){
+  if ((_hid = H5Screate_simple(int(dims.size()), &(real_dims.at(0)), NULL)) <
+    0) {
+    throw DataSpaceException("Impossible to create resizeable dataspace");
+  }
+  }else{
+    if ((_hid = H5Screate_simple(int(dims.size()), &(real_dims.at(0)), real_max_dims.data())) <
+    0) {
+    throw DataSpaceException("Impossible to create resizeable dataspace");
+    }
+  }
+  }
+
 inline DataSpace::DataSpace(const size_t dim1) {
     const hsize_t dims = hsize_t(dim1);
     if ((_hid = H5Screate_simple(1, &dims, NULL)) < 0) {
@@ -85,6 +103,21 @@ inline std::vector<size_t> DataSpace::getDimensions() const {
     std::copy(dims.begin(), dims.end(), res.begin());
     return res;
 }
+
+inline std::vector<size_t> DataSpace::getMaxDimensions() const {
+    std::vector<hsize_t> dims(getNumberDimensions());
+    if (H5Sget_simple_extent_dims(_hid, NULL, &(dims[0])) < 0) {
+        HDF5ErrMapper::ToException<DataSetException>(
+            "Unable to get dataspace dimensions");
+    }
+
+    std::vector<size_t> res(dims.size());
+    std::copy(dims.begin(), dims.end(), res.begin());
+    return res;
+}
+
+
+
 
 template <typename ScalarValue>
 inline DataSpace DataSpace::From(const ScalarValue& scalar) {

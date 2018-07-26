@@ -1,5 +1,43 @@
 context("h5")
 
+
+
+test_that("I can overwrite a vector",{
+  
+  tf <- tempfile()
+  tv <- runif(3)
+  write_vector_h5(tf,"/","test",tv)
+  expect_equal(read_vector_h5(tf,"/","test"),tv)
+  ntv <- runif(3)
+  write_vector_h5(tf,"/","test",ntv)
+  expect_equal(read_vector_h5(tf,"/","test"),ntv)
+})
+
+test_that("I can append a vector",{
+  tf <- tempfile()
+  tv <- runif(3)
+  write_vector_h5(tf,"/","test",tv,max_dims=c(NA_integer_))
+  expect_equal(read_vector_h5(tf,"/","test"),tv)
+  ntv <- runif(3)
+  write_vector_h5(tf,"/","test",ntv,append=T)
+  expect_equal(read_vector_h5(tf,"/","test"),c(tv,ntv))
+})
+
+
+
+test_that("I can append a dataframe",{
+  
+  p_a <- 3
+  tdf <- tibble::data_frame(a=runif(p_a),b=sample(1:p_a,p_a))
+  tf <- tempfile()
+  write_df_h5(tdf,"test",tf,max_dim=c(NA_integer_))
+  write_df_h5(tdf,"test",tf,append=T)
+  expect_equal(read_df_h5(tf,"test"),dplyr::bind_rows(tdf,tdf))
+  
+  
+})
+
+
 test_that("Can read dosage files (in random order)",{
 # 
 # library(tidyverse)
@@ -109,6 +147,14 @@ test_that("can read a vector out of order",{
   write_vector_h5(tempf,"grp","dat",tvec)
   trd <- read_vector_h5(tempf,"grp","dat",subset=c(3,1,2))
   expect_equal(trd,tvec[c(3,1,2)])
+  
+})
+
+test_that("can read an empty subset",{
+  tvec <- runif(3)
+  tempf <- tempfile()
+  write_vector_h5(tempf,"grp","dat",tvec)
+  rd <- read_vector_h5(tempf,"grp","dat",subset=integer())
   
 })
 

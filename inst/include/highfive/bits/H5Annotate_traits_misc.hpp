@@ -20,7 +20,7 @@
 #include "../H5Exception.hpp"
 
 #include <H5Apublic.h>
-
+#include <experimental/filesystem>
 namespace HighFive {
 
 template <typename Derivate>
@@ -46,6 +46,20 @@ AnnotateTraits<Derivate>::createAttribute(const std::string& attribute_name,
                                           const DataSpace& space) {
     return createAttribute(attribute_name, space, AtomicType<Type>());
 }
+
+
+template <typename Derivate>
+inline std::optional<Attribute> AnnotateTraits<Derivate>::openAttribute(
+    const std::string& attribute_name) const {
+  if(!this->hasAttribute(attribute_name)){
+    return(std::nullopt);
+  }else{
+    return(this->getAttribute(attribute_name));
+  }
+
+}
+
+
 
 template <typename Derivate>
 inline Attribute AnnotateTraits<Derivate>::getAttribute(
@@ -94,6 +108,9 @@ AnnotateTraits<Derivate>::listAttributeNames() const {
 template <typename Derivate>
 inline bool
 AnnotateTraits<Derivate>::hasAttribute(const std::string& attr_name) const {
+
+
+    // const auto ttid=static_cast<const Derivate*>(this)->
     int res = H5Aexists(static_cast<const Derivate*>(this)->getId(),
                         attr_name.c_str());
     if (res < 0) {
@@ -102,5 +119,6 @@ AnnotateTraits<Derivate>::hasAttribute(const std::string& attr_name) const {
     }
     return res;
 }
-}
 
+
+}

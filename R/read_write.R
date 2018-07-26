@@ -19,10 +19,17 @@ read_df_h5 <- function(filename,groupname,...){
   #return(tibble::as_data_frame(read_l_h5(filename = normalizePath(filename),groupname = groupname,subcols = subcols,offset = offset,chunksize = chunksize,filtervec = filtervec)))
 }
 
+write_S4_h5 <- function(filename,datapath,data,...){
+  stopifnot(isS4(data))
+  sl <- slotNames(data)
+  dl <- purrr::map(sl,~slot(data,.x))
+  names(dl) <- sl
+  write_l_h5(h5filepath = filename,datapath = datapath,datal = dl)
+}
 
 write_df_h5 <- function(df,groupname="/",filename,...){
-  # stopifnot(file.exists(filename))
-  purrr::iwalk(df,~write_vector_h5(filename = filename,datapath = normalizePath(paste(groupname,.y,sep="/"),mustWork = F),data=.x,...))
+  argl <- list(...)
+  purrr::iwalk(df,~purrr::invoke(write_vector_h5,filename = filename,groupname=groupname,dataname=.y,data=.x,argl))
 }
 
 
@@ -70,6 +77,17 @@ create_matrix_h5 <- function(filename,groupname="/",dataname,data,...){
   create_dataset_h5(filename,datapath,data,argl)
 }
   
+append_vector_h5 <- function(filename,datapath,data,...){
+  argl <- list(...)
+  filename <- file.path(filename)
+  argl[["offset"]]<- get_dims_h5(filename,datapath)
+  
+  extend_dataset_by(filename,datapath,newdims = length(data))
+  ret <- update_vector(data,filename,datapath,argl)
+  return(ret)
+}
+
+
 
 write_vector_h5 <- function(filename,groupname="/",dataname,data,...){
   argl <- list(...)
@@ -80,19 +98,27 @@ write_vector_h5 <- function(filename,groupname="/",dataname,data,...){
     datapath <- argl[["datapath"]]
   }
 
-  
+  app_v <- TRUE
   if(!file.exists(filename)){
-
     create_dataset_h5(filename,datapath,data,argl)
-
+    app_v <- FALSE
   }
   if(!isObject(filename,datapath)){
-
     create_dataset_h5(filename,datapath,data,argl)
-
+  }else{
+    if(hasArg(append)){
+      if(app_v & argl[["append"]]){
+        ret <- append_vector_h5(filename = filename,datapath = datapath,data = data,... = argl)
+        return(ret)
+      }
+    }
   }
-  ret <- update_vector(data,filename,datapath,argl)
-  return(ret)
+  if(length(data)>0){
+    ret <- update_vector(data,filename,datapath,argl)
+    return(ret)
+  }else{
+    return(TRUE)
+  }
 }
 
 

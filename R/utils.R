@@ -56,14 +56,16 @@ write_h5 <- function(h5filepath,datapath,data,offset=0L,subsets=list(subset_rows
     write_l_h5(h5filepath=h5filepath,datapath=datapath,datal=data)
   }else{
     if(is.vector(data)){
-      write_vector(h5filepath = h5filepath,datapath=datapath,data = data,offset=offset,subset = subsets[["subset_rows"]])
+      write_vector_h5(filename =  h5filepath,datapath=datapath,data = data,offset=offset,subset = subsets[["subset_rows"]])
     }else{
       if(is.matrix(data)){
-        write_matrix(h5filepath = h5filepath,datapath=datapath,data = data,
+        write_matrix_h5(filename = h5filepath,datapath=datapath,data = data,
                      subset_rows = subsets[["subset_rows"]],
                      subset_cols = subsets[["subset_cols"]])
       }else{
+        if(!is.null(data)){
         stop("data is of unknown type!")
+        }
       }
     }
   }

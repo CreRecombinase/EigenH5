@@ -27,10 +27,18 @@ namespace HighFive {
     const size_t c_size = chunk_dims.size();
     std::vector<hsize_t> nchunk_dims(c_size);
     std::copy(chunk_dims.begin(), chunk_dims.end(), nchunk_dims.begin());
-    auto rr = H5Pset_chunk(_hid, c_size, nchunk_dims.data());
-    if (rr < 0) {
-      HDF5ErrMapper::ToException<FilterException>("Unable to set chunk size");
+    herr_t rr = 0;
+    if(c_size>0){
+      rr = H5Pset_chunk(_hid, c_size, nchunk_dims.data());
+      if (rr < 0) {
+	HDF5ErrMapper::ToException<FilterException>("Unable to set chunk size");
+      }
+    }else{
+      if(filter_id!=no_filter){
+	HDF5ErrMapper::ToException<FilterException>("Compression filter cannot be used without chunking");
+      }
     }
+
     switch(filter_id){
     case gzip:{
       unsigned int comp_opt = 1;
@@ -45,11 +53,13 @@ namespace HighFive {
       rr = H5Pset_filter(_hid, filter_id, H5Z_FLAG_OPTIONAL, 0, NULL);
       break;
     }
+    case no_filter:{
+      break;
+    }
     default:{
       if(cd_values.empty()){
 	rr = H5Pset_filter(_hid, filter_id, H5Z_FLAG_OPTIONAL, 0, nullptr);
       }else{
-	//      unsigned int* tcd = cd_values.data();
 	rr = H5Pset_filter(_hid, filter_id, H5Z_FLAG_OPTIONAL, cd_values.size(), cd_values.data());
       }
     }
@@ -92,18 +102,27 @@ namespace HighFive {
     std::vector<char> name(30);
     size_t ncd=cd.size();
     size_t nname = name.size();
-    auto filt_ret=H5Pget_filter(_hid,
-				0,
-				flgs.data(),
-				&ncd,
-				cd.data(),
-				nname,
-				name.data(),
-				&tflg);
-    std::string	nameret(name.data());
-    std::vector<unsigned int> ret(ncd);
-    std::copy(cd.begin(),cd.begin()+ncd,ret.begin());
-    return(std::make_pair(nameret,ret));
+    //We want to get the last filter
+    int num_filt=H5Pget_nfilters(_hid);
+    if(num_filt>0){
+      auto filt_ret=H5Pget_filter(_hid,
+				  num_filt-1,
+				  flgs.data(),
+				  &ncd,
+				  cd.data(),
+				  nname,
+				  name.data(),
+				  &tflg);
+      std::string	nameret(name.data());
+      std::vector<unsigned int> ret(ncd);
+      std::copy(cd.begin(),cd.begin()+ncd,ret.begin());
+      return(std::make_pair(nameret,ret));
+    }else{
+      return(std::make_pair("no_filter",std::vector<unsigned int>()));
+    }
+
+    
+
   }
   
   inline std::vector<size_t> Filter::get_chunksizes()const{

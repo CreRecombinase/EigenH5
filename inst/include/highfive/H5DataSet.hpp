@@ -32,6 +32,7 @@ class DataSet : public Object,
                 public AnnotateTraits<DataSet> {
   public:
     void setTranspose(const bool doTranspose);
+  void extend(const std::vector<size_t> &new_dims);
     size_t getStorageSize() const;
 
     ///
@@ -53,8 +54,6 @@ class DataSet : public Object,
     /// \return return the filter(compression) associated with this dataset 
     ///
     Filter getFilter() const;
-
-  
 
     ///
     /// \brief getMemSpace

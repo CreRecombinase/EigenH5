@@ -121,7 +121,6 @@ public:
     }
   }
 
-
   dim_sel(const int offset,const int dimsize){
     in_stop=dimsize-1;
     if(offset<0){

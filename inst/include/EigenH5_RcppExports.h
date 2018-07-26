@@ -213,11 +213,49 @@ namespace EigenH5 {
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
-    inline bool create_dataset_h5(const std::string& filename, const std::string datapath, const RObject& data, Rcpp::List options) {
+    inline bool write_attribute_h5(const std::string& filename, std::string datapath, const RObject& data) {
+        typedef SEXP(*Ptr_write_attribute_h5)(SEXP,SEXP,SEXP);
+        static Ptr_write_attribute_h5 p_write_attribute_h5 = NULL;
+        if (p_write_attribute_h5 == NULL) {
+            validateSignature("bool(*write_attribute_h5)(const std::string&,std::string,const RObject&)");
+            p_write_attribute_h5 = (Ptr_write_attribute_h5)R_GetCCallable("EigenH5", "_EigenH5_write_attribute_h5");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_write_attribute_h5(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(data)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<bool >(rcpp_result_gen);
+    }
+
+    inline SEXP read_attribute_h5(const std::string& filename, std::string datapath) {
+        typedef SEXP(*Ptr_read_attribute_h5)(SEXP,SEXP);
+        static Ptr_read_attribute_h5 p_read_attribute_h5 = NULL;
+        if (p_read_attribute_h5 == NULL) {
+            validateSignature("SEXP(*read_attribute_h5)(const std::string&,std::string)");
+            p_read_attribute_h5 = (Ptr_read_attribute_h5)R_GetCCallable("EigenH5", "_EigenH5_read_attribute_h5");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_read_attribute_h5(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<SEXP >(rcpp_result_gen);
+    }
+
+    inline bool create_dataset_h5(const std::string& filename, std::string datapath, const RObject& data, Rcpp::List options) {
         typedef SEXP(*Ptr_create_dataset_h5)(SEXP,SEXP,SEXP,SEXP);
         static Ptr_create_dataset_h5 p_create_dataset_h5 = NULL;
         if (p_create_dataset_h5 == NULL) {
-            validateSignature("bool(*create_dataset_h5)(const std::string&,const std::string,const RObject&,Rcpp::List)");
+            validateSignature("bool(*create_dataset_h5)(const std::string&,std::string,const RObject&,Rcpp::List)");
             p_create_dataset_h5 = (Ptr_create_dataset_h5)R_GetCCallable("EigenH5", "_EigenH5_create_dataset_h5");
         }
         RObject rcpp_result_gen;
@@ -249,6 +287,42 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("try-error"))
             throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<Rcpp::IntegerVector >(rcpp_result_gen);
+    }
+
+    inline void extend_dataset(const std::string filename, const std::string datapath, Rcpp::IntegerVector newdims) {
+        typedef SEXP(*Ptr_extend_dataset)(SEXP,SEXP,SEXP);
+        static Ptr_extend_dataset p_extend_dataset = NULL;
+        if (p_extend_dataset == NULL) {
+            validateSignature("void(*extend_dataset)(const std::string,const std::string,Rcpp::IntegerVector)");
+            p_extend_dataset = (Ptr_extend_dataset)R_GetCCallable("EigenH5", "_EigenH5_extend_dataset");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_extend_dataset(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(newdims)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+    }
+
+    inline void extend_dataset_by(const std::string filename, const std::string datapath, Rcpp::IntegerVector newdims) {
+        typedef SEXP(*Ptr_extend_dataset_by)(SEXP,SEXP,SEXP);
+        static Ptr_extend_dataset_by p_extend_dataset_by = NULL;
+        if (p_extend_dataset_by == NULL) {
+            validateSignature("void(*extend_dataset_by)(const std::string,const std::string,Rcpp::IntegerVector)");
+            p_extend_dataset_by = (Ptr_extend_dataset_by)R_GetCCallable("EigenH5", "_EigenH5_extend_dataset_by");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_extend_dataset_by(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(newdims)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
     }
 
     inline Rcpp::List get_datset_filter(const std::string filename, const std::string datapath) {

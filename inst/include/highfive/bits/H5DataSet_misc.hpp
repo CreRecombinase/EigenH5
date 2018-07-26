@@ -50,6 +50,15 @@ inline DataType DataSet::getDataType() const {
     return (transpose_int != 0);
   }
 
+  inline void DataSet::extend(const std::vector<size_t> &new_dims) {
+    std::vector<hsize_t> real_new_dims(new_dims.size());
+    std::copy(new_dims.begin(), new_dims.end(), real_new_dims.begin());
+    if ((_hid =  H5Dset_extent(_hid,real_new_dims.data())) < 0) {
+	HDF5ErrMapper::ToException<DataSetException>(
+            "Unable to extend DataSet");
+    }
+  }
+
   inline void DataSet::setTranspose(const bool transpose) {
     int transpose_int = transpose ? 1 : 0;
     auto transpose_attr = this->createAttribute<int>("doTranspose", DataSpace::From(transpose_int));
@@ -72,12 +81,17 @@ inline Filter DataSet::getFilter() const {
     Filter filt;
     const size_t rank = this->getMemSpace().getNumberDimensions();
     std::vector<hsize_t> tvec(rank);
-    filt.chunksizes.resize(rank);
+
+
+
     if ((filt._hid =  H5Dget_create_plist(_hid)) < 0) {
         HDF5ErrMapper::ToException<DataSetException>("Unable to get Filter out of DataSet");
     }
-    auto ret = H5Pget_chunk(filt._hid, rank, tvec.data());
-    std::copy(tvec.begin(),tvec.end(),filt.chunksizes.begin());
+    if(H5Pget_layout(filt._hid) ==H5D_CHUNKED){
+      filt.chunksizes.resize(rank);
+      auto ret = H5Pget_chunk(filt._hid, rank, tvec.data());
+      std::copy(tvec.begin(),tvec.end(),filt.chunksizes.begin());
+    }
 
     return filt;
 }

@@ -1,9 +1,20 @@
 context("dataframes")
 
 
+test_that("we can write an empty data_frame",{
+  
+  td <- tibble::data_frame(a=1:5,b=letters[1:5],c=runif(5))
+  ntd <- dplyr::slice(td,integer())
+  tf <- tempfile()
+  write_df_h5(ntd,"test",tf,chunksizes=9L,max_dims=NA_integer_)
+  expect_equal(c(dim_h5(tf,"test/a"),dim_h5(tf,"test/b"),dim_h5(tf,"test/c")),c(0L,0L,0L))
+  write_df_h5(td,"test",tf,append=T)
+  srtd <- read_df_h5(tf,"test")
+  expect_equal(td,srtd)
+})
+
 
 test_that("We can read and write dataframes correctly",{
-  
   
   td <- tibble::data_frame(a=1:5,b=letters[1:5],c=runif(5))
   std <- dplyr::slice(td,3:5)
@@ -49,35 +60,5 @@ test_that("We can read and dataframe slices correctly",{
   expect_equal(td,rtd)
   expect_equal(std,srtd)
 })
-
-
-# 
-# test_that("finding the intersection of 3 SNPinfo dfs",{
-#   library(tidyverse)
-#   p <- 10
-#   master_snpi <- data_frame(chr=sample(1:3,p,replace=T),pos=sample(1:1000,p,replace=F)) %>% arrange(chr,pos) %>% mutate(snp_id=1:n())
-#   
-#   slice_a <- c(2,4,6,8)
-#   slice_b <- c(1,2,4,5,7)
-#   slice_c <- c(2,4,8)
-#   
-#   tempfa <- tempfile()
-#   tempfb <- tempfile()
-#   tempfc <- tempfile()
-#   
-#   tdf_a <- slice(master_snpi,slice_a) %>% mutate(snp_id=1:n())
-#   tdf_b <- slice(master_snpi,slice_b) %>% mutate(snp_id=1:n())
-#   tdf_c <- slice(master_snpi,slice_c) %>% mutate(snp_id=1:n())
-#   
-#   write_df_h5(tdf_a,"SNPinfo",tempfa)
-#   write_df_h5(tdf_b,"SNPinfo",tempfb)
-#   write_df_h5(tdf_c,"SNPinfo",tempfc)
-#   
-#   resl <- intersect_snpinfo_h5(c(tempfa,tempfb,tempfc))
-#   
-#   
-#   
-#   
-# })
 
 

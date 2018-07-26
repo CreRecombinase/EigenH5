@@ -44,15 +44,17 @@ NodeTraits<Derivate>::createDataSet(const std::string& dataset_name,
   auto chunksizes = filter.get_chunksizes();
   if(chunksizes.size()>0){
     auto space_dims=space.getDimensions();
+    auto space_max_dims=space.getMaxDimensions();
+
     const size_t n_dims=space_dims.size();
     if(chunksizes.size()!=n_dims){
       HDF5ErrMapper::ToException<FilterException>(
 						  "Filter and DataSpace are of different ranks!");
     }
     for(int i=0;i<n_dims;i++){
-      if(chunksizes[i]>space_dims[i]){
+      if(chunksizes[i]>space_max_dims[i]){
 	HDF5ErrMapper::ToException<FilterException>(
-						    "Filter chunksize cannot be larger than DataSpace dimension!");
+						    "Filter chunksize cannot be larger than DataSpace (max) dimension!");
       }
     }
   }
@@ -150,8 +152,6 @@ NodeTraits<Derivate>::openGroup(const std::string& group_name) const {
     return(this->getGroup(group_name));
   }
 }
-
-
 
 
 template <typename Derivate>

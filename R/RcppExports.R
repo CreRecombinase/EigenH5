@@ -41,6 +41,14 @@ update_vector <- function(data, filename, datapath, options) {
     .Call(`_EigenH5_update_vector`, data, filename, datapath, options)
 }
 
+write_attribute_h5 <- function(filename, datapath, data) {
+    .Call(`_EigenH5_write_attribute_h5`, filename, datapath, data)
+}
+
+read_attribute_h5 <- function(filename, datapath) {
+    .Call(`_EigenH5_read_attribute_h5`, filename, datapath)
+}
+
 create_dataset_h5 <- function(filename, datapath, data, options) {
     .Call(`_EigenH5_create_dataset_h5`, filename, datapath, data, options)
 }
@@ -51,6 +59,14 @@ split_ldd <- function(region_ids) {
 
 dataset_chunks <- function(filename, datapath) {
     .Call(`_EigenH5_dataset_chunks`, filename, datapath)
+}
+
+extend_dataset <- function(filename, datapath, newdims) {
+    invisible(.Call(`_EigenH5_extend_dataset`, filename, datapath, newdims))
+}
+
+extend_dataset_by <- function(filename, datapath, newdims) {
+    invisible(.Call(`_EigenH5_extend_dataset_by`, filename, datapath, newdims))
 }
 
 get_datset_filter <- function(filename, datapath) {

@@ -16,6 +16,7 @@
 
 #include <H5Tpublic.h>
 
+template<class T> struct always_false : std::false_type {};
 
 template<bool isReadOnly>
 class FileManager{
@@ -185,8 +186,8 @@ inline std::vector<std::optional<Rcpp::IntegerVector> > parse_subset_list(const 
     return(retvec);
   }
 
-  auto subset_ro =get_list_element<INTSXP>(list,"subset_rows");
-  auto subset_co =get_list_element<INTSXP>(list,"subset_cols");
+  auto subset_ro =get_list_element<INTSXP>(list,"subset_rows",false);
+  auto subset_co =get_list_element<INTSXP>(list,"subset_cols",false);
   if(subset_ro && subset_co){
     if(num_dims==1){
       Rcpp::stop("Cannot specify subset_rows and subset_cols when data is 1 dimensional");
