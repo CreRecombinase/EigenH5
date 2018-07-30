@@ -270,6 +270,24 @@ namespace EigenH5 {
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
+    inline void create_file_h5(const std::string filename) {
+        typedef SEXP(*Ptr_create_file_h5)(SEXP);
+        static Ptr_create_file_h5 p_create_file_h5 = NULL;
+        if (p_create_file_h5 == NULL) {
+            validateSignature("void(*create_file_h5)(const std::string)");
+            p_create_file_h5 = (Ptr_create_file_h5)R_GetCCallable("EigenH5", "_EigenH5_create_file_h5");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_create_file_h5(Shield<SEXP>(Rcpp::wrap(filename)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+    }
+
     inline Rcpp::IntegerVector dataset_chunks(const std::string filename, const std::string datapath) {
         typedef SEXP(*Ptr_dataset_chunks)(SEXP,SEXP);
         static Ptr_dataset_chunks p_dataset_chunks = NULL;

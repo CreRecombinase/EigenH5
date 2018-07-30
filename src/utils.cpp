@@ -9,6 +9,10 @@
 
 
 
+//[[Rcpp::export]]
+void create_file_h5(const std::string filename){
+  HighFive::File file(filename,HighFive::File::Create);
+}
 
 
 
