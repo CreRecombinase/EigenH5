@@ -91,33 +91,38 @@ append_vector_h5 <- function(filename,datapath,data,...){
 
 write_vector_h5 <- function(filename,groupname="/",dataname,data,...){
   argl <- list(...)
-
+  # pre_ct <- file_acc_ct(filename)
+  ret <- FALSE
   if(!hasArg(datapath)){
     datapath <- construct_data_path(groupname,dataname)
   }else{
     datapath <- argl[["datapath"]]
   }
-
   app_v <- TRUE
   if(!file.exists(filename)){
     create_dataset_h5(filename,datapath,data,argl)
+    # post_ct <- file_acc_ct(filename)
+    # stopifnot(all.equal(pre_ct,post_ct))
     app_v <- FALSE
   }
   if(!isObject(filename,datapath)){
     create_dataset_h5(filename,datapath,data,argl)
+    # post_ct <- file_acc_ct(filename)
+    # stopifnot(all.equal(pre_ct,post_ct))
   }else{
     if(hasArg(append)){
       if(app_v & argl[["append"]]){
         ret <- append_vector_h5(filename = filename,datapath = datapath,data = data,... = argl)
-        return(ret)
+        # post_ct <- file_acc_ct(filename)
       }
     }
   }
-  if(length(data)>0){
-    ret <- update_vector(data,filename,datapath,argl)
-    return(ret)
-  }else{
-    return(TRUE)
+  if(!ret){
+    if(length(data)>0){
+      ret <- update_vector(data,filename,datapath,argl)
+      return(ret)
+    }else{
+    }
   }
 }
 

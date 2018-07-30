@@ -61,7 +61,6 @@ class mach_file{
   std::pair<int,int> buffer_pos; //Which byte in the buffer am I on (start and one past end)?
   size_t sample_offset;
   std::vector<double> data;
-
 public:
   mach_file(boost::iostreams::filtering_istream	&fs_,
 	    const std::vector<std::string> &sample_names_,
@@ -235,18 +234,22 @@ public:
 
 
 //[[Rcpp::export]]
-void mach2h5(const std::string dosagefile, const std::string h5file, const std::string datapath,std::vector<int> snp_idx, std::vector<std::string> names, const int p,const int buffer_size=10000,bool SNPfirst=true){
+void mach2h5(const std::string dosagefile, const std::string h5file, const std::string datapath,std::vector<int> snp_idx, std::vector<std::string> names, const int p,Rcpp::List options){
 
   const size_t num_elem=names.size();
   using namespace HighFive;
   size_t mp=p;
   File file(h5file,HighFive::File::ReadWrite | HighFive::File::Create);
   std::vector<size_t> space_dims = {snp_idx.size(),num_elem};
+  const bool SNPfirst =	get_list_scalar<bool>(options,"SNPfirst").value_or(true);
+
   if(!SNPfirst){
     std::reverse(space_dims.begin(),space_dims.end());
   }
+
   DataSpace space(space_dims);
-  Filter filter	= Filter::From(space,FILTER_BLOSC,{});
+  const int buffer_size= get_list_scalar<int>(options,"buffer_size").value_or(10000);
+  Filter filter	= create_filter(space_dims,options);
   auto dset = file.createDataSet(datapath,space,AtomicType<double>(),filter);
 
 

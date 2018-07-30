@@ -78,6 +78,9 @@ struct cpp2r<std::string>{
 };
 
 
+HighFive::Filter create_filter(std::vector<size_t> data_dimensions,
+			       Rcpp::List &options);
+
 template<SEXPTYPE RTYPE> std::optional<Rcpp::Vector<RTYPE> > get_list_element(const Rcpp::List &list, const std::string name,const bool empty_is_false = true);
 template<typename T,SEXPTYPE RTYPE = cpp2r<T>::data_t > std::optional<T> get_list_scalar(const Rcpp::List &list, const std::string name);
 std::vector<std::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims);

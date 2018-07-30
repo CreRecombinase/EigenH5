@@ -13,8 +13,8 @@ is_transposed <- function(filename, groupname, dataname) {
     .Call(`_EigenH5_is_transposed`, filename, groupname, dataname)
 }
 
-mach2h5 <- function(dosagefile, h5file, datapath, snp_idx, names, p, buffer_size = 10000L, SNPfirst = TRUE) {
-    invisible(.Call(`_EigenH5_mach2h5`, dosagefile, h5file, datapath, snp_idx, names, p, buffer_size, SNPfirst))
+mach2h5 <- function(dosagefile, h5file, datapath, snp_idx, names, p, options) {
+    invisible(.Call(`_EigenH5_mach2h5`, dosagefile, h5file, datapath, snp_idx, names, p, options))
 }
 
 len <- function(x) {

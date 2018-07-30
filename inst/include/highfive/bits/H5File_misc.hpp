@@ -70,9 +70,14 @@ inline File::File(const std::string& filename, int openFlags,
     //    auto fapl=    H5Pset_libver_bounds(fapl_id, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
 
 
+
     if (openFlags & H5F_ACC_CREAT) {
-        if ((_hid = H5Fcreate(_filename.c_str(), openFlags & (H5F_ACC_TRUNC),
-                              H5P_DEFAULT, driver.getId())) < 0) {
+      auto fcpl = H5Pcreate(H5P_FILE_CREATE);
+      auto test = H5Pset_file_space_strategy( fcpl, H5F_FSPACE_STRATEGY_PAGE, false, 1);
+        if ((_hid = H5Fcreate(_filename.c_str(),
+			      openFlags & (H5F_ACC_TRUNC),
+                              fcpl,
+			      driver.getId())) < 0) {
             HDF5ErrMapper::ToException<FileException>(
                 std::string("Unable to create file " + _filename));
         }

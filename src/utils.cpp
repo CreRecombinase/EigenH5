@@ -197,15 +197,19 @@ Rcpp::StringVector typeof_h5(const std::string &filename,
 }
 
 
-
+inline bool exists_file (const std::string& name) {
+    std::ifstream f(name.c_str());
+    return f.good();
+}
 
 //[[Rcpp::export]]
 Rcpp::DataFrame file_acc_ct(const std::string filename){
   using namespace Rcpp;
+  if(exists_file(filename)){
   HighFive::File file(filename,HighFive::File::ReadOnly);
   auto ret = Rcpp::DataFrame::create(
       _["count"]=Rcpp::IntegerVector::create(
-        file.getObjCount(H5F_OBJ_FILE),
+        file.getObjCount(H5F_OBJ_FILE)-1,
         file.getObjCount(H5F_OBJ_DATASET),
         file.getObjCount(H5F_OBJ_GROUP),
         file.getObjCount(H5F_OBJ_DATATYPE),
@@ -219,7 +223,22 @@ Rcpp::DataFrame file_acc_ct(const std::string filename){
         ));
 
   return(ret);
+  }else{
+    return(Rcpp::DataFrame::create(
+      _["count"]=Rcpp::IntegerVector::create(0,
+					     0,
+					     0,
+					     0,
+					     0),
+      _["type"]=Rcpp::StringVector::create(
+					   "Files",
+					   "DataSets",
+					   "Groups",
+					   "DataTypes",
+					   "Attributes"
+					   )));
 
+  }
 }
 
 
