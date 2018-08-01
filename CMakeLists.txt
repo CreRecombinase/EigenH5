@@ -2,45 +2,16 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(EigenH5)
 include(ExternalProject)
 
-
-
-
-add_compile_options(-Wno-ignored-attributes  -Wno-deprecated-declarations)
-set(CMAKE_MODULE_PATH  "${CMAKE_SOURCE_DIR}/inst/cmake/Modules/"  ${CMAKE_MODULE_PATH})
-set(HDF5_USE_STATIC_LIBRARIES ON)
 option(FIND_HDF5
   "Search for a local installation of HDF5" ON)
 option(FIND_BLOSC
   "Search for a local installation of blosc" ON)
 option(FIND_ZSTD
-  "Search for a local installation of zstd" OFF)
-if(FIND_HDF5)
-  find_package(HDF5 COMPONENTS C REQUIRED)
-endif()
-if(NOT HDF5_FOUND)
-  set(ExternalProjectCMakeArgs
-    -DHDF5_BUILD_CPP_LIB=OFF
-    )
-  file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/hdf5_local/src)
-  ExternalProject_Add(hdf5_local
-    GIT_REPOSITORY "https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git"
-    GIT_TAG "hdf5-1_10_2"
-    CMAKE_ARGS ${ExternalProjectCMakeArgs}
-    SOURCE_DIR ${PROJECT_BINARY_DIR}/hdf5_local/src/hdf5-${_hdf5_version}
-    BINARY_DIR ${PROJECT_BINARY_DIR}/hdf5_local/build
-    STAMP_DIR  ${PROJECT_BINARY_DIR}/hdf5_local/stamp
-    TMP_DIR    ${PROJECT_BINARY_DIR}/hdf5_local/tmp
-    INSTALL_COMMAND ""
-    )
-  include_directories(
-    ${PROJECT_BINARY_DIR}/hdf5_local/src/hdf5-${_hdf5_version}/src
-    ${PROJECT_BINARY_DIR}/hdf5_local/build
-    )
-  set(_hdf5_libs
-    ${PROJECT_BINARY_DIR}/hdf5_local/build/bin/libhdf5.a
-    -ldl
-    )
-endif()
+  "Search for a local installation of zstd" ON)
+
+
+add_compile_options(-Wno-ignored-attributes  -Wno-deprecated-declarations)
+set(CMAKE_MODULE_PATH  "${CMAKE_SOURCE_DIR}/inst/cmake/Modules/"  ${CMAKE_MODULE_PATH})
 
 find_package(R)
 
@@ -75,6 +46,42 @@ add_library(eigenh5 SHARED
   src/test-runner.cpp
   src/utils.cpp
   src/zstd_h5plugin.c)
+
+set(HDF5_USE_STATIC_LIBRARIES ON)
+
+if(FIND_HDF5)
+  find_package(HDF5 COMPONENTS C HL REQUIRED)
+  if(HDF5_FOUND)
+    target_link_libraries(eigenh5 ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
+    include_directories(${HDF5_INCLUDE_DIRS})
+  endif()
+endif()
+if(NOT HDF5_FOUND)
+  set(ExternalProjectCMakeArgs
+    -DHDF5_BUILD_CPP_LIB=OFF
+    )
+  file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/hdf5_local/src)
+  ExternalProject_Add(hdf5_local
+    GIT_REPOSITORY "https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git"
+    GIT_TAG "hdf5-1_10_2"
+    CMAKE_ARGS ${ExternalProjectCMakeArgs}
+    SOURCE_DIR ${PROJECT_BINARY_DIR}/hdf5_local/src/hdf5-${_hdf5_version}
+    BINARY_DIR ${PROJECT_BINARY_DIR}/hdf5_local/build
+    STAMP_DIR  ${PROJECT_BINARY_DIR}/hdf5_local/stamp
+    TMP_DIR    ${PROJECT_BINARY_DIR}/hdf5_local/tmp
+    INSTALL_COMMAND ""
+    )
+  include_directories(
+    ${PROJECT_BINARY_DIR}/hdf5_local/src/hdf5-${_hdf5_version}/src
+    ${PROJECT_BINARY_DIR}/hdf5_local/build
+    )
+  set(_hdf5_libs
+    ${PROJECT_BINARY_DIR}/hdf5_local/build/bin/libhdf5.a
+    -ldl
+    )
+endif()
+
+
 
 
 
@@ -215,8 +222,7 @@ endif()
 
 
 set_property(TARGET eigenh5 PROPERTY CXX_STANDARD 17)
-target_link_libraries(eigenh5 ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
-include_directories(${HDF5_INCLUDE_DIRS})
+
 include_directories(${RCPP_INCLUDE_DIRS})
 #include_directories(${PROGRESS_INCLUDE_DIRS})
 #include_directories(${PARALLEL_INCLUDE_DIRS})
