@@ -13,7 +13,7 @@ option(FIND_HDF5
 option(FIND_BLOSC
   "Search for a local installation of blosc" ON)
 option(FIND_ZSTD
-  "Search for a local installation of zstd" ON)
+  "Search for a local installation of zstd" OFF)
 if(FIND_HDF5)
   find_package(HDF5 COMPONENTS C REQUIRED)
 endif()
@@ -174,15 +174,17 @@ if(ZSTD_INCLUDE_DIR AND ZSTD_LIBRARY)
   set(ZSTD_FOUND TRUE)
   message(STATUS "Found ZSTD library: ${ZSTD_LIBRARY}")
 else()
+
   set (ZSTD_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/zstd")
   set(ZSTD_INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/zstd")
-  set(ZSTD_CMAKE_ARGS build/cmake/ -DCMAKE_INSTALL_PREFIX=${BLOSC_INSTALL_DIR})
+  set(ZSTD_CMAKE_ARGS  -DCMAKE_INSTALL_PREFIX=${ZSTD_INSTALL_DIR})
   ExternalProject_Add(zstd_ext
     PREFIX ${ZSTD_PREFIX}
-    GIT_REPOSITORY "https://github.com/facebook/zstd.git"
-    SOURCE_DIR= "build/cmake/"
+    GIT_REPOSITORY https://github.com/facebook/zstd.git
+    SOURCE_SUBDIR build/cmake/
     INSTALL_DIR ${ZSTD_INSTALL_DIR}
     CMAKE_ARGS ${ZSTD_CMAKE_ARGS})
+
   add_library(zstd_shared STATIC IMPORTED)
   set_property(TARGET zstd_shared PROPERTY IMPORTED_LOCATION ${ZSTD_INSTALL_DIR}/lib/${CMAKE_SHARED_LIBRARY_PREFIX}zstd${CMAKE_SHARED_LIBRARY_SUFFIX})
   add_dependencies(zstd_shared zstd_ext)
