@@ -98,41 +98,6 @@ RcppExport SEXP _EigenH5_is_transposed(SEXP filenameSEXP, SEXP groupnameSEXP, SE
     UNPROTECT(1);
     return rcpp_result_gen;
 }
-// mach2h5
-void mach2h5(const std::string dosagefile, const std::string h5file, const std::string datapath, std::vector<int> snp_idx, std::vector<std::string> names, const int p, Rcpp::List options);
-static SEXP _EigenH5_mach2h5_try(SEXP dosagefileSEXP, SEXP h5fileSEXP, SEXP datapathSEXP, SEXP snp_idxSEXP, SEXP namesSEXP, SEXP pSEXP, SEXP optionsSEXP) {
-BEGIN_RCPP
-    Rcpp::traits::input_parameter< const std::string >::type dosagefile(dosagefileSEXP);
-    Rcpp::traits::input_parameter< const std::string >::type h5file(h5fileSEXP);
-    Rcpp::traits::input_parameter< const std::string >::type datapath(datapathSEXP);
-    Rcpp::traits::input_parameter< std::vector<int> >::type snp_idx(snp_idxSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type names(namesSEXP);
-    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type options(optionsSEXP);
-    mach2h5(dosagefile, h5file, datapath, snp_idx, names, p, options);
-    return R_NilValue;
-END_RCPP_RETURN_ERROR
-}
-RcppExport SEXP _EigenH5_mach2h5(SEXP dosagefileSEXP, SEXP h5fileSEXP, SEXP datapathSEXP, SEXP snp_idxSEXP, SEXP namesSEXP, SEXP pSEXP, SEXP optionsSEXP) {
-    SEXP rcpp_result_gen;
-    {
-        Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_EigenH5_mach2h5_try(dosagefileSEXP, h5fileSEXP, datapathSEXP, snp_idxSEXP, namesSEXP, pSEXP, optionsSEXP));
-    }
-    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
-    if (rcpp_isInterrupt_gen) {
-        UNPROTECT(1);
-        Rf_onintr();
-    }
-    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
-    if (rcpp_isError_gen) {
-        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
-        UNPROTECT(1);
-        Rf_error(CHAR(rcpp_msgSEXP_gen));
-    }
-    UNPROTECT(1);
-    return rcpp_result_gen;
-}
 // len
 int len(RObject x);
 static SEXP _EigenH5_len_try(SEXP xSEXP) {
@@ -903,7 +868,6 @@ static int _EigenH5_RcppExport_validate(const char* sig) {
         signatures.insert("void(*start_blosc)()");
         signatures.insert("bool(*check_blosc)()");
         signatures.insert("bool(*is_transposed)(const std::string,const std::string,const std::string)");
-        signatures.insert("void(*mach2h5)(const std::string,const std::string,const std::string,std::vector<int>,std::vector<std::string>,const int,Rcpp::List)");
         signatures.insert("int(*len)(RObject)");
         signatures.insert("Rcpp::List(*permutation_order)(const Rcpp::List,Rcpp::IntegerVector)");
         signatures.insert("SEXP(*read_vector)(std::string,std::string,Rcpp::List)");
@@ -937,7 +901,6 @@ RcppExport SEXP _EigenH5_RcppExport_registerCCallable() {
     R_RegisterCCallable("EigenH5", "_EigenH5_start_blosc", (DL_FUNC)_EigenH5_start_blosc_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_check_blosc", (DL_FUNC)_EigenH5_check_blosc_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_is_transposed", (DL_FUNC)_EigenH5_is_transposed_try);
-    R_RegisterCCallable("EigenH5", "_EigenH5_mach2h5", (DL_FUNC)_EigenH5_mach2h5_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_len", (DL_FUNC)_EigenH5_len_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_permutation_order", (DL_FUNC)_EigenH5_permutation_order_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_read_vector", (DL_FUNC)_EigenH5_read_vector_try);
@@ -972,7 +935,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_EigenH5_start_blosc", (DL_FUNC) &_EigenH5_start_blosc, 0},
     {"_EigenH5_check_blosc", (DL_FUNC) &_EigenH5_check_blosc, 0},
     {"_EigenH5_is_transposed", (DL_FUNC) &_EigenH5_is_transposed, 3},
-    {"_EigenH5_mach2h5", (DL_FUNC) &_EigenH5_mach2h5, 7},
     {"_EigenH5_len", (DL_FUNC) &_EigenH5_len, 1},
     {"_EigenH5_permutation_order", (DL_FUNC) &_EigenH5_permutation_order, 2},
     {"_EigenH5_read_vector", (DL_FUNC) &_EigenH5_read_vector, 3},
