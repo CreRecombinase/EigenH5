@@ -1,0 +1,37 @@
+set -x
+set -e
+
+which cmake
+
+rm -rf _builds
+#cmake -H. -B_builds\
+#-DCMAKE_VERBOSE_MAKEFILE=ON\
+#-DCMAKE_BUILD_TYPE=Release\
+#-DCONDA_PREFIX="${CONDA_PREFIX}"\
+#-DCMAKE_INSTALL_PREFIX=_install\
+#-DCMAKE_SHARED_LIBRARY_PREFIX_CXX=""\
+
+rxx=$(R CMD config CXX)
+echo "CXX: ${rxx}"
+
+rcc=$(R CMD config CC)
+echo "CC: ${rcc}"
+
+
+
+cmake -H. -B_builds \
+    -DCMAKE_VERBOSE_MAKEFILE=ON \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=_install \
+    -DCMAKE_FIND_ROOT_PATH=${CONDA_PREFIX} \
+    -DCMAKE_CXX_COMPILER=${rxx} \
+    -DCMAKE_C_COMPILER=${rcc} \
+    -DCMAKE_SHARED_LIBRARY_PREFIX_CXX=""
+
+cmake --build _builds --target install --config Release
+
+# Linux
+cp _install/lib/eigenh5.so src/ || echo "Failed: eigenh5.so -> src"
+
+# Mac
+#cp _install/lib/eigenh5.dylib src/foocpp.so || echo "Failed: eigenh5.dylib -> src"
