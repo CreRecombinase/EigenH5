@@ -48,6 +48,7 @@ add_library(eigenh5 SHARED
   src/zstd_h5plugin.c)
 
 set(HDF5_USE_STATIC_LIBRARIES ON)
+target_link_libraries(eigenh5 stdc++fs)
 
 if(FIND_HDF5)
   find_package(HDF5 COMPONENTS C HL REQUIRED)
