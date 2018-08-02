@@ -1,0 +1,2 @@
+rm -rf _builds
+rm -rf _install

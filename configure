@@ -3,7 +3,7 @@ set -e
 
 which cmake
 
-rm -rf _builds
+
 #cmake -H. -B_builds\
 #-DCMAKE_VERBOSE_MAKEFILE=ON\
 #-DCMAKE_BUILD_TYPE=Release\
@@ -13,17 +13,15 @@ rm -rf _builds
 
 rxx=$(R CMD config CXX)
 echo "CXX: ${rxx}"
-
+MAKEFLAGS=-j8
 rcc=$(R CMD config CC)
 echo "CC: ${rcc}"
-
-
-
+[[ -z "${CONDA_PREFIX}" ]] && MyVar='' || MyVar="${CONDA_PREFIX}"
 cmake -H. -B_builds \
     -DCMAKE_VERBOSE_MAKEFILE=ON \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=_install \
-    -DCMAKE_FIND_ROOT_PATH=${CONDA_PREFIX} \
+    -DCMAKE_FIND_ROOT_PATH=${MyVar} \
     -DCMAKE_CXX_COMPILER=${rxx} \
     -DCMAKE_C_COMPILER=${rcc} \
     -DCMAKE_SHARED_LIBRARY_PREFIX_CXX=""
@@ -31,7 +29,7 @@ cmake -H. -B_builds \
 cmake --build _builds --target install --config Release
 
 # Linux
-cp _install/lib/eigenh5.so src/ || echo "Failed: eigenh5.so -> src"
+cp _install/lib/eigenh5.so src/EigenH5.so || echo "Failed: eigenh5.so -> src"
 
 # Mac
 #cp _install/lib/eigenh5.dylib src/foocpp.so || echo "Failed: eigenh5.dylib -> src"
