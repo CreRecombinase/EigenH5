@@ -3958,7 +3958,7 @@ else
 fi
 
 
-
+LDFLAGS=`"${R_HOME}/bin/R" CMD config LDFLAGS`
 
 # mkdir _build
 # wget "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.2/src/hdf5-1.10.2.tar.gz" -o _build/hdf5-1.10.2.tar.gz
@@ -4013,6 +4013,67 @@ if test -z "${R_HOME}"; then
   echo "could not determine R_HOME"
   exit 1
 fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing blosc_compress" >&5
+$as_echo_n "checking for library containing blosc_compress... " >&6; }
+if ${ac_cv_search_blosc_compress+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char blosc_compress ();
+int
+main ()
+{
+return blosc_compress ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' blosc; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_search_blosc_compress=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_blosc_compress+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_blosc_compress+:} false; then :
+
+else
+  ac_cv_search_blosc_compress=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_blosc_compress" >&5
+$as_echo "$ac_cv_search_blosc_compress" >&6; }
+ac_res=$ac_cv_search_blosc_compress
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+
+else
+
+  as_fn_error $? "unable to find the blosc_compress() function" "$LINENO" 5
+
+fi
+
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing ZSTD_compress" >&5
 $as_echo_n "checking for library containing ZSTD_compress... " >&6; }
@@ -4075,65 +4136,7 @@ else
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing blosc_compress" >&5
-$as_echo_n "checking for library containing blosc_compress... " >&6; }
-if ${ac_cv_search_blosc_compress+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_func_search_save_LIBS=$LIBS
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
 
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char blosc_compress ();
-int
-main ()
-{
-return blosc_compress ();
-  ;
-  return 0;
-}
-_ACEOF
-for ac_lib in '' blosc; do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_search_blosc_compress=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext
-  if ${ac_cv_search_blosc_compress+:} false; then :
-  break
-fi
-done
-if ${ac_cv_search_blosc_compress+:} false; then :
-
-else
-  ac_cv_search_blosc_compress=no
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_blosc_compress" >&5
-$as_echo "$ac_cv_search_blosc_compress" >&6; }
-ac_res=$ac_cv_search_blosc_compress
-if test "$ac_res" != no; then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-
-else
-
-  as_fn_error $? "unable to find the blosc_compress() function" "$LINENO" 5
-
-fi
 
 
 

@@ -22,7 +22,7 @@ else
 fi
 
 
-
+LDFLAGS=`"${R_HOME}/bin/R" CMD config LDFLAGS`
 
 # mkdir _build
 # wget "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.2/src/hdf5-1.10.2.tar.gz" -o _build/hdf5-1.10.2.tar.gz
@@ -49,13 +49,19 @@ if test -z "${R_HOME}"; then
   exit 1
 fi
 
+AC_SEARCH_LIBS([blosc_compress], [blosc], [], [
+  AC_MSG_ERROR([unable to find the blosc_compress() function])
+])
+
 AC_SEARCH_LIBS([ZSTD_compress], [zstd], [], [
   AC_MSG_ERROR([unable to find the ZSTD_compress() function])
 ])
 
-AC_SEARCH_LIBS([blosc_compress], [blosc], [], [
-  AC_MSG_ERROR([unable to find the blosc_compress() function])
-])
+dnl AC_SEARCH_LIBS([std::filesystem::path::path],[std++fs],[],[
+dnl   AC_MSG_ERROR([unable to find the c++ filesystem library])
+dnl   ])
+
+
 
 
 AC_MSG_RESULT([Libs will be : $LIBS])
