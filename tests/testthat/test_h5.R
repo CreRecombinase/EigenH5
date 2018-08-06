@@ -8,7 +8,7 @@ test_that("Can append a dataframe",{
   p_a <- 3
   tdf <- tibble::data_frame(a=runif(p_a),b=sample(1:p_a,p_a))
   tf <- tempfile()
-  write_df_h5(tdf,"test",tf,max_dim=c(NA_integer_))
+  write_df_h5(tdf,tf,"test",max_dim=c(NA_integer_))
   write_df_h5(tdf,"test",tf,append=T)
   expect_equal(read_df_h5(tf,"test"),dplyr::bind_rows(tdf,tdf))
   

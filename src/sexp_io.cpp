@@ -74,34 +74,6 @@ int len(const Vector<RTYPE>& x)
 
 
 
-// std::variant<Rcpp::IntegerVector,
-// 	     Rcpp::NumericVector,
-// 	     Rcpp::CharacterVector,
-// 	     Rcpp::Vector<NILSXP>> get_obj_v(RObject x){
-//   const auto my_t = x.sexp_type();
-//   const bool isMatrix = x.hasAttribute("dim");
-//   switch (my_t){
-//   case INTSXP: {
-//     return(Rcpp::Vector<INTSXP>(x));
-//   }
-//   case REALSXP: {
-//     return(Rcpp::Vector<REALSXP>(x));
-//   }
-//   case STRSXP: {
-//     return(Rcpp::Vector<STRSXP>(x));
-//   }
-//   default: {
-//     warning(
-// 	    "Invalid SEXPTYPE %d.\n",
-// 	    my_t
-// 	    );
-//     return(Rcpp::Vector<NILSXP>(x));
-//   }
-//   }
-
-// }
-
-
 
 
 std::vector<size_t> obj_dim(RObject x){
@@ -111,11 +83,6 @@ std::vector<size_t> obj_dim(RObject x){
     std::vector<size_t> ret={static_cast<size_t>(XLENGTH(SEXP(x)))};
     return(ret);
   }
-    // auto vec=get_obj_v(x);
-    // return(std::visit([](auto&& arg) -> std::vector<size_t> {
-    // 	  std::vector<size_t> retvec = {static_cast<size_t>(arg.size())};
-    // 	  return(retvec);
-    // 	},vec));
 }
 
 // [[Rcpp::export]]
@@ -143,9 +110,6 @@ Rcpp::List permutation_order(const Rcpp::List options, Rcpp::IntegerVector dims)
       Rcpp::stop("dims must be length 1 or 2");
     }
   }
-
-
-
 }
 
 
@@ -194,35 +158,35 @@ SEXP read_attribute(const Derivate der,const std::string attribute_name){
     Rcpp::stop("Can currently only read	vector and scalar attributes");
   }
   auto my_t = h2r_T(attr.getDataType().getId());
-    switch(my_t){
-    case INTSXP:{
-      std::vector<int> retv(attr_dims.front());
-      attr.read(retv);
-      return(Rcpp::wrap(retv));
-      break;
-    }
-    case REALSXP: {
-      std::vector<double> retv(attr_dims.front());
-      attr.read(retv);
-      return(Rcpp::wrap(retv));
-      break;
-    }
-    case STRSXP: {
-      std::vector<std::string> retv(attr_dims.front());
-      attr.read(retv);
-      return(Rcpp::wrap(retv));
-      break;
-    }
-    default: {
-      warning(
-	      "Invalid SEXPTYPE %d.\n",
-	      my_t
-	      );
-      Rcpp::Rcerr<<attribute_name<<" has type that can't be read"<<std::endl;
-      Rcpp::stop("Can't read type");
-      return R_NilValue;
-    }
-    }
+  switch(my_t){
+  case INTSXP:{
+    std::vector<int> retv(attr_dims.front());
+    attr.read(retv);
+    return(Rcpp::wrap(retv));
+    break;
+  }
+  case REALSXP: {
+    std::vector<double> retv(attr_dims.front());
+    attr.read(retv);
+    return(Rcpp::wrap(retv));
+    break;
+  }
+  case STRSXP: {
+    std::vector<std::string> retv(attr_dims.front());
+    attr.read(retv);
+    return(Rcpp::wrap(retv));
+    break;
+  }
+  default: {
+    warning(
+	    "Invalid SEXPTYPE %d.\n",
+	    my_t
+	    );
+    Rcpp::Rcerr<<attribute_name<<" has type that can't be read"<<std::endl;
+    Rcpp::stop("Can't read type");
+    return R_NilValue;
+  }
+  }
 }
 
 template <typename Derivate>
@@ -271,14 +235,9 @@ void write_attribute(Derivate &der,const std::string attribute_name,const Rcpp::
 }
 
 
-
-
-
-
 template <SEXPTYPE RTYPE,typename T= typename r2cpp_t<RTYPE>::type>
 Rcpp::Vector<RTYPE> read_elem_v_h5(HighFive::Selection &file_sel,
 				   DatasetSelection<1> &mem_sel){
-
   auto r_size =	file_sel.getDataDimensions();
   if(r_size.size()!=1){
     Rcpp::Rcerr<<"Dataset is of rank: "<<r_size.size()<<std::endl;
@@ -286,7 +245,6 @@ Rcpp::Vector<RTYPE> read_elem_v_h5(HighFive::Selection &file_sel,
   }
   std::vector<T> retv(r_size[0]);
   //  Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > mretmat(&retmat(0,0),r_size[0],r_size[1]);
-
   mem_sel.readVector<T>(file_sel,retv);
   return(Rcpp::wrap(retv));
 }
@@ -304,12 +262,6 @@ void write_elem_v_h5(HighFive::Selection &file_sel,
   }
   mem_sel.writeVector(file_sel,std::move(Rcpp::as<std::vector<T>>(wvec)));
 }
-
-
-
-
-
-
 
 
 HighFive::DataSet create_dataset(HighFive::Group &group,
@@ -339,10 +291,6 @@ HighFive::DataSet create_dataset(HighFive::Group &group,
   }
 }
 
-
-
-
-
 SEXPTYPE typeof_h5_dset(HighFive::DataSet &dset){
   using namespace HighFive;
   return(h2r_T(dset.getDataType().getId()));
@@ -352,9 +300,6 @@ SEXPTYPE typeof_h5_attr(HighFive::Attribute &attr){
   using namespace HighFive;
   return(h2r_T(attr.getDataType().getId()));
 }
-
-
-
 
 
 // SEXP read_h5(const Rcpp::List &file_l){
@@ -398,12 +343,7 @@ SEXPTYPE typeof_h5_attr(HighFive::Attribute &attr){
 //   auto datasel = DatasetSelection<2>::ProcessList(subset,dims);
 //   if(tdim==1){
 //     dset.getDataType()
-
 //       }
-
-
-
-
 
 std::vector<size_t> dataset_dims(std::string filename,
 				 std::string datapath){
@@ -479,110 +419,6 @@ SEXP read_vector(std::string filename,
 
 
 
-
-
-// SEXP read_object(std::string filename,
-//                     std::string groupname,
-//                     std::string dataname,
-//                     const Rcpp::IntegerVector offsets = Rcpp::IntegerVector::create(0,0),
-//                     const Rcpp::IntegerVector chunksizes = Rcpp::IntegerVector::create(-1,-1),
-//                     const Rcpp::IntegerVector subset_rows = Rcpp::IntegerVector::create(),
-//                     const Rcpp::IntegerVector subset_cols = Rcpp::IntegerVector::create()){
-  
-//   using namespace Rcpp;
-//   if(groupname=="."){
-//     groupname="/";
-//   }
-//   std::vector<int> tchunksizes(chunksizes.size());
-//   for(int i=0; i<tchunksizes.size();i++){
-//     tchunksizes[i]=chunksizes(i)==(-1) ? NA_INTEGER  : chunksizes(i);
-//   }
-//   HighFive::File file(filename,HighFive::File::ReadOnly);
-//   auto grp = file.getGroup(groupname);
-//   auto dset = file.getGroup(groupname).getDataSet(dataname);
-//   auto dims = dset.getDataDimensions();
-//   const size_t num_dims=dims.size();
-//   if(num_dims==1){
-//     DatasetSelection<1> datasel({construct_dimrange(offsets(0),chunksizes(0),subset_rows,dims[0])},{dims[0]});
-//     auto file_sel=datasel.makeSelection(dset);
-//     auto my_t = typeof_h5_dset(dset);
-//     switch (my_t){
-//     case INTSXP: {
-//       return(read_elem_v_h5<INTSXP>(file_sel,datasel));
-//       break;
-//     }
-//     case REALSXP: {
-//       return(read_elem_v_h5<REALSXP>(file_sel,datasel));
-//       break;
-//     }
-//     case STRSXP: {
-//       return(read_elem_v_h5<STRSXP>(file_sel,datasel));
-//       break;
-//     }
-//     default: {
-//       warning(
-//         "Invalid SEXPTYPE %d.\n",
-//         my_t
-//       );
-//       Rcpp::Rcerr<<dataname<<" has type that can't be read"<<std::endl;
-//       Rcpp::stop("Can't read type");
-//       return R_NilValue;
-//     }
-//     }
-//   }else{
-    
-//     std::array<size_t,2>tdims={dims[0],dims[1]};
-//     DatasetSelection<2> datasel({
-//       construct_dimrange(offsets(0),tchunksizes[0],subset_rows,dims[0]),
-//       construct_dimrange(offsets(1),tchunksizes[1],subset_cols,dims[1])},tdims);
-    
-//     auto file_sel=datasel.makeSelection(dset);
-//     auto my_t = typeof_h5_dset(dset);
-    
-    
-//     switch (my_t){
-//     case INTSXP: {
-//       return(read_elem_m_h5<INTSXP>(file_sel,datasel));
-//       break;
-//     }
-//     case REALSXP: {
-//       return(read_elem_m_h5<REALSXP>(file_sel,datasel));
-//       break;
-//     }
-//     default: {
-//       warning(
-//         "Invalid SEXPTYPE %d.\n",
-//         my_t
-//       );
-//       Rcpp::Rcerr<<dataname<<" has type that can't be read"<<std::endl;
-//       Rcpp::stop("Can't read type");
-//       return R_NilValue;
-//     }
-//     }
-    
-//   }
-  
-// }
-
-
-
-
-// SEXP read_dataqueue_mat( const Rcpp::List file_l){
-
-//   FileManager<true> rf(Rcpp::StringVector::create());
-
-//   DataQueue<2,double> X_f(file_l,true,rf);
-
-//   const int num_reg = X_f.getNumSelections();
-
-
-// }
-
-
-
-
-
-
 //[[Rcpp::export]]
 SEXP read_matrix(std::string filename,
 		 std::string datapath,
@@ -627,10 +463,6 @@ SEXP read_matrix(std::string filename,
   }
 }
 
-
-
-
-
 //[[Rcpp::export]]
 bool update_matrix(RObject data,
                    const std::string filename,
@@ -665,7 +497,6 @@ bool update_matrix(RObject data,
 	      my_t
 	      );
       Rcpp::Rcerr<<dp.filename()<<" has type that can't be written"<<std::endl;
-
       Rcpp::stop("Can't read type");
     }
     }
@@ -673,6 +504,12 @@ bool update_matrix(RObject data,
   file.flush();
   return(write_success);
 }
+
+
+
+
+
+
 
 
 
@@ -732,19 +569,16 @@ bool update_vector(RObject data,
   return(write_success);
 }
 
-
 HighFive::Filter create_filter(std::vector<size_t> data_dimensions,
 			       Rcpp::List &options){
   using namespace HighFive;
-  const std::map<std::string, hid_t> filters{
-					     {"blosc", Filter::blosc},
+  const std::map<std::string, hid_t> filters{{"blosc", Filter::blosc},
 					     {"no_filter", Filter::no_filter},
 					     {"none", Filter::no_filter},
 					     {"gzip", Filter::gzip},
 					     {"deflate", Filter::gzip},
 					     {"lzf", Filter::lzf},
-					     {"zstd",Filter::zstd}
-  };
+					     {"zstd",Filter::zstd}};
   hid_t	filt = Filter::zstd;
   if (auto tfilt = get_list_scalar<std::string>(options,"filter")){
     auto titer = filters.find(*tfilt);
@@ -781,8 +615,6 @@ HighFive::Filter create_filter(std::vector<size_t> data_dimensions,
 //     write_vector_h5(
 
 // }
-
-
 
 //[[Rcpp::export]]
 bool write_attribute_h5(const std::string &filename,
@@ -883,199 +715,3 @@ bool create_dataset_h5(const std::string &filename,
   return(create_success);
  }
 
-
-
-
- // void create_vector(const std::string &filename,
- // 		    const std::string datapath,
- // 		    RObject data,
- // 		    Rcpp::List options){
- //  using namespace HighFive;
- //  using namespace HighFive;
- //  
- //  fs::path dp=datapath;
- //  HighFive::File file(filename,);
- //  if(dim.size()!=1){
- //    Rcpp::stop("length(dim) must be equal to 1");
- //  }
- //  if(chunksize.size()>1){
- //    Rcpp::stop("length(chunksize) cannot be greater than one (must be length 1 or empty)");
- //  }
- //  auto grp = file.createOrGetGroups(dp.parent_path());
- //  create_dataset(grp,dp.filename(),data,Rcpp::as<std::vector<size_t> >(dim),Rcpp::as<std::vector<size_t> >(chunksize));
- // }
-
-
-
-
-
-
-// bool write_df_h5(Rcpp::DataFrame &df,const std::string groupname,const std::string outfile,Rcpp::IntegerVector deflate_level=Rcpp::IntegerVector::create(4)){
-//   HighFive::File file(outfile, HighFive::File::ReadWrite | HighFive::File::Create);
-//   HighFive::Group group = file.createOrGetGroups(groupname);
-
-//   const size_t df_cols=df.ncol();
-//   std::vector<std::string> df_colnames = Rcpp::as<std::vector<std::string> >(df.names());
-
-//   for(int i=0; i<df_cols;i++){
-//     auto t_colname= df_colnames[i];
-//     auto t_col = df[t_colname];
-//     auto my_t = TYPEOF(t_col);
-//     switch (my_t){
-//     case INTSXP: {
-//       auto d=Rcpp::as<std::vector<int> >(t_col);
-//       impl::write_v_h5<int>(d,file,group,t_colname);
-//       break;
-//     }
-//     case REALSXP: {
-//       auto d=Rcpp::as<std::vector<double> >(t_col);
-//       impl::write_v_h5<double>(d,file,group,t_colname);
-//       break;
-//     }
-//     case STRSXP: {
-//       auto d=Rcpp::as<std::vector<std::string> >(t_col);
-//       impl::write_v_h5<std::string>(d,file,group,t_colname);
-//       break;
-//     }
-//     default: {
-//       warning(
-//         "Invalid SEXPTYPE %d.\n",
-//         my_t
-//       );
-//       return(false);
-//     }
-//     }
-//   }
-//   return(true);
-// }
-
-
-
-
-// std::vector<int>  get_dims_h5(const std::string filename, std::string datapath){
-//   
-// }
-
-
-
-
-// Rcpp::List read_l_h5(const std::string h5filepath,
-//                            const std::string groupname,
-//                            Rcpp::CharacterVector subcols = Rcpp::CharacterVector::create(),
-//                            Rcpp::IntegerVector offset = Rcpp::IntegerVector::create(),
-//                            Rcpp::IntegerVector chunksize = Rcpp::IntegerVector::create(),
-//                            Rcpp::IntegerVector filtervec = Rcpp::IntegerVector::create()
-//                            ){
-//   using namespace Rcpp;
-
-//   HighFive::File file(h5filepath,HighFive::File::ReadOnly);
-//   auto grp = file.getGroup(groupname);
-//   std::vector<std::string> df_cols;
-//   std::vector<size_t> col_sizes;
-//   std::vector<size_t> elem(filtervec.size());
-//   std::transform(filtervec.begin(),filtervec.end(),elem.begin(),[](int f) -> size_t{return f-1;});
-
-//   if((offset.size()!=0) ^ (chunksize.size()!=0)){
-//     Rcpp::Rcerr<<"with offset size: "<<offset.size()<<" and chunksize size: "<<chunksize.size()<<std::endl;
-//     Rcpp::stop("offset and chunksize must both be specified or neither can be specified ");
-//   }
-//   const bool read_subset = !elem.empty();
-//   const bool read_chunk = (offset.size()!=0) && (chunksize.size()!=0);
-//   const size_t offset_r= read_chunk ? offset[0] :  0;
-//   const size_t chunksize_r= read_chunk ? chunksize[0] :  0;
-
-
-
-//   if(read_subset && read_chunk){
-//     Rcpp::stop("filtervec and offset/chunksize cannot both be specified");
-//   }
-//   size_t num_cols = (subcols.size()==0) ? grp.getNumberObjects() : subcols.size();
-//   if(subcols.size()!=0){
-//     df_cols=Rcpp::as<std::vector<std::string> >(subcols);
-//   }else{
-//     df_cols.resize(num_cols);
-//     for(int i=0; i<num_cols;i++){
-//       df_cols[i]=grp.getObjectName(i);
-//     }
-//   }
-//   col_sizes.resize(num_cols);
-//   Rcpp::List retdf;
-//   for(int i=0; i<num_cols;i++){
-//     auto cname = df_cols[i];
-//     auto dset = grp.getDataSet(cname);
-//     auto dims = dset.getDataDimensions();
-//     if(dims.size()!=1){
-//       Rcpp::Rcerr<<"Can't read non-vector df_col: "<<cname<<std::endl;
-//       Rcpp::stop("Currently unable to read non-vector columns");
-//     }
-//     col_sizes[i]=dims[0];
-//     if(i>0){
-//       if(col_sizes[i]!=col_sizes[i-1]){
-//         Rcpp::Rcerr<<"df_col: "<<cname<<" has"<<col_sizes[i];
-//         Rcpp::Rcerr<<"df_col: "<<df_cols[i-1]<<" has"<<col_sizes[i-1];
-//         Rcpp::stop("All columns must have the same length");
-//       }
-//     }
-
-//     auto my_t = h2r_T(dset.getDataType().getId());
-//     switch (my_t){
-//     case INTSXP: {
-//       if(!read_subset){
-//         retdf[cname]=read_v_h5<INTSXP>(file,
-//                                              grp,
-//                                              cname,
-//                                              offset_r,chunksize_r);
-
-
-//     }else{
-//         retdf[cname]=read_elem_v_h5<INTSXP>(file,
-//                                                   grp,
-//                                                   cname,
-//                                                   elem);
-//       }
-//       break;
-//     }
-//     case REALSXP: {
-//       if(!read_subset){
-//       retdf[cname]=read_v_h5<REALSXP>(file,
-//                                             grp,
-//                                             cname,
-//                                             offset_r,chunksize_r);
-//     }else{
-//         retdf[cname]=read_elem_v_h5<REALSXP>(file,
-//                                                    grp,
-//                                                    cname,
-//                                                    elem);
-//       }
-//       break;
-
-//     }
-//     case STRSXP: {
-//       if(!read_subset){
-//       retdf[cname]=read_v_h5<STRSXP>(file,
-//                                            grp,
-//                                            cname,
-//                                            offset_r,chunksize_r);
-//     }else{
-//         retdf[cname]=read_elem_v_h5<STRSXP>(file,
-//                                                   grp,
-//                                                   cname,
-//                                                   elem);
-//       }
-//       break;
-
-//     }
-//     default: {
-//       warning(
-//         "Invalid SEXPTYPE %d.\n",
-//         my_t
-//       );
-//       Rcpp::Rcerr<<cname<<" has type that can't be read"<<std::endl;
-//       Rcpp::stop("Can't read type");
-//       return R_NilValue;
-//     }
-//     }
-//   }
-//   retdf.attr("names")=Rcpp::wrap(df_cols);
-//   return retdf;
-// }

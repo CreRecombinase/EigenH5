@@ -206,7 +206,7 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
     nbytes, outbuf_size);
 #endif
 
-    outbuf = malloc(outbuf_size);
+    outbuf = H5allocate_memory(outbuf_size,false);
 
     if (outbuf == NULL) {
       PUSH_ERR("blosc_filter", H5E_CALLBACK,
@@ -227,7 +227,7 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
     /* declare dummy variables */
     size_t cbytes, blocksize;
 
-    free(outbuf);
+    H5free_memory(outbuf);
 
     /* Extract the exact outbuf_size from the buffer header.
      *
@@ -242,7 +242,7 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
     fprintf(stderr, "Blosc: Decompress %zd chunk w/buffer %zd\n", nbytes, outbuf_size);
 #endif
 
-    outbuf = malloc(outbuf_size);
+    outbuf = H5allocate_memory(outbuf_size,false);
 
     if (outbuf == NULL) {
       PUSH_ERR("blosc_filter", H5E_CALLBACK, "Can't allocate decompression buffer");
@@ -258,14 +258,15 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
   } /* compressing vs decompressing */
 
   if (status != 0) {
-    free(*buf);
+    
+    H5free_memory(*buf);
     *buf = outbuf;
     *buf_size = outbuf_size;
     return status;  /* Size of compressed/decompressed data */
   }
 
   failed:
-  free(outbuf);
+  H5free_memory(outbuf);
   return 0;
 
 } /* End filter function */

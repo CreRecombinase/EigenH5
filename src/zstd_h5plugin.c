@@ -50,12 +50,14 @@ DLL_EXPORT size_t zstd_filter(unsigned int flags, size_t cd_nelmts,
 	if (flags & H5Z_FLAG_REVERSE)
 	{
 		size_t decompSize = ZSTD_getDecompressedSize(*buf, origSize);
-		if (NULL == (outbuf = malloc(decompSize)))
+		//		H5allocate_memory( size_t size, hbool_t clear );
+		if (NULL == (outbuf = H5allocate_memory(decompSize,false)))
 			goto error;
 
 		decompSize = ZSTD_decompress(outbuf, decompSize, inbuf, origSize);
 
-		free(*buf);
+		//		H5free_memory(void *buf)
+		H5free_memory(*buf);
 		*buf = outbuf;
 		outbuf = NULL;
 		ret_value = (size_t)decompSize;
@@ -69,19 +71,20 @@ DLL_EXPORT size_t zstd_filter(unsigned int flags, size_t cd_nelmts,
 			aggression = 22;
 
 		size_t compSize = ZSTD_compressBound(origSize);
-		if (NULL == (outbuf = malloc(compSize)))
+		//		H5allocate_memory( size_t size, hbool_t clear );
+		if (NULL == (outbuf = H5allocate_memory(compSize,false)))
 			goto error;
 
 		compSize = ZSTD_compress(outbuf, compSize, inbuf, origSize, aggression);
 
-		free(*buf);
+		H5free_memory(*buf);
 		*buf = outbuf;
 		*buf_size = compSize;
 		outbuf = NULL;
 		ret_value = compSize;
 	}
 	if (outbuf != NULL)
-		free(outbuf);
+		H5free_memory(outbuf);
 	return ret_value;
 
 error:
