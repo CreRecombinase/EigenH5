@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 #include <boost/algorithm/string.hpp>
-#include <filesystem>
+#include <experimental/filesystem>
 
 
 #include "../H5Attribute.hpp"
@@ -94,7 +94,7 @@ NodeTraits<Derivate>::createDataSet(const std::string& dataset_name,
 template <typename Derivate>
 inline DataSet
 NodeTraits<Derivate>::getDataSet(const std::string& dataset_name) const {
-  namespace fs = std::filesystem;
+  namespace fs = std::experimental::filesystem;
   fs::path p = dataset_name;
     DataSet set;
     if(!p.has_parent_path()){
@@ -156,7 +156,7 @@ NodeTraits<Derivate>::openGroup(const std::string& group_name) const {
 
 template <typename Derivate>
 inline Group NodeTraits<Derivate>::createGroup(const std::string& group_name) {
-  namespace fs = std::filesystem;
+  namespace fs = std::experimental::filesystem;
   fs::path p = group_name;
   if(p.empty()){
     HDF5ErrMapper::ToException<GroupException>(
@@ -210,7 +210,7 @@ inline size_t NodeTraits<Derivate>::getNumberObjects() const{
 
     template<typename Derivate>
       inline bool NodeTraits<Derivate>::isGroup(const std::string & object_name) const{
-      namespace fs = std::filesystem;
+      namespace fs = std::experimental::filesystem;
       fs::path p = object_name;
       std::string pp = p.has_parent_path() ? p.parent_path() : ".";
       if(auto group = this->openGroup(pp)){
@@ -232,7 +232,7 @@ inline size_t NodeTraits<Derivate>::getNumberObjects() const{
 
     template<typename Derivate>
       inline bool NodeTraits<Derivate>::isDataSet(const std::string & object_name) const{
-      namespace fs = std::filesystem;
+      namespace fs = std::experimental::filesystem;
       fs::path p = object_name;
       std::string pp = p.has_parent_path() ? p.parent_path() : ".";
       if(auto group = this->openGroup(pp)){
@@ -258,7 +258,7 @@ inline size_t NodeTraits<Derivate>::getNumberObjects() const{
     if(object_name=="."){
       return(getObj(static_cast<const Derivate*>(this)->getId(),object_name.c_str()));
     }
-    namespace fs = std::filesystem;
+    namespace fs = std::experimental::filesystem;
     fs::path p = object_name;
     std::string pp = p.has_parent_path() ? p.parent_path() : ".";
     Group tg = this->getGroup(pp);
@@ -370,7 +370,7 @@ inline bool NodeTraits<Derivate>::exist(const std::string& node_name) const {
   if(node_name=="."){
     return(true);
   }
-  namespace fs = std::filesystem;
+  namespace fs = std::experimental::filesystem;
   const fs::path p = node_name;
   if(p.empty()){
     HDF5ErrMapper::ToException<GroupException>(
@@ -401,7 +401,7 @@ inline bool NodeTraits<Derivate>::exist(const std::string& node_name) const {
 
 // template <typename Derivate>
 // inline bool NodeTraits<Derivate>::exist(const std::string& node_name) const {
-//   namespace fs = std::filesystem;
+//   namespace fs = std::experimental::filesystem;
 //   //    fs::path p = node_name;
 
 //     htri_t val = H5Lexists(static_cast<const Derivate*>(this)->getId(),
