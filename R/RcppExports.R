@@ -21,12 +21,12 @@ permutation_order <- function(options, dims) {
     .Call(`_EigenH5_permutation_order`, options, dims)
 }
 
-read_vector <- function(filename, datapath, subset) {
-    .Call(`_EigenH5_read_vector`, filename, datapath, subset)
+read_vector <- function(filename, datapath, options) {
+    .Call(`_EigenH5_read_vector`, filename, datapath, options)
 }
 
-read_matrix <- function(filename, datapath, subset) {
-    .Call(`_EigenH5_read_matrix`, filename, datapath, subset)
+read_matrix <- function(filename, datapath, options) {
+    .Call(`_EigenH5_read_matrix`, filename, datapath, options)
 }
 
 update_matrix <- function(data, filename, datapath, options) {

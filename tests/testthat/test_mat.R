@@ -2,13 +2,13 @@ context("matrices")
 
 
 test_that("can read int matrix",{
-  library(EigenH5)
+  #library(EigenH5)
   tmat <- matrix(sample(1:900),100,9)
   tempf <- tempfile()
   #write_matrix_h5(tempf,"grp","tmat_t",tmat,doTranspose = T)
-  write_matrix_h5(tempf,"/","tmat",tmat)
-  rd <- read_matrix_h5(tempf,"/","tmat")
-  expect_equal(get_dims_h5(tempf,"/","tmat"),c(100,9))
+  write_matrix_h5(tmat,filename = tempf,"tmat")
+  rd <- read_matrix_h5(tempf,"tmat")
+  expect_equal(get_dims_h5(tempf,"/tmat"),c(100,9))
   expect_equal(tmat,rd)
 })
 
@@ -21,8 +21,8 @@ test_that("can concatenate matrices virtually (along columns)",{
   mats <- purrr::map(pvec,~matrix(sample(1:(n*.x)),n,.x))
   # tfs <- purrr::map(pvec,~tempfile())
   tfs <- purrr::rerun(length(pvec),filename=tempfile(),datapath="/temp")
-  purrr::walk2(tfs,mats,~write_matrix_h5(.x$filename,"/","temp",.y))
-  purrr::walk2(tfs,mats,~write_matrix_h5(.x$filename,"/","t_temp",t(.y)))
+  purrr::walk2(tfs,mats,~write_matrix_h5(.y,.x$filename,"temp"))
+  purrr::walk2(tfs,mats,~write_matrix_h5(t(.y),.x$filename,"t_temp"))
   
   # am <- map(tfs,~update_list(.x,datapath="/temp"))
   t_tfs <- purrr::map(tfs,~purrr::list_modify(.x,datapath="t_temp"))
@@ -33,9 +33,9 @@ test_that("can concatenate matrices virtually (along columns)",{
   
   
   #write_matrix_h5(tempf,"grp","tmat_t",tmat,doTranspose = T)
-  # write_matrix_h5(tempf,"/","tmat",tmat)
-  rd <- read_matrix_h5(nf,"/","all_temp")
-  rd_t <- read_matrix_h5(nf,"/","all_temp_t")
+  # write_matrix_h5(tempf,"tmat",tmat)
+  rd <- read_matrix_h5(nf,"all_temp")
+  rd_t <- read_matrix_h5(nf,"all_temp_t")
   
   all_mats <- purrr::reduce(mats,cbind)
   all_mats_t <- purrr::map(mats,t) %>% purrr::reduce(rbind)
@@ -53,23 +53,23 @@ test_that("can read int matrix transpose",{
   tmat <- matrix(1:(rown*coln),rown,coln)
   tempf <- tempfile()
   #write_matrix_h5(tempf,"grp","tmat_t",tmat,doTranspose = T)
-  write_matrix_h5(tempf,"/","tmat",tmat)
-  rd <- read_matrix_h5(tempf,"/","tmat",doTranspose=T)
+  write_matrix_h5(tmat,tempf,"tmat")
+  rd <- read_matrix_h5(tempf,"tmat",doTranspose=T)
   expect_equal(t(rd),tmat)
   
   sr <- sample(1:nrow(tmat),nrow(tmat)-1,replace=F)
   sc <- sample(1:ncol(tmat),ncol(tmat)-1,replace=F)
   # sc <- c(1,4,2,5,3)
-  srd <- read_matrix_h5(tempf,"/","tmat",subset_rows=sr,doTranspose=T)
+  srd <- read_matrix_h5(tempf,"tmat",subset_rows=sr,doTranspose=T)
   expect_equal(t(srd),tmat[sr,,drop=F])
-  src <- read_matrix_h5(tempf,"/","tmat",subset_cols=sc,doTranspose=F)
+  src <- read_matrix_h5(tempf,"tmat",subset_cols=sc,doTranspose=F)
   expect_equal(src,tmat[,sc])
-  src <- read_matrix_h5(tempf,"/","tmat",subset_cols=sc,doTranspose=T)
+  src <- read_matrix_h5(tempf,"tmat",subset_cols=sc,doTranspose=T)
   expect_equal(t(src),tmat[,sc])
-  srrc <- read_matrix_h5(tempf,"/","tmat",subset_rows=sr,subset_cols=sc,doTranspose=T)
+  srrc <- read_matrix_h5(tempf,"tmat",subset_rows=sr,subset_cols=sc,doTranspose=T)
   expect_equal(t(srrc),tmat[sr,sc])
-  # mb <- microbenchmark::microbenchmark(rd=read_matrix_h5(tempf,"/","tmat",doTranspose=T),
-  #                                      trd=t(read_matrix_h5(tempf,"/","tmat")))
+  # mb <- microbenchmark::microbenchmark(rd=read_matrix_h5(tempf,"tmat",doTranspose=T),
+  #                                      trd=t(read_matrix_h5(tempf,"tmat")))
   # expect_equal(tmat,rd)
 })
 
@@ -81,9 +81,9 @@ test_that("can read int matrix(one column)",{
   smat <- tmat[,3,drop=F]
   tempf <- tempfile()
   #write_matrix_h5(tempf,"grp","tmat_t",tmat,doTranspose = T)
-  write_matrix_h5(tempf,"/","tmat",tmat)
-  rd <- read_matrix_h5(tempf,"/","tmat",subset_cols=3)
-  expect_equal(get_dims_h5(tempf,"/","tmat"),c(100,9))
+  write_matrix_h5(tmat,tempf,"tmat")
+  rd <- read_matrix_h5(tempf,"tmat",subset_cols=3)
+  expect_equal(get_dims_h5(tempf,"tmat"),c(100,9))
   expect_equal(smat,rd)
 })
 
@@ -94,9 +94,9 @@ test_that("can read int matrix(one row)",{
   smat <- tmat[3,,drop=F]
   tempf <- tempfile()
   #write_matrix_h5(tempf,"grp","tmat_t",tmat,doTranspose = T)
-  write_matrix_h5(tempf,"/","tmat",tmat)
-  rd <- read_matrix_h5(tempf,"/","tmat",subset_rows=3)
-  expect_equal(get_dims_h5(tempf,"/","tmat"),c(100,9))
+  write_matrix_h5(tempf,"tmat",tmat)
+  rd <- read_matrix_h5(tempf,"tmat",subset_rows=3)
+  expect_equal(get_dims_h5(tempf,"tmat"),c(100,9))
   expect_equal(smat,rd)
 })
 
@@ -229,10 +229,10 @@ test_that("writing matrix blocks works ",{
   
   tmat <- matrix(runif(9*3),9,3)
   tempf <- tempfile()
-  create_matrix_h5(filename = tempf,groupname = "/",dataname = "testd",data=numeric(),dims = c(9L,3L))
+  create_matrix_h5(filename = tempf, dataname = "testd",data=numeric(),dims = c(9L,3L))
   sub_mat <- tmat[3:5,2:3]
-  write_matrix_h5(filename = tempf,groupname = "/",dataname = "testd",data = sub_mat,offsets = c(2L,1L))
-  r_sub_mat <- read_matrix_h5(tempf,"/","testd",offsets = c(2L,1L),datasizes = c(3L,2L))
+  write_matrix_h5(filename = tempf, dataname = "testd",data = sub_mat,offsets = c(2L,1L))
+  r_sub_mat <- read_matrix_h5(tempf,"testd",offsets = c(2L,1L),datasizes = c(3L,2L))
   expect_equal(sub_mat,r_sub_mat)
 })
 test_that("writing 2 matrix blocks works ",{

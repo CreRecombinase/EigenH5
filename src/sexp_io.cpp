@@ -365,7 +365,7 @@ std::vector<size_t> dataset_dims(std::string filename,
 //[[Rcpp::export]]
 SEXP read_vector(std::string filename,
 		 std::string datapath,
-		 Rcpp::List subset){
+		 Rcpp::List options){
   using namespace Rcpp;
   namespace fs = stdx::filesystem;
   fs::path dp=datapath;
@@ -378,7 +378,7 @@ SEXP read_vector(std::string filename,
   auto dset = file.getGroup(groupname).getDataSet(dataname);
   auto dims = dset.getDataDimensions();
 
-  auto datasel = DatasetSelection<1>::ProcessList(subset,dims);
+  auto datasel = DatasetSelection<1>::ProcessList(options,dims);
 
   auto file_sel=datasel.makeSelection(dset);
   auto my_t = typeof_h5_dset(dset);
@@ -422,7 +422,7 @@ SEXP read_vector(std::string filename,
 //[[Rcpp::export]]
 SEXP read_matrix(std::string filename,
 		 std::string datapath,
-		 const Rcpp::List subset){
+		 const Rcpp::List options){
 
   using namespace Rcpp;
   namespace fs = stdx::filesystem;
@@ -431,7 +431,7 @@ SEXP read_matrix(std::string filename,
   fs::path dp=datapath;
   auto dset = file.getDataSet(datapath);
   auto dims = dset.getDataDimensions();
-  auto datasel = DatasetSelection<2>::ProcessList(subset,dims);
+  auto datasel = DatasetSelection<2>::ProcessList(options,dims);
 
 
   auto file_sel=datasel.makeSelection(dset);

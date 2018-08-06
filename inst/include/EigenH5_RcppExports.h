@@ -119,7 +119,7 @@ namespace EigenH5 {
         return Rcpp::as<Rcpp::List >(rcpp_result_gen);
     }
 
-    inline SEXP read_vector(std::string filename, std::string datapath, Rcpp::List subset) {
+    inline SEXP read_vector(std::string filename, std::string datapath, Rcpp::List options) {
         typedef SEXP(*Ptr_read_vector)(SEXP,SEXP,SEXP);
         static Ptr_read_vector p_read_vector = NULL;
         if (p_read_vector == NULL) {
@@ -129,7 +129,7 @@ namespace EigenH5 {
         RObject rcpp_result_gen;
         {
             RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_read_vector(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(subset)));
+            rcpp_result_gen = p_read_vector(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(options)));
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
@@ -138,7 +138,7 @@ namespace EigenH5 {
         return Rcpp::as<SEXP >(rcpp_result_gen);
     }
 
-    inline SEXP read_matrix(std::string filename, std::string datapath, const Rcpp::List subset) {
+    inline SEXP read_matrix(std::string filename, std::string datapath, const Rcpp::List options) {
         typedef SEXP(*Ptr_read_matrix)(SEXP,SEXP,SEXP);
         static Ptr_read_matrix p_read_matrix = NULL;
         if (p_read_matrix == NULL) {
@@ -148,7 +148,7 @@ namespace EigenH5 {
         RObject rcpp_result_gen;
         {
             RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_read_matrix(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(subset)));
+            rcpp_result_gen = p_read_matrix(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(options)));
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();

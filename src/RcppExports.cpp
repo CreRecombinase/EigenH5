@@ -160,22 +160,22 @@ RcppExport SEXP _EigenH5_permutation_order(SEXP optionsSEXP, SEXP dimsSEXP) {
     return rcpp_result_gen;
 }
 // read_vector
-SEXP read_vector(std::string filename, std::string datapath, Rcpp::List subset);
-static SEXP _EigenH5_read_vector_try(SEXP filenameSEXP, SEXP datapathSEXP, SEXP subsetSEXP) {
+SEXP read_vector(std::string filename, std::string datapath, Rcpp::List options);
+static SEXP _EigenH5_read_vector_try(SEXP filenameSEXP, SEXP datapathSEXP, SEXP optionsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< std::string >::type filename(filenameSEXP);
     Rcpp::traits::input_parameter< std::string >::type datapath(datapathSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type subset(subsetSEXP);
-    rcpp_result_gen = Rcpp::wrap(read_vector(filename, datapath, subset));
+    Rcpp::traits::input_parameter< Rcpp::List >::type options(optionsSEXP);
+    rcpp_result_gen = Rcpp::wrap(read_vector(filename, datapath, options));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
 }
-RcppExport SEXP _EigenH5_read_vector(SEXP filenameSEXP, SEXP datapathSEXP, SEXP subsetSEXP) {
+RcppExport SEXP _EigenH5_read_vector(SEXP filenameSEXP, SEXP datapathSEXP, SEXP optionsSEXP) {
     SEXP rcpp_result_gen;
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_EigenH5_read_vector_try(filenameSEXP, datapathSEXP, subsetSEXP));
+        rcpp_result_gen = PROTECT(_EigenH5_read_vector_try(filenameSEXP, datapathSEXP, optionsSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
@@ -192,22 +192,22 @@ RcppExport SEXP _EigenH5_read_vector(SEXP filenameSEXP, SEXP datapathSEXP, SEXP 
     return rcpp_result_gen;
 }
 // read_matrix
-SEXP read_matrix(std::string filename, std::string datapath, const Rcpp::List subset);
-static SEXP _EigenH5_read_matrix_try(SEXP filenameSEXP, SEXP datapathSEXP, SEXP subsetSEXP) {
+SEXP read_matrix(std::string filename, std::string datapath, const Rcpp::List options);
+static SEXP _EigenH5_read_matrix_try(SEXP filenameSEXP, SEXP datapathSEXP, SEXP optionsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< std::string >::type filename(filenameSEXP);
     Rcpp::traits::input_parameter< std::string >::type datapath(datapathSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::List >::type subset(subsetSEXP);
-    rcpp_result_gen = Rcpp::wrap(read_matrix(filename, datapath, subset));
+    Rcpp::traits::input_parameter< const Rcpp::List >::type options(optionsSEXP);
+    rcpp_result_gen = Rcpp::wrap(read_matrix(filename, datapath, options));
     return rcpp_result_gen;
 END_RCPP_RETURN_ERROR
 }
-RcppExport SEXP _EigenH5_read_matrix(SEXP filenameSEXP, SEXP datapathSEXP, SEXP subsetSEXP) {
+RcppExport SEXP _EigenH5_read_matrix(SEXP filenameSEXP, SEXP datapathSEXP, SEXP optionsSEXP) {
     SEXP rcpp_result_gen;
     {
         Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_EigenH5_read_matrix_try(filenameSEXP, datapathSEXP, subsetSEXP));
+        rcpp_result_gen = PROTECT(_EigenH5_read_matrix_try(filenameSEXP, datapathSEXP, optionsSEXP));
     }
     Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
     if (rcpp_isInterrupt_gen) {
