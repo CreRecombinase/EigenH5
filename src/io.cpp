@@ -283,7 +283,7 @@ void mach2h5(const std::string dosagefile, const std::string h5file, const std::
   size_t mp=p;
   const bool SNPfirst =	get_list_scalar<bool>(options,"SNPfirst").value_or(true);
   const int buffer_size= get_list_scalar<int>(options,"buffer_size").value_or(10000);
-  const bool prog= get_list_scalar<int>(options,"progress").value_or(false);
+  const bool prog= get_list_scalar<bool>(options,"progress").value_or(false);
 
   const int buffer_vec= static_cast<size_t>(get_list_scalar<int>(options,"buffer_vec").value_or(1));
 
@@ -298,13 +298,16 @@ void mach2h5(const std::string dosagefile, const std::string h5file, const std::
     DataSpace space(space_dims);
     Filter filter	= create_filter(space_dims,options);
     auto dset = file.createDataSet(datapath,space,AtomicType<double>(),filter);
+    file.flush();
   }
   Rcpp::Rcerr<<"Memory mapping file"<<std::endl;
-  boost::iostreams::mapped_file_source mapfile(dosagefile.c_str());
+  boost::iostreams::mapped_file_source mapfile;
+  Rcpp::Rcerr<<"mapfile created"<<std::endl;
+  mapfile.open(dosagefile);
   if(!mapfile.is_open()){
     Rcpp::stop("opening	file:"+dosagefile+"failed!");
   }else{
-    std::cout<<"File mapped, opening stream"<<std::endl;
+    Rcpp::Rcerr<<"File mapped, opening stream"<<std::endl;
   }
   boost::iostreams::stream<boost::iostreams::mapped_file_source> textstream(mapfile);
   boost::iostreams::filtering_istream fs;
