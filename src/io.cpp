@@ -299,8 +299,13 @@ void mach2h5(const std::string dosagefile, const std::string h5file, const std::
     Filter filter	= create_filter(space_dims,options);
     auto dset = file.createDataSet(datapath,space,AtomicType<double>(),filter);
   }
-  std::cout<<"Starting to map file"<<std::endl;
+  Rcpp::Rcerr<<"Memory mapping file"<<std::endl;
   boost::iostreams::mapped_file_source mapfile(dosagefile.c_str());
+  if(!mapfile.is_open()){
+    Rcpp::stop("opening	file:"+dosagefile+"failed!");
+  }else{
+    std::cout<<"File mapped, opening stream"<<std::endl;
+  }
   boost::iostreams::stream<boost::iostreams::mapped_file_source> textstream(mapfile);
   boost::iostreams::filtering_istream fs;
   fs.push(boost::iostreams::gzip_decompressor{});

@@ -17,8 +17,8 @@ test_that("Can append a dataframe",{
 test_that("Can read mach dosage files (in random order)",{
 # 
 # library(tidyverse)
-N <- 5
-p <- 4
+N <- 50
+p <- 40000
 sample_ids <- as.character(sample(1:(N*p),N,replace=F))
 ntsnpf <- paste0(tempfile(),".txt.gz")
 tsnp_mat <- matrix(sprintf("%.3f",runif(min=0,max=2,N*p)),nrow = N,byrow=T)
@@ -34,7 +34,7 @@ p <- ncol(atsnp_mat)
 t_idx <- sort(sample(1:p,min(100,as.integer(p/2)),replace=F))
 # t_idx <- c(3,10,19,33,34,46,56,79,80)
 tf <- tempfile()
-EigenH5::mach2h5(dosagefile = ntsnpf,h5file = tf,datapath = "test",snp_idx = t_idx-1,names=sample_names,p=p,options=list(buffer_size = 18,SNPfirst = T))
+EigenH5::mach2h5(dosagefile = ntsnpf,h5file = tf,datapath = "test",snp_idx = t_idx-1,names=sample_names,p=p,options=list(buffer_size = 18,SNPfirst = T,progress=T))
 ttsnp_mat <- t(atsnp_mat[,t_idx])
 attr(ttsnp_mat,"dimnames") <- NULL
 # class(ttsnp_mat) <- "numeric"
