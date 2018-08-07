@@ -17,14 +17,15 @@ test_that("Can append a dataframe",{
 test_that("Can read mach dosage files (in random order)",{
 # 
 # library(tidyverse)
-N <- 100
-p <- 400
+N <- 5
+p <- 4
 sample_ids <- as.character(sample(1:(N*p),N,replace=F))
 ntsnpf <- paste0(tempfile(),".txt.gz")
 tsnp_mat <- matrix(sprintf("%.3f",runif(min=0,max=2,N*p)),nrow = N,byrow=T)
 expect_true(all(nchar(tsnp_mat)==5))
 wtsnp_mat <- cbind(cbind(sample_ids,rep("DOSE",N)),tsnp_mat)
 readr::write_delim(tibble::as_data_frame(wtsnp_mat[sample(1:N),]),path = ntsnpf,delim = "\t",col_names = F)
+
 atsnp_mat <-wtsnp_mat[,-c(1,2)]
 class(atsnp_mat) <- "numeric"
 
@@ -34,13 +35,12 @@ t_idx <- sort(sample(1:p,min(100,as.integer(p/2)),replace=F))
 # t_idx <- c(3,10,19,33,34,46,56,79,80)
 tf <- tempfile()
 EigenH5::mach2h5(dosagefile = ntsnpf,h5file = tf,datapath = "test",snp_idx = t_idx-1,names=sample_names,p=p,options=list(buffer_size = 18,SNPfirst = T))
- 
 ttsnp_mat <- t(atsnp_mat[,t_idx])
 attr(ttsnp_mat,"dimnames") <- NULL
 # class(ttsnp_mat) <- "numeric"
-mrd <- EigenH5::read_matrix_h5(tf,"/","test")
+mrd <- EigenH5::read_matrix_h5(tf,"test")
 testthat::expect_equal(mrd,ttsnp_mat)
-# which(mrd!=ttsnp_mat,arr.ind = T) 
+# which(mrd!=ttsnp_mat,arr.ind = T) atsn  
 })
 
 

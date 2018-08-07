@@ -8,4 +8,4 @@ CXX_STD = CXX17
 
 PKG_LIBS += @HDF5_LIBS@   -lstdc++fs @LIBS@
 PKG_LIBS += $(shell ${R_HOME}/bin/Rscript -e "RcppParallel::RcppParallelLibs()") -lboost_iostreams
-PKG_CPPFLAGS += -g -I../inst/include -DUSE_MKL   -DUSE_BLOSC
+PKG_CPPFLAGS += -I../inst/include -DUSE_MKL   -DUSE_BLOSC

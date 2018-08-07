@@ -81,6 +81,24 @@ namespace EigenH5 {
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
+    inline void mach2h5(const std::string dosagefile, const std::string h5file, const std::string datapath, std::vector<int> snp_idx, std::vector<std::string> names, const int p, Rcpp::List options) {
+        typedef SEXP(*Ptr_mach2h5)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_mach2h5 p_mach2h5 = NULL;
+        if (p_mach2h5 == NULL) {
+            validateSignature("void(*mach2h5)(const std::string,const std::string,const std::string,std::vector<int>,std::vector<std::string>,const int,Rcpp::List)");
+            p_mach2h5 = (Ptr_mach2h5)R_GetCCallable("EigenH5", "_EigenH5_mach2h5");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_mach2h5(Shield<SEXP>(Rcpp::wrap(dosagefile)), Shield<SEXP>(Rcpp::wrap(h5file)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(snp_idx)), Shield<SEXP>(Rcpp::wrap(names)), Shield<SEXP>(Rcpp::wrap(p)), Shield<SEXP>(Rcpp::wrap(options)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+    }
+
     inline int len(RObject x) {
         typedef SEXP(*Ptr_len)(SEXP);
         static Ptr_len p_len = NULL;
