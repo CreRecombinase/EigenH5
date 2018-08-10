@@ -623,8 +623,6 @@ ac_includes_default="\
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
-ZSTD_LIBS
-ZSTD_CFLAGS
 BLOSC_LIBS
 BLOSC_CFLAGS
 PKG_CONFIG_LIBDIR
@@ -715,9 +713,7 @@ PKG_CONFIG
 PKG_CONFIG_PATH
 PKG_CONFIG_LIBDIR
 BLOSC_CFLAGS
-BLOSC_LIBS
-ZSTD_CFLAGS
-ZSTD_LIBS'
+BLOSC_LIBS'
 
 
 # Initialize some variables set by options.
@@ -1356,8 +1352,6 @@ Some influential environment variables:
   BLOSC_CFLAGS
               C compiler flags for BLOSC, overriding pkg-config
   BLOSC_LIBS  linker flags for BLOSC, overriding pkg-config
-  ZSTD_CFLAGS C compiler flags for ZSTD, overriding pkg-config
-  ZSTD_LIBS   linker flags for ZSTD, overriding pkg-config
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -4267,84 +4261,9 @@ LIBS="${BLOSC_LIBS} ${LIBS}"
 $as_echo "found the blosc package: $BLOSC_LIBS" >&6; }
 fi
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: looking for .pc files in $PKG_CONFIG_PATH" >&5
+$as_echo "looking for .pc files in $PKG_CONFIG_PATH" >&6; }
 
-pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for ZSTD" >&5
-$as_echo_n "checking for ZSTD... " >&6; }
-
-if test -n "$ZSTD_CFLAGS"; then
-    pkg_cv_ZSTD_CFLAGS="$ZSTD_CFLAGS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"zstd\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "zstd") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_ZSTD_CFLAGS=`$PKG_CONFIG --cflags "zstd" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-if test -n "$ZSTD_LIBS"; then
-    pkg_cv_ZSTD_LIBS="$ZSTD_LIBS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"zstd\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "zstd") 2>&5
-  ac_status=$?
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }; then
-  pkg_cv_ZSTD_LIBS=`$PKG_CONFIG --libs "zstd" 2>/dev/null`
-		      test "x$?" != "x0" && pkg_failed=yes
-else
-  pkg_failed=yes
-fi
- else
-    pkg_failed=untried
-fi
-
-
-
-if test $pkg_failed = yes; then
-   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-
-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
-        _pkg_short_errors_supported=yes
-else
-        _pkg_short_errors_supported=no
-fi
-        if test $_pkg_short_errors_supported = yes; then
-	        ZSTD_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "zstd" 2>&1`
-        else
-	        ZSTD_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "zstd" 2>&1`
-        fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$ZSTD_PKG_ERRORS" >&5
-
-
-as_fn_error $? "unable to find the zstd package" "$LINENO" 5
-
-elif test $pkg_failed = untried; then
-     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-
-as_fn_error $? "unable to find the zstd package" "$LINENO" 5
-
-else
-	ZSTD_CFLAGS=$pkg_cv_ZSTD_CFLAGS
-	ZSTD_LIBS=$pkg_cv_ZSTD_LIBS
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-
-LIBS="${ZSTD_LIBS} ${LIBS}"
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: found the zstd package: $ZSTD_LIBS" >&5
-$as_echo "found the zstd package: $ZSTD_LIBS" >&6; }
-fi
 
 if test -z "${BLOSC_LIBS}"; then
    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing blosc_compress" >&5

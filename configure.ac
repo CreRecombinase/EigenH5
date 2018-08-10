@@ -73,11 +73,13 @@ AC_MSG_RESULT([found the blosc package: $BLOSC_LIBS])],[
 AC_MSG_ERROR([unable to find the blosc package])
 ])
 
-PKG_CHECK_MODULES([ZSTD], [zstd], [
-LIBS="${ZSTD_LIBS} ${LIBS}"
-AC_MSG_RESULT([found the zstd package: $ZSTD_LIBS])],[
-AC_MSG_ERROR([unable to find the zstd package])
-])
+AC_MSG_RESULT([looking for .pc files in $PKG_CONFIG_PATH])
+
+dnl PKG_CHECK_MODULES([ZSTD], [zstd], [
+dnl LIBS="${ZSTD_LIBS} ${LIBS}"
+dnl AC_MSG_RESULT([found the zstd package: $ZSTD_LIBS])],[
+dnl AC_MSG_ERROR([unable to find the zstd package])
+dnl ])
 
 if test -z "${BLOSC_LIBS}"; then
    AC_SEARCH_LIBS([blosc_compress], [blosc], [], [
