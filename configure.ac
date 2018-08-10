@@ -12,6 +12,24 @@ m4_include([inst/m4/ax_compare_version.m4])
 
 AX_LIB_HDF5()
 
+#AC_PATH_PROG([PKGCONF], [pkg-config], [], [$PATH:/usr/local/bin:ext/bin:ext:/sw/bin:/opt/bin])
+#PKG_CHECK_MODULES([BLOSC], [blosc])
+# If pkg-config is available, use it to find needed libraries
+#if test -n "${PKGCONF}"; then
+#    
+    # Check blosc
+#    AC_MSG_CHECKING([whether pkg-config could find blosc])
+#    if "${PKGCONF}" --exists zlib; then
+#        AC_MSG_RESULT([yes])
+#        BLOSC_CPPFLAGS=`"${PKGCONF}" --cflags blosc`
+#        BLOSC_LIBS=`"${PKGCONF}" --libs blosc`
+#    else
+#        AC_MSG_RESULT([no])
+#    fi
+
+
+
+
 if test "$with_hdf5" = "yes"; then
 AC_MSG_RESULT([Found hdf5 with version: $HDF5_VERSION])
 AX_COMPARE_VERSION([$HDF5_VERSION], [ge], [1.10.2], [hdf5_version_sufficient="yes"], AC_MSG_ERROR([The version of hdf5 installed on your system is not sufficient. Please ensure that at least version 1.10.2 is installed]))
@@ -49,13 +67,29 @@ if test -z "${R_HOME}"; then
   exit 1
 fi
 
-AC_SEARCH_LIBS([blosc_compress], [blosc], [], [
-  AC_MSG_ERROR([unable to find the blosc_compress() function])
+PKG_CHECK_MODULES([BLOSC], [blosc], [
+LIBS="${BLOSC_LIBS} ${LIBS}"
+AC_MSG_RESULT([found the blosc package: $BLOSC_LIBS])],[
+AC_MSG_ERROR([unable to find the blosc package])
 ])
 
+PKG_CHECK_MODULES([ZSTD], [zstd], [
+LIBS="${ZSTD_LIBS} ${LIBS}"
+AC_MSG_RESULT([found the zstd package: $ZSTD_LIBS])],[
+AC_MSG_ERROR([unable to find the zstd package])
+])
+
+if test -z "${BLOSC_LIBS}"; then
+   AC_SEARCH_LIBS([blosc_compress], [blosc], [], [
+   AC_MSG_ERROR([unable to find the blosc_compress() function])
+   ])
+fi	
+
+if test -z "${ZSTD_LIBS}"; then
 AC_SEARCH_LIBS([ZSTD_compress], [zstd], [], [
   AC_MSG_ERROR([unable to find the ZSTD_compress() function])
 ])
+fi
 
 dnl AC_SEARCH_LIBS([std::filesystem::path::path],[std++fs],[],[
 dnl   AC_MSG_ERROR([unable to find the c++ filesystem library])
@@ -69,6 +103,7 @@ AC_MSG_RESULT([HDF5Libs will be : $HDF5_LIBS])
 AC_SUBST(LIBS)
 AC_SUBST(HDF5_LIBS)
 #AC_SUBST(BLOSC_CFLAGS)
+
 
 
 
