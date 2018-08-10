@@ -67,13 +67,15 @@ if test -z "${R_HOME}"; then
   exit 1
 fi
 
+AC_MSG_RESULT([looking for .pc files in $PKG_CONFIG_PATH])
+
 PKG_CHECK_MODULES([BLOSC], [blosc], [
 LIBS="${BLOSC_LIBS} ${LIBS}"
 AC_MSG_RESULT([found the blosc package: $BLOSC_LIBS])],[
 AC_MSG_ERROR([unable to find the blosc package])
 ])
 
-AC_MSG_RESULT([looking for .pc files in $PKG_CONFIG_PATH])
+
 
 dnl PKG_CHECK_MODULES([ZSTD], [zstd], [
 dnl LIBS="${ZSTD_LIBS} ${LIBS}"
