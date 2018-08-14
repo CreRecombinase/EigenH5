@@ -112,8 +112,8 @@ bool isObject(const std::string filename, std::string dataname){
 //[[Rcpp::export]]
 bool isDataSet(const std::string filename, std::string dataname){
 
-  namespace fs = std::experimental::filesystem;
-  stdx::filesystem::path d_path = dataname;
+  namespace fs = stdx::filesystem;
+  fs::path d_path = dataname;
 
   bool ret = false;
   HighFive::File file(filename,HighFive::File::ReadOnly);
@@ -131,6 +131,9 @@ bool isDataSet(const std::string filename, std::string dataname){
 bool isGroup(const std::string filename, std::string dataname){
 
   namespace fs = std::experimental::filesystem;
+  if(dataname[0]!='/'){
+    dataname="/"+dataname;
+  }
   stdx::filesystem::path d_path = dataname;
 
   bool ret = false;
