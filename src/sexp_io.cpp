@@ -523,6 +523,10 @@ bool update_vector(RObject data,
   bool write_success=false;
   HighFive::File file(filename,HighFive::File::ReadWrite);
 
+  if(datapath[0]!='/'){
+    datapath="/"+datapath;
+  }
+
   if( auto dset = file.openDataSet(datapath)){
     auto dims = dset->getDataDimensions();
 
