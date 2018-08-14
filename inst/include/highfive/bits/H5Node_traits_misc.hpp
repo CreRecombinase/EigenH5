@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 #include <boost/algorithm/string.hpp>
-#include <experimental/filesystem>
+#include <filesystem>
 
 
 #include "../H5Attribute.hpp"
@@ -94,7 +94,7 @@ NodeTraits<Derivate>::createDataSet(const std::string& dataset_name,
 template <typename Derivate>
 inline DataSet
 NodeTraits<Derivate>::getDataSet(const std::string& dataset_name) const {
-  namespace fs = std::experimental::filesystem;
+
   fs::path p = dataset_name;
     DataSet set;
     if(!p.has_parent_path()){
@@ -131,13 +131,13 @@ NodeTraits<Derivate>::openDataSet(const std::string& dataset_name) const {
 
 template <typename Derivate>
 inline Group
-NodeTraits<Derivate>::getGroup(const std::string& group_name) const {
+NodeTraits<Derivate>::getGroup(const fs::path &group_name) const {
 
   Group group;
   if ((group._hid = H5Gopen2(static_cast<const Derivate*>(this)->getId(),
 			     group_name.c_str(), H5P_DEFAULT)) < 0) {
     HDF5ErrMapper::ToException<GroupException>(
-					       std::string("Unable to open the group \"") + group_name + "\":");
+					       std::string("Unable to open the group \"") + group_name.string() + "\":");
   }
   return group;
 }
@@ -145,7 +145,7 @@ NodeTraits<Derivate>::getGroup(const std::string& group_name) const {
 
 template <typename Derivate>
 inline std::optional<Group>
-NodeTraits<Derivate>::openGroup(const std::string& group_name) const {
+NodeTraits<Derivate>::openGroup(const fs::path &group_name) const {
   if(!this->exist(group_name)){
     return(std::nullopt);
   }else{
@@ -155,16 +155,11 @@ NodeTraits<Derivate>::openGroup(const std::string& group_name) const {
 
 
 template <typename Derivate>
-inline Group NodeTraits<Derivate>::createGroup(const std::string& group_name) {
-  namespace fs = std::experimental::filesystem;
-  fs::path p = group_name;
-  if(p.empty()){
-    HDF5ErrMapper::ToException<GroupException>(
-					       std::string("Cannot create empty group"));
+inline Group NodeTraits<Derivate>::createGroup(const fs::path& group_name) {
+  if(group_name.empty()){
+    HDF5ErrMapper::ToException<GroupException>(std::string("Cannot create empty group"));
   }
-
-
-  auto ip = p.begin();
+  auto ip = group_name.begin();
   Group group =	this->getGroup((*ip=="/") ? "/" : ".");
   fs::path tp;
   do{
@@ -177,7 +172,7 @@ inline Group NodeTraits<Derivate>::createGroup(const std::string& group_name) {
       }
     }
     ip++;
-  }while(ip!=p.end());
+  }while(ip!=group_name.end());
   return(group);
 }
 
@@ -206,66 +201,59 @@ inline size_t NodeTraits<Derivate>::getNumberObjects() const{
     return res;
 }
 
-
-
-    template<typename Derivate>
-      inline bool NodeTraits<Derivate>::isGroup(const std::string & object_name) const{
-      namespace fs = std::experimental::filesystem;
-      fs::path p = object_name;
-      std::string pp = p.has_parent_path() ? p.parent_path() : ".";
-      if(auto group = this->openGroup(pp)){
-	if(group->exist(p.filename())){
-	  H5O_info_t tid;
-	  if(H5Oget_info_by_name(group->getId(),p.filename().c_str(),&tid,H5P_DEFAULT)<0){
-	    HDF5ErrMapper::ToException<DataSetException>(
-							 std::string("Unable to open the object \"") + std::string(p.filename()) +
-							 "\":");
-	  }
-	  return(tid.type==H5O_TYPE_GROUP);
+  template<typename Derivate>
+  inline bool NodeTraits<Derivate>::isGroup(const fs::path & object_name) const{
+    std::string pp = object_name.has_parent_path() ? object_name.parent_path() : ".";
+    if(auto group = this->openGroup(pp)){
+      if(group->exist(object_name.filename())){
+	H5O_info_t tid;
+	if(H5Oget_info_by_name(group->getId(),object_name.filename().c_str(),&tid,H5P_DEFAULT)<0){
+	  HDF5ErrMapper::ToException<DataSetException>(
+						       std::string("Unable to open the object \"") + std::string(object_name.filename()) +
+						       "\":");
 	}
+	return(tid.type==H5O_TYPE_GROUP);
       }
-      HDF5ErrMapper::ToException<DataSetException>(
-						   std::string("Object does not exist \"") + object_name +
-						   "\":");
-            return(false);
     }
+    HDF5ErrMapper::ToException<DataSetException>(
+						 std::string("Object does not exist \"") + object_name.string() +
+						 "\":");
+    return(false);
+  }
 
     template<typename Derivate>
-      inline bool NodeTraits<Derivate>::isDataSet(const std::string & object_name) const{
-      namespace fs = std::experimental::filesystem;
-      fs::path p = object_name;
-      std::string pp = p.has_parent_path() ? p.parent_path() : ".";
+    inline bool NodeTraits<Derivate>::isDataSet(const fs::path & object_name) const{
+      std::string pp = object_name.has_parent_path() ? object_name.parent_path() : ".";
       if(auto group = this->openGroup(pp)){
-	if(group->exist(p.filename())){
+	if(group->exist(object_name.filename())){
 	  H5O_info_t tid;
-	  if(H5Oget_info_by_name(group->getId(),p.filename().c_str(),&tid,H5P_DEFAULT)<0){
+	  if(H5Oget_info_by_name(group->getId(),object_name.filename().c_str(),&tid,H5P_DEFAULT)<0){
 	    HDF5ErrMapper::ToException<DataSetException>(
-							 std::string("Unable to open the object \"") + std::string(p.filename()) +
+							 std::string("Unable to open the object \"") + std::string(object_name.filename()) +
 							 "\":");
 	  }
 	  return(tid.type==H5O_TYPE_DATASET);
 	}
       }
       HDF5ErrMapper::ToException<DataSetException>(
-						   std::string("Object does not exist \"") + object_name +
+						   std::string("Object does not exist \"") + object_name.string() +
 						   "\":");
       return(false);
     }
 
 
   template<typename Derivate>
-  inline std::variant<DataSet,Group> NodeTraits<Derivate>::getObject(const std::string & object_name) const{
+  inline std::variant<DataSet,Group> NodeTraits<Derivate>::getObject(const fs::path & object_name) const{
     if(object_name=="."){
       return(getObj(static_cast<const Derivate*>(this)->getId(),object_name.c_str()));
     }
-    namespace fs = std::experimental::filesystem;
-    fs::path p = object_name;
-    std::string pp = p.has_parent_path() ? p.parent_path() : ".";
+
+    std::string pp = object_name.has_parent_path() ? object_name.parent_path() : ".";
     Group tg = this->getGroup(pp);
-    if(p.filename()=="."){
+    if(object_name.filename()=="."){
       return(tg);
     }else{
-      return(getObj(tg.getId(),p.filename().c_str()));
+      return(getObj(tg.getId(),object_name.filename().c_str()));
     }
   }
 
@@ -358,7 +346,6 @@ inline std::vector<std::string> NodeTraits<Derivate>::listObjectNames() const {
         HDF5ErrMapper::ToException<GroupException>(
             std::string("Unable to list objects in group"));
     }
-
     return names;
 }
 

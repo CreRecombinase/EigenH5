@@ -367,7 +367,7 @@ SEXP read_vector(std::string filename,
 		 std::string datapath,
 		 Rcpp::List options){
   using namespace Rcpp;
-  namespace fs = stdx::filesystem;
+  namespace fs = std::filesystem;
   fs::path dp=datapath;
 
   HighFive::File file(filename,HighFive::File::ReadOnly);

@@ -9,19 +9,21 @@
 #pragma once
 
 #include <string>
-#include <experimental/filesystem>
+#include <filesystem>
 #include <variant>
 #include <optional>
 
+
+
 namespace HighFive {
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 class Attribute;
 class DataSet;
 class Group;
 class DataSpace;
 class DataType;
 
-    class Properties;
+  class Properties;
 
 template <typename Derivate>
 class NodeTraits {
@@ -86,19 +88,19 @@ class NodeTraits {
     /// \param group_name
     /// \return the group object
     ///
-  Group createGroup(const std::string& group_name);
+  Group createGroup(const fs::path &group_name);
 
     ///
     /// \brief open an existing group with the name group_name
     /// \param group_name
     /// \return the group object
     ///
-  Group getGroup(const std::string& group_name) const;
-  std::optional<Group> openGroup(const std::string& group_name) const;
+  Group getGroup(const fs::path &group_name) const;
+  std::optional<Group> openGroup(const fs::path& group_name) const;
 
 
-  bool isGroup(const std::string& group_name) const;
-  bool isDataSet(const std::string& group_name) const;
+  bool isGroup(const fs::path& group_name) const;
+  bool isDataSet(const fs::path& group_name) const;
 
 
 
@@ -119,7 +121,7 @@ class NodeTraits {
   ///
   /// \brief return either a group or dataset
   /// \return variant containing either a group or dataset
-  std::variant<DataSet,Group> getObject(const std::string & object_name) const;
+  std::variant<DataSet,Group> getObject(const fs::path & object_name) const;
   std::optional<std::variant<DataSet,Group>> openObject(const std::string & object_name) const;
 
   ///
