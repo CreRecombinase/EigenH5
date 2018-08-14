@@ -1,7 +1,6 @@
 #include "EigenH5.h"
 //[[depends(RcppEigen)]]
 //[[Rcpp::plugins(cpp17)]]
-//#include <experimental/filesystem>
 #include <optional>
 #include <array>
 
@@ -99,8 +98,11 @@ bool exists_h5(const std::string filename,
 
 //[[Rcpp::export]]
 bool isObject(const std::string filename, std::string dataname){
-  namespace fs = std::experimental::filesystem;
   bool ret = false;
+  namespace fs = stdx::filesystem;
+  if(dataname[0]!='/'){
+     dataname="/"+dataname;
+  }
   HighFive::File file(filename,HighFive::File::ReadOnly);
   ret = file.exist(dataname);
   return(ret);
