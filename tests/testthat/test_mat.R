@@ -89,30 +89,25 @@ test_that("can read int matrix(one column)",{
 
 
 test_that("can read int matrix(one row)",{
-  library(EigenH5)
   tmat <- matrix(sample(1:900),100,9)
   smat <- tmat[3,,drop=F]
   tempf <- tempfile()
   #write_matrix_h5(tempf,"grp","tmat_t",tmat,doTranspose = T)
-  write_matrix_h5(tempf,"tmat",tmat)
+  write_matrix_h5(tmat,tempf,"tmat")
   rd <- read_matrix_h5(tempf,"tmat",subset_rows=3)
   expect_equal(get_dims_h5(tempf,"tmat"),c(100,9))
   expect_equal(smat,rd)
 })
 
-
-
-
-
 test_that("can read int matrix rows",{
   tmat <- matrix(sample(1:900),100,9)
   tempf <- tempfile()
-  write_matrix_h5(tempf,"grp/grp2","tmat",tmat)
+  write_matrix_h5(tmat,tempf,"grp/grp2/tmat")
   ind <- c(1,3,5)
   ttmat <- tmat[ind,]
-  rd <- read_matrix_h5(tempf,"grp/grp2","tmat",subset_rows = ind)
+  rd <- read_matrix_h5(tempf,"grp/grp2/tmat",subset_rows = ind)
   nttmat <- tmat[,ind]
-  rd <- read_matrix_h5(tempf,"grp/grp2","tmat",subset_cols = ind)
+  rd <- read_matrix_h5(tempf,"grp/grp2/tmat",subset_cols = ind)
   expect_equal(nttmat,rd)
   # expect_equal(ind,c(1,3,5))
   # expect_equal(ttmat,rd)
@@ -127,7 +122,7 @@ test_that("can read int matrix rows",{
 test_that("can read int matrix cols",{
   tmat <- matrix(sample(1:900),100,9)
   tempf <- tempfile()
-  write_matrix_h5(tempf,"grp","tmat",tmat)
+  write_matrix_h5(tmat,tempf,"grp/tmat")
   ind <- c(3,1,5)
   ttmat <- tmat[,ind]
   rd <- read_matrix_h5(tempf,datapath="grp/tmat",subset_cols = ind)
@@ -143,7 +138,7 @@ test_that("can read int matrix cols",{
 test_that("can read int matrix rows & cols",{
   tmat <- matrix(sample(1:900),100,9)
   tempf <- tempfile()
-  write_matrix_h5(tempf,"grp","tmat",tmat)
+  write_matrix_h5(tmat,tempf,"grp/tmat")
   ttmat <- tmat[c(5,3,1),c(3,5,6)]
   rd <- read_matrix_h5(tempf,datapath="grp/tmat",
                        subset_rows = c(5,3,1),

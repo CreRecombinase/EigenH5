@@ -683,7 +683,17 @@ bool create_dataset_h5(const std::string &filename,
    fs::path dp=datapath;
    bool create_success=false;
    HighFive::File file(filename,HighFive::File::Create | HighFive::File::ReadWrite);
+
+#ifdef DEBUG
+   Rcpp::Rcerr<<"opening/creating group: "<<dp.parent_path()<<std::endl;
+#endif
+
    auto group = file.openGroup(dp.parent_path()).value_or(file.createGroup(dp.parent_path()));
+
+#ifdef DEBUG
+   Rcpp::Rcerr<<"opening group: "<<dp.parent_path()<<std::endl;
+#endif
+
 
    auto data_d = get_list_element<INTSXP>(options,"dim");
    if(!data_d){

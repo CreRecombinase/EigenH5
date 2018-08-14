@@ -14,7 +14,7 @@
 #include <optional>
 
 namespace HighFive {
-
+namespace fs = std::experimental::filesystem;
 class Attribute;
 class DataSet;
 class Group;
@@ -86,7 +86,7 @@ class NodeTraits {
     /// \param group_name
     /// \return the group object
     ///
-    Group createGroup(const std::string& group_name);
+  Group createGroup(const std::string& group_name);
 
     ///
     /// \brief open an existing group with the name group_name
@@ -133,7 +133,7 @@ class NodeTraits {
   /// \param dataset/group name to check
   /// \return true if a dataset/group with the asssociated name exist, or
   /// false
-  bool exist(const std::string& node_name) const;
+  bool exist(const fs::path node_name) const;
 private:
   static Group grpCreate(const hid_t root_id, const char* name);
   std::variant<DataSet,Group> getObj(const hid_t root_id, const char* name) const;

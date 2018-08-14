@@ -365,16 +365,15 @@ inline std::vector<std::string> NodeTraits<Derivate>::listObjectNames() const {
 
 
 template <typename Derivate>
-inline bool NodeTraits<Derivate>::exist(const std::string& node_name) const {
+inline bool NodeTraits<Derivate>::exist(fs::path p) const {
 
-  if(node_name=="."){
+
+  if(p=="." || p == "/"){
     return(true);
   }
-  namespace fs = std::experimental::filesystem;
-  const fs::path p = node_name;
+
   if(p.empty()){
-    HDF5ErrMapper::ToException<GroupException>(
-					       std::string("Cannot check for existence of an empty path"));
+    HDF5ErrMapper::ToException<GroupException>(std::string("Cannot check for existence of an empty path"));
   }
   const auto ttid=static_cast<const Derivate*>(this)->getId();
 
@@ -386,7 +385,7 @@ inline bool NodeTraits<Derivate>::exist(const std::string& node_name) const {
       if(tp!="/"){
 	htri_t val = H5Lexists(ttid,tp.c_str(), H5P_DEFAULT);
 	if(val<0){
-	  HDF5ErrMapper::ToException<GroupException>(std::string("Invalid path while checking for existence of "+node_name));
+	  HDF5ErrMapper::ToException<GroupException>(std::string("Invalid path while checking for existence of "+p.string()));
 	}if(val==0){
 	  return(false);
 	}
