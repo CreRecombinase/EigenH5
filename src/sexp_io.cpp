@@ -687,8 +687,10 @@ bool create_dataset_h5(const std::string &filename,
 #ifdef DEBUG
    Rcpp::Rcerr<<"opening/creating group: "<<dp.parent_path()<<std::endl;
 #endif
-
-   auto group = file.openGroup(dp.parent_path()).value_or(file.createGroup(dp.parent_path()));
+   auto group = file.openGroup(dp.parent_path());
+   if(!group){
+     group = file.createGroup(dp.parent_path());
+   }
 
 #ifdef DEBUG
    Rcpp::Rcerr<<"opening group: "<<dp.parent_path()<<std::endl;
@@ -719,7 +721,7 @@ bool create_dataset_h5(const std::string &filename,
    Rcpp::IntegerVector tvec;
    auto	filt = create_filter(dimvec,options);
    DataSpace space = DataSpace(dimvec,max_dvec);
-   create_dataset(group,dp.filename(),data,space,filt);
+   create_dataset(group.value(),dp.filename(),data,space,filt);
    create_success=true;
    file.flush();
   return(create_success);
