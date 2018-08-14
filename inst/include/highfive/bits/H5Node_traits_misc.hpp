@@ -367,11 +367,14 @@ inline std::vector<std::string> NodeTraits<Derivate>::listObjectNames() const {
 template <typename Derivate>
 inline bool NodeTraits<Derivate>::exist(fs::path p) const {
 
-
-  if(p=="." || p == "/"){
+  if(p.has_root_path()){
+    if(p == p.root_path()){
+      return(true);
+    }
+  }
+  if(p=="."){
     return(true);
   }
-
   if(p.empty()){
     HDF5ErrMapper::ToException<GroupException>(std::string("Cannot check for existence of an empty path"));
   }
