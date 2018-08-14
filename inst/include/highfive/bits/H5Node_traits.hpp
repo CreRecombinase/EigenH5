@@ -9,14 +9,13 @@
 #pragma once
 
 #include <string>
-#include <filesystem>
 #include <variant>
 #include <optional>
 
 
 
 namespace HighFive {
-namespace fs = std::filesystem;
+namespace fs = stdx::filesystem;
 class Attribute;
 class DataSet;
 class Group;

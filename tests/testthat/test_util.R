@@ -52,3 +52,12 @@ test_that("I can create an extendable dataset and extend it",{
     
   
 })
+
+test_that("root group is created upon file creation",{
+  
+  tf <- tempfile()
+  create_file_h5(tf)  
+  ls_h5(tf)
+  isGroup(tf,"/")
+  
+})

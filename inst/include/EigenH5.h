@@ -8,6 +8,26 @@
 
 #define EIGEN_PERMANENTLY_DISABLE_STUPID_WARNINGS
 #include <RcppEigen.h>
+
+#if __has_include(<filesystem>)
+
+#include <filesystem>
+namespace stdx {
+  using namespace ::std;
+}
+#elif __has_include(<experimental/filesystem>)
+#   include <experimental/filesystem>
+namespace stdx {
+  using namespace ::std;
+  using namespace ::std::experimental;
+}
+#else
+#   error <experimental/filesystem> and <filesystem> not found
+#endif
+
+
+
+
 #include "highfive/highfive.hpp"
 #include "blosc_filter.h"
 #include "lzf/lzf_filter.h"
@@ -35,21 +55,6 @@ public:
 
 
 
-#if __has_include(<filesystem>)
-
-#include <filesystem>
-namespace stdx {
-  using namespace ::std;
-}
-#elif __has_include(<experimental/filesystem>)
-#   include <experimental/filesystem>
-namespace stdx {
-  using namespace ::std;
-  using namespace ::std::experimental;
-}
-#else
-#   error <experimental/filesystem> and <filesystem> not found
-#endif
 
 
 template <typename T>

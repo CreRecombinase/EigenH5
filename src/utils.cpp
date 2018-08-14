@@ -1,7 +1,7 @@
 #include "EigenH5.h"
 //[[depends(RcppEigen)]]
 //[[Rcpp::plugins(cpp17)]]
-#include <experimental/filesystem>
+//#include <experimental/filesystem>
 #include <optional>
 #include <array>
 
@@ -111,7 +111,7 @@ bool isObject(const std::string filename, std::string dataname){
 bool isDataSet(const std::string filename, std::string dataname){
 
   namespace fs = std::experimental::filesystem;
-  fs::path d_path = dataname;
+  stdx::filesystem::path d_path = dataname;
 
   bool ret = false;
   HighFive::File file(filename,HighFive::File::ReadOnly);
@@ -129,7 +129,7 @@ bool isDataSet(const std::string filename, std::string dataname){
 bool isGroup(const std::string filename, std::string dataname){
 
   namespace fs = std::experimental::filesystem;
-  fs::path d_path = dataname;
+  stdx::filesystem::path d_path = dataname;
 
   bool ret = false;
   HighFive::File file(filename,HighFive::File::ReadOnly);
@@ -147,13 +147,13 @@ Rcpp::StringVector ls_h5(const std::string filename,Rcpp::CharacterVector groupn
 
   HighFive::File file(filename,HighFive::File::ReadOnly);
   HighFive::Group grp;
-  namespace fs = std::experimental::filesystem;
+
   std::string tgroupname = Rcpp::as<std::string>(groupname(0));
   if(tgroupname=="."){
     tgroupname="/";
   }
-  //fs::path d_path = dataname;
-  fs::path g_path(tgroupname);
+  //stdx::filesystem::path d_path = dataname;
+  stdx::filesystem::path g_path(tgroupname);
 
   //HDF5ErrMapper::ToException<GroupException>(
   grp = file.getGroup(g_path);
@@ -161,8 +161,8 @@ Rcpp::StringVector ls_h5(const std::string filename,Rcpp::CharacterVector groupn
   const size_t num_cols = grp.getNumberObjects();
   Rcpp::StringVector retvec(num_cols);
   for(int i=0; i<num_cols;i++){
-    fs::path tpath = full_names ? g_path : fs::path();
-    tpath/=fs::path(grp.getObjectName(i));
+    stdx::filesystem::path tpath = full_names ? g_path : stdx::filesystem::path();
+    tpath/=stdx::filesystem::path(grp.getObjectName(i));
     std::string tst = tpath;
     retvec[i]=tst;
   }
@@ -173,7 +173,7 @@ Rcpp::StringVector ls_h5(const std::string filename,Rcpp::CharacterVector groupn
 Rcpp::StringVector typeof_h5(const std::string &filename,
                    const std::string &datapath){
 
-  namespace fs = std::experimental::filesystem;
+
   using namespace HighFive;
 
   if(isGroup(filename,datapath)){

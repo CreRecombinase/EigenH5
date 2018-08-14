@@ -151,9 +151,9 @@ test_that("can read int matrix rows & cols",{
 test_that("can read int matrix cols",{
   tmat <- matrix(sample(1:900),100,9)
   tempf <- tempfile()
-  write_matrix_h5(tempf,"grp","tmat",tmat)
+  write_matrix_h5(tmat,tempf,"grp/tmat")
   ttmat <- tmat[,c(1,3,5)]
-  rd <- read_matrix_h5(tempf,"grp","tmat",subset_cols = c(1,3,5))
+  rd <- read_matrix_h5(tempf,"grp/tmat",subset_cols = c(1,3,5))
   expect_equal(ttmat,rd)
 })
 
