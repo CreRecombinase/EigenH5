@@ -171,35 +171,44 @@ private:
     buffer_pos.second=prel_pos;
   }
 
-  void get_current_sample(){
+  bool get_current_sample(){
     std::getline(fs,sample_id,'\t');
-    auto ret = std::find(sample_names.begin(),sample_names.end(),sample_id);
-    if(ret == sample_names.end()){
-      Rcpp::stop("sample_id: "+sample_id+" not found!");
+    if(fs.eof()){
+      return(false);
     }else{
-      // Rcpp::Rcerr<<"sample_id: "<<sample_id<<" found on line"<<line_no<<std::endl;
-      sample_offset=ret-sample_names.begin();
+      auto ret = std::find(sample_names.begin(),sample_names.end(),sample_id);
+      if(ret == sample_names.end()){
+	Rcpp::stop("sample_id: "+sample_id+" not found!");
+      }else{
+	//	Rcpp::Rcerr<<"sample_id: "<<sample_id<<" found on line"<<line_no<<std::endl;
+	sample_offset=ret-sample_names.begin();
+      }
+      std::string tst;
+      std::getline(fs,tst,'\t');
+      // fs.read(region_buffer.data(),5);
+      if(tst != "DOSE"){
+	Rcpp::stop("Not at the beginning of line_no:"+std::to_string(line_no)+":\n"+tst+"\nExpecting:\nDOSE");
+      }
     }
-    std::string tst;
-    std::getline(fs,tst,'\t');
-    // fs.read(region_buffer.data(),5);
-    if(tst!="DOSE"){
-      Rcpp::stop("Not at the beginning of line_no:"+std::to_string(line_no)+":\n"+tst+"\nExpecting:\nDOSE");
-    }
+    return(true);
   }
-  void advance_line(){
+  bool advance_line(){
     const size_t line_remaining=p*6-buffer_pos.second;
     fs.ignore(line_remaining);
     line_no++;
     //    region_buffer.resize(name_sizes[line_no]+6);
-    get_current_sample();
-    buffer_pos={0,0};
-    region_buffer.clear();
-    prog_bar.increment();
-    if (Progress::check_abort() ){
-      Rcpp::stop("Process Interrupted!");
+    if(get_current_sample()){
+      buffer_pos={0,0};
+      region_buffer.clear();
+      prog_bar.increment();
+      if (Progress::check_abort() ){
+	Rcpp::stop("Process Interrupted!");
+      }
+      snp_idx=0;
+      return(true);
+    }else{
+      return(false);
     }
-    snp_idx=0;
   }
   bool parse_chunk(){
     //stuff the buffered SNPs into the data vector until:
@@ -230,8 +239,7 @@ private:
 	  write_buffer();
 	  if(snp_idx==(snp_ind_size-1)){
 	    if((line_no+1)<num_rows){
-		advance_line();
-		return(true);
+	      return(advance_line());
 	    }else{
 	      return(false);
 	    }
@@ -279,35 +287,47 @@ public:
 void mach2h5(const std::string dosagefile, const std::string h5file, const std::string datapath,std::vector<int> snp_idx, std::vector<std::string> names, const int p,Rcpp::List options){
 
   const size_t num_elem=names.size();
-
+  const size_t num_snps=snp_idx.size();
   size_t mp=p;
-  const bool SNPfirst =	get_list_scalar<bool>(options,"SNPfirst").value_or(true);
+  // const bool SNPfirst =	get_list_scalar<bool>(options,"SNPfirst").value_or(true);
   const int buffer_size= get_list_scalar<int>(options,"buffer_size").value_or(10000);
   const bool prog= get_list_scalar<bool>(options,"progress").value_or(false);
 
+
   const int buffer_vec= static_cast<size_t>(get_list_scalar<int>(options,"buffer_vec").value_or(1));
 
-  {
-    using namespace HighFive;
-    File file(h5file,HighFive::File::ReadWrite | HighFive::File::Create);
-    std::vector<size_t> space_dims = {snp_idx.size(),num_elem};
 
-    if(!SNPfirst){
-      std::reverse(space_dims.begin(),space_dims.end());
-    }
-    DataSpace space(space_dims);
-    Filter filter	= create_filter(space_dims,options);
-    auto dset = file.createDataSet(datapath,space,AtomicType<double>(),filter);
-    file.flush();
-  }
-  Rcpp::Rcerr<<"Memory mapping file"<<std::endl;
+  const bool SNPfirst =   [h5file,datapath,num_snps,num_elem](){
+			    using namespace HighFive;
+			    File file(h5file,HighFive::File::ReadOnly);
+			    auto dset =	file.getDataSet(datapath);
+			    auto data_dims = dset.getDataDimensions();
+			    if(data_dims[0]==num_snps){
+			      if(data_dims[1]==num_elem){
+				return(true);
+			      }else{
+				Rcpp::stop("SNPfirst but second dimension doesn't match length(names)");
+			      }
+			    }else{
+			      if(data_dims[1]==num_snps){
+				if(data_dims[0]==num_elem){
+				  return(false);
+				}else{
+				  Rcpp::stop("!SNPfirst but first dimension doesn't match length(names)");
+				}
+			      }else{
+				Rcpp::stop("first dimension doesn't match length(snp_idx) or length(names)");
+			      }
+			    }
+			  }();
+
+
   boost::iostreams::mapped_file_source mapfile;
-  Rcpp::Rcerr<<"mapfile created"<<std::endl;
   mapfile.open(dosagefile);
   if(!mapfile.is_open()){
     Rcpp::stop("opening	file:"+dosagefile+"failed!");
   }else{
-    Rcpp::Rcerr<<"File mapped, opening stream"<<std::endl;
+    // Rcpp::Rcerr<<"File mapped, opening stream"<<std::endl;
   }
   boost::iostreams::stream<boost::iostreams::mapped_file_source> textstream(mapfile);
   boost::iostreams::filtering_istream fs;

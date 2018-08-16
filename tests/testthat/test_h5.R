@@ -33,17 +33,18 @@ atsnp_mat <-wtsnp_mat[,-c(1,2)]
 class(atsnp_mat) <- "numeric"
 hdf5_f <- 
 sample_names <- wtsnp_mat[,1]
-write_vector_h5()
+
 p <- ncol(atsnp_mat)
 t_idx <- sort(sample(1:p,min(100,as.integer(p/2)),replace=F))
 # t_idx <- c(3,10,19,33,34,46,56,79,80)
 tf <- tempfile()
+create_dataset_h5(tf,"test",numeric(),options=list(dims=c(length(t_idx),N)))
 EigenH5::mach2h5(dosagefile = ntsnpf,
                  h5file = tf,
                  datapath = "test",
                  snp_idx = t_idx-1,
                  names=sample_names,
-                 p=p,options=list(buffer_size = 18,SNPfirst = T,progress=T))
+                 p=p,options=list(buffer_size = 18,progress=T))
 ttsnp_mat <- t(atsnp_mat[,t_idx])
 attr(ttsnp_mat,"dimnames") <- NULL
 # class(ttsnp_mat) <- "numeric"
@@ -51,6 +52,67 @@ mrd <- EigenH5::read_matrix_h5(tf,"test")
 testthat::expect_equal(mrd,ttsnp_mat)
 # which(mrd!=ttsnp_mat,arr.ind = T) atsn  
 })
+
+
+
+
+test_that("Can read mach dosage files (in random order split between 2 files)",{
+  # 
+  # library(tidyverse)
+  N <- 50
+  p <- 40000
+  sample_ids <- as.character(sample(1:(N*p),N,replace=F))
+  ntsnpf_a <- paste0(tempfile(),".txt.gz")
+  ntsnpf_b <- paste0(tempfile(),".txt.gz")
+  
+  tsnp_mat <- matrix(sprintf("%.3f",runif(min=0,max=2,N*p)),nrow = N,byrow=T)
+  expect_true(all(nchar(tsnp_mat)==5))
+  
+  split_pt <- sample(1:N,floor(N/2),replace=F)
+  N_a <- length(split_pt)
+  N_b <- length(sample_ids[-split_pt])
+  expect_equal(N_a+N_b,N)
+  tsnp_mat_a <- tsnp_mat[split_pt,]
+  tsnp_mat_b <- tsnp_mat[-split_pt,]
+  
+  wtsnp_mat_a <- cbind(cbind(sample_ids[split_pt],rep("DOSE",N_a)),tsnp_mat_a)
+  wtsnp_mat_b <- cbind(cbind(sample_ids[-split_pt],rep("DOSE",N_b)),tsnp_mat_b)
+  
+  expect_equal(nrow(wtsnp_mat_a),N_a)
+  expect_equal(nrow(wtsnp_mat_b),N_b)
+  readr::write_delim(tibble::as_data_frame(wtsnp_mat_a[sample(1:N_a),]),path = ntsnpf_a,delim = "\t",col_names = F)
+  readr::write_delim(tibble::as_data_frame(wtsnp_mat_b[sample(1:N_b),]),path = ntsnpf_b,delim = "\t",col_names = F)
+  
+  class(tsnp_mat) <- "numeric"
+
+  t_idx <- sort(sample(1:p,min(100,as.integer(p/2)),replace=F))
+  # t_idx <- c(3,10,19,33,34,46,56,79,80)
+  tf <- tempfile()
+  n_p <- length(t_idx)
+  create_dataset_h5(filename = tf,datapath="test",data=numeric(),options=list(dims=c(n_p,N)))
+  
+  EigenH5::mach2h5(dosagefile = ntsnpf_a,
+                   h5file = tf,
+                   datapath = "test",
+                   snp_idx = t_idx-1,
+                   names=sample_ids,
+                   p=p,options=list(buffer_size = 18,progress=T))
+  EigenH5::mach2h5(dosagefile = ntsnpf_b,
+                   h5file = tf,
+                   datapath = "test",
+                   snp_idx = t_idx-1,
+                   names=sample_ids,
+                   p=p,options=list(buffer_size = 18,progress=T))
+  ttsnp_mat <- t(tsnp_mat[,t_idx])
+  attr(ttsnp_mat,"dimnames") <- NULL
+  # class(ttsnp_mat) <- "numeric"
+  mrd <- EigenH5::read_matrix_h5(tf,"test")
+  testthat::expect_equal(mrd,ttsnp_mat)
+  # which(mrd!=ttsnp_mat,arr.ind = T) atsn  
+})
+
+
+
 
 
 test_that("check for groups/datasets",{

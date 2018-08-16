@@ -2,25 +2,24 @@ context("vectors")
 
 
 
-test_that("I can overwrite a vector",{
-  
+test_that("I can overwrite a vector", {
   tf <- tempfile()
   tv <- runif(3)
-  write_vector_h5(tf,"/","test",tv)
-  expect_equal(read_vector_h5(tf,"/","test"),tv)
+  write_vector_h5(tv, tf, "test")
+  expect_equal(read_vector_h5(tf, "test"), tv)
   ntv <- runif(3)
-  write_vector_h5(tf,"/","test",ntv)
-  expect_equal(read_vector_h5(tf,"/","test"),ntv)
+  write_vector_h5(ntv,tf, "test")
+  expect_equal(read_vector_h5(tf,"test"),ntv)
 })
 
 test_that("I can append a vector",{
   tf <- tempfile()
   tv <- runif(3)
-  write_vector_h5(tf,"/","test",tv,max_dims=c(NA_integer_))
-  expect_equal(read_vector_h5(tf,"/","test"),tv)
+  write_vector_h5(tf,"test",tv,max_dims=c(NA_integer_))
+  expect_equal(read_vector_h5(tf,"test"),tv)
   ntv <- runif(3)
-  write_vector_h5(tf,"/","test",ntv,append=T)
-  expect_equal(read_vector_h5(tf,"/","test"),c(tv,ntv))
+  write_vector_h5(tf,"test",ntv,append=T)
+  expect_equal(read_vector_h5(tf,"test"),c(tv,ntv))
 })
 
 

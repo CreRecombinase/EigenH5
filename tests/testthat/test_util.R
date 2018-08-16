@@ -53,6 +53,13 @@ test_that("I can create an extendable dataset and extend it",{
   
 })
 
+
+test_that("We can write a vector",{
+  
+  EigenH5::write_vector_h5(numeric(3),tempfile(),"test")
+  
+})
+
 test_that("root group is created upon file creation",{
   
   tf <- tempfile()
