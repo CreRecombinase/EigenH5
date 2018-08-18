@@ -19,7 +19,7 @@ test_that("Can read mach dosage files (in random order)",{
 # 
 # library(tidyverse)
 N <- 50
-p <- 40000
+p <- 6000
 sample_ids <- as.character(sample(1:(N*p),N,replace=F))
 ntsnpf <- paste0(tempfile(),".txt.gz")
 tsnp_mat <- matrix(sprintf("%.3f",runif(min=0,max=2,N*p)),nrow = N,byrow=T)
@@ -35,7 +35,7 @@ hdf5_f <-
 sample_names <- wtsnp_mat[,1]
 
 p <- ncol(atsnp_mat)
-t_idx <- sort(sample(1:p,min(100,as.integer(p/2)),replace=F))
+t_idx <- sort(sample(1:p,min(101,as.integer(p/2)),replace=F))
 # t_idx <- c(3,10,19,33,34,46,56,79,80)
 tf <- tempfile()
 create_dataset_h5(tf,"test",numeric(),options=list(dims=c(length(t_idx),N)))
@@ -44,7 +44,7 @@ EigenH5::mach2h5(dosagefile = ntsnpf,
                  datapath = "test",
                  snp_idx = t_idx-1,
                  names=sample_names,
-                 p=p,options=list(buffer_size = 18,progress=T))
+                 p=p,options=list(progress=T))
 ttsnp_mat <- t(atsnp_mat[,t_idx])
 attr(ttsnp_mat,"dimnames") <- NULL
 # class(ttsnp_mat) <- "numeric"
@@ -96,13 +96,82 @@ test_that("Can read mach dosage files (in random order split between 2 files)",{
                    datapath = "test",
                    snp_idx = t_idx-1,
                    names=sample_ids,
-                   p=p,options=list(buffer_size = 18,progress=T))
+                   p=p,options=list(progress=T))
   EigenH5::mach2h5(dosagefile = ntsnpf_b,
                    h5file = tf,
                    datapath = "test",
                    snp_idx = t_idx-1,
                    names=sample_ids,
-                   p=p,options=list(buffer_size = 18,progress=T))
+                   p=p,options=list(progress=T))
+  ttsnp_mat <- t(tsnp_mat[,t_idx])
+  attr(ttsnp_mat,"dimnames") <- NULL
+  # class(ttsnp_mat) <- "numeric"
+  mrd <- EigenH5::read_matrix_h5(tf,"test")
+  testthat::expect_equal(mrd,ttsnp_mat)
+  # which(mrd!=ttsnp_mat,arr.ind = T) atsn  
+})
+
+
+
+
+test_that("Can read mach dosage files (in random order split between 2 files with extra lines)",{
+  # 
+  # library(tidyverse)
+  N <- 50
+  p <- 400
+  
+  gen_mach <- function(N,p){
+    sample_ids <- as.character(sample(1:(N*p),N,replace=F))
+    tsnp_mat <- matrix(sprintf("%.3f",runif(min=0,max=2,N*p)),nrow = N,byrow=T)
+    expect_true(all(nchar(tsnp_mat)==5))
+    wtsnp_mat <- cbind(cbind(sample_ids,rep("DOSE",N)),tsnp_mat)
+    return(wtsnp_mat)
+  }
+  
+  
+  ntsnpf_a <- paste0(tempfile(),".txt.gz")
+  ntsnpf_b <- paste0(tempfile(),".txt.gz")
+  
+  all_tsnp <- gen_mach(4*N,p)
+  wtsnp_a <- all_tsnp[1:N,]
+  wtsnp_b <- all_tsnp[(1:N)+N,]
+  wtsnp_c <- all_tsnp[(1:N)+2*N,]
+  wtsnp_d <- all_tsnp[(1:N)+3*N,]
+  
+  expect_equal(rbind(wtsnp_a,wtsnp_b,wtsnp_c,wtsnp_d),all_tsnp)
+  
+  good_tsnp <- rbind(wtsnp_a,wtsnp_c)
+  
+  
+  
+  all_tsnp_a <- rbind(wtsnp_a,wtsnp_b)
+  all_tsnp_b <- rbind(wtsnp_c,wtsnp_d)
+
+  readr::write_delim(tibble::as_data_frame(all_tsnp_a[sample(1:(2*N)),]),path = ntsnpf_a,delim = "\t",col_names = F)
+  readr::write_delim(tibble::as_data_frame(all_tsnp_b[sample(1:(2*N)),]),path = ntsnpf_b,delim = "\t",col_names = F)
+  
+  tsnp_mat <- good_tsnp[,-c(1,2)]
+  class(tsnp_mat) <- "numeric"
+  
+  t_idx <- sort(sample(1:p,min(100,as.integer(p/2)),replace=F))
+  # t_idx <- c(3,10,19,33,34,46,56,79,80)
+  tf <- tempfile()
+  n_p <- length(t_idx)
+  create_dataset_h5(filename = tf,datapath="test",data=numeric(),options=list(dims=c(n_p,2*N)))
+  sample_ids <- good_tsnp[,1]
+  
+  EigenH5::mach2h5(dosagefile = ntsnpf_a,
+                   h5file = tf,
+                   datapath = "test",
+                   snp_idx = t_idx-1,
+                   names=sample_ids,
+                   p=p,options=list(progress=T))
+  EigenH5::mach2h5(dosagefile = ntsnpf_b,
+                   h5file = tf,
+                   datapath = "test",
+                   snp_idx = t_idx-1,
+                   names=sample_ids,
+                   p=p,options=list(progress=T))
   ttsnp_mat <- t(tsnp_mat[,t_idx])
   attr(ttsnp_mat,"dimnames") <- NULL
   # class(ttsnp_mat) <- "numeric"

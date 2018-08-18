@@ -75,6 +75,12 @@ AC_MSG_RESULT([found the blosc package: $BLOSC_LIBS])],[
 AC_MSG_ERROR([unable to find the blosc package])
 ])
 
+dnl PKG_CHECK_MODULES([LZF], [lzf], [
+dnl LIBS="${LZF_LIBS} ${LIBS}"
+dnl AC_MSG_RESULT([found the lzf package: LZF_LIBS])],[
+dnl AC_MSG_ERROR([unable to find the lzf package])
+dnl ])
+
 
 
 dnl PKG_CHECK_MODULES([ZSTD], [zstd], [

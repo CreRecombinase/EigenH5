@@ -17,53 +17,79 @@
 
 // [[Rcpp::interfaces(r, cpp)]]
 
-template<typename T>
-class data_slice{
+// template<typename T>
+// class data_slice{
 
-public:
-  data_slice(const std::vector<T> & tdat, std::initializer_list<size_t>  off,std::initializer_list<size_t> chunk):
-    dat(tdat),
-    offset(off),
-    chunksize(chunk){}
-  std::vector<T> dat;
-  std::vector<size_t> offset;
-  std::vector<size_t> chunksize;
-};
+// public:
+//   data_slice(const size_t  capacity, std::initializer_list<size_t>  off,std::initializer_list<size_t> chunk):
+//     offset(off),
+//     chunksize(chunk){
+//     dat.reserve(capacity);
+//   }
+//   void reset_slice(){
+//     dat.clear();
+//     chunksize = {0,0};
+//     offset = {0,0};
+//   std::vector<T> dat;
+//   std::vector<size_t> offset;
+//   std::vector<size_t> chunksize;
+// };
 
 
 template<typename T>
 class buffered_writer{
-  const size_t buffer_capacity;
-  std::vector<data_slice<T> > data_queue;
+  const size_t vec_capacity;
+  const bool SNPfirst;
+  std::vector<T> data_buff;
   HighFive::File file;
   HighFive::DataSet  ds;
+  size_t offset_snp;
+  size_t offset_sample;
+  bool is_empty;
+  const size_t max_offset_snp;
+  const size_t max_offset_sample;
 public:
-  buffered_writer(const std::string filename, const std::string datapath, const size_t buffer_cap):
-    buffer_capacity(buffer_cap),
+  buffered_writer(const std::string filename, const std::string datapath,const size_t max_buffer_size,const bool SNPfirst_, const size_t num_snp, const size_t num_n):
+    vec_capacity(max_buffer_size),
     file(filename,HighFive::File::ReadWrite | HighFive::File::Create),
-    ds(file.getDataSet(datapath)){
-    data_queue.reserve(buffer_capacity);
+    ds(file.getDataSet(datapath)),SNPfirst(SNPfirst_),is_empty(true),max_offset_snp(num_snp),
+    max_offset_sample(num_n){
+    data_buff.reserve(vec_capacity);
   }
-  bool push_buffer(data_slice<T> && data_el){
-    while(data_queue.size()>=buffer_capacity){
+  void push_data(T datum,const size_t snp_offset,size_t sample_offset){
+    if((data_buff.size()>=vec_capacity) || (sample_offset != offset_sample) ) {
       write_data();
     }
-    data_queue.emplace_back(data_el);
-    return(true);
+    data_buff.push_back(datum);
+    if(is_empty){
+      offset_snp=snp_offset;
+      offset_sample=sample_offset;
+      is_empty=false;
+    }
   }
   void write_data(){
-    if(!data_queue.empty()){
-      auto b= data_queue.back();
-      ds.select(b.offset,b.chunksize,{}).write(b.dat);
-      data_queue.pop_back();
+    if(!is_empty){
+      if(offset_snp+data_buff.size()> max_offset_snp){
+	Rcpp::Rcerr<<"Sample  offset+chunksize: "+std::to_string(offset_sample)+",1,"<<max_offset_sample<<std::endl;
+	Rcpp::stop("cannot perform write, SNP offset,chunksize,max: "+std::to_string(offset_snp)+","+std::to_string(data_buff.size())+","+std::to_string(max_offset_snp));
+      }
+      if(offset_sample+1>max_offset_sample){
+	Rcpp::stop("cannot perform write, Sample  offset+chunksize: "+std::to_string(offset_sample)+",1");
+      }
+      std::vector<size_t> off= {offset_snp,offset_sample};
+      std::vector<size_t> csize= {data_buff.size(),1};
+      if(!SNPfirst){
+	std::reverse(off.begin(),off.end());
+	std::reverse(csize.begin(),csize.end());
+      }
+      ds.select(off,csize,{}).write(data_buff);
+      data_buff.clear();
+      is_empty=true;
     }
   }
   ~buffered_writer() {
-    while(!data_queue.empty()){
-      write_data();
-    }
+    write_data();
   }
-
 };
 
 template<typename string_type>
@@ -82,204 +108,156 @@ inline bool str_to_value(const string_type& src, int& dest)
     return qi::parse(std::cbegin(src), std::cend(src), qi::int_, dest);
 }
 
-struct data_buff{
+
+class Region_buffer{
+public:
   std::string buffer;
   std::pair<int,int> pos;
-  std::string_view tbuff;
+  const size_t max_size;
+  Region_buffer(const size_t ms):max_size(ms),pos{0,0}{
+    buffer.reserve(max_size);
+  };
+  const size_t size()const{
+    return(buffer.size());
+  }
+  void empty(){
+    pos={0,pos.second};
+    buffer.clear();
+  }
+  void reset(){
+    pos={0,0};
+    buffer.clear();
+  }
 };
 
 
-class mach_file{
+class Mach_file{
   boost::iostreams::filtering_istream &fs;
-  const std::vector<std::string> &sample_names;
+  mutable std::unordered_map<std::string,size_t> sample_names;
   const size_t num_rows;
   const std::vector<int> &snp_indices;
   const size_t snp_ind_size;
   const size_t p;
-  const size_t max_buffer_size;
-  const bool SNPfirst;
+
   buffered_writer<double> & bw;
-  //  const std::vector<size_t> line_sizes;
   Progress prog_bar;
-  std::string region_buffer;
-  std::string current_sample;
+  //  Region_buffer region_buffer;
+  // std::string region_buffer;
   //  size_t line_pos; //line cursor (should always be inside the buffer)
   size_t snp_idx; //Which snp index am I on?
   size_t line_no; // Which sample am I on?
-  std::pair<int,int> buffer_pos; //Which byte in the buffer am I on (start and one past end)?
-  size_t sample_offset;
-  std::string	sample_id;
-  std::vector<double> data;
+  //  std::pair<int,int> buffer_pos; //Which byte in the buffer am I on (start and one past end)?
+
 public:
-  mach_file(boost::iostreams::filtering_istream	&fs_,
+  Mach_file(boost::iostreams::filtering_istream	&fs_,
 	    const std::vector<std::string> &sample_names_,
 	    const std::vector<int> &snp_indices_, const size_t p_,
-	    const size_t buffer_size_,buffered_writer<double> & bw_,const bool SNPfirst_=true,const bool progress=true):
+	    buffered_writer<double> & bw_,const bool progress=true):
     fs(fs_),
-    sample_names(sample_names_),
-    num_rows(sample_names.size()),
+    num_rows(sample_names_.size()),
     snp_indices(snp_indices_),
     snp_ind_size(snp_indices.size() ),
     p(p_),
-    max_buffer_size(buffer_size_),
     bw(bw_),
-    SNPfirst(SNPfirst_),
     prog_bar(num_rows,progress)
   {
+    for(size_t i=0; i<num_rows; i++){
+      sample_names.insert({sample_names_[i],i});
+    }
     line_no=0;
-    region_buffer.reserve(max_buffer_size);
-    data.reserve(max_buffer_size/6);
-    buffer_pos={0,0};
-    snp_idx=0;
-    get_current_sample();
-    //    size_t empty_rsize=name_sizes[0]+6;
+
   }
 private:
   size_t snp_line_pos(const size_t idx) const{
     const size_t cur_snp=snp_indices[idx];
-    //    const size_t empty_rsize=name_sizes[line_no]+6;
     return(cur_snp*6);
   }
-  bool scan_until_snp(){
-    const size_t cur_snp_pos = snp_line_pos(snp_idx);
-    if(cur_snp_pos>=buffer_pos.second){
-      fs.ignore(cur_snp_pos-buffer_pos.second);
-      buffer_pos.second=cur_snp_pos;
-      buffer_pos.first=cur_snp_pos;
-      return(true);
+
+
+
+  std::optional<size_t> get_current_sample(const std::string &t_sample_id)const{
+    auto ret = sample_names.find(t_sample_id);
+    //std::find(sample_names.begin(),sample_names.end(),t_sample_id);
+    if(ret == sample_names.end()){
+      return(std::nullopt);
     }else{
-      size_t buff_ahead=cur_snp_pos-buffer_pos.first;
-      region_buffer.substr(buff_ahead,buffer_pos.second-cur_snp_pos);
-      return(false);
+      size_t offset = ret->second;
+      sample_names.erase(ret);
+      return(offset);
     }
   }
 
-  void extend_buffer(){
-    const size_t cur_snp_pos = snp_line_pos(snp_idx);
-    size_t prel_snp=snp_idx;
-    size_t prel_pos=snp_line_pos(prel_snp)+6;
-    while((prel_snp+1)<snp_ind_size){
-      if(((snp_line_pos(prel_snp+1)-cur_snp_pos)<(max_buffer_size))){
-	prel_snp++;
-	prel_pos=snp_line_pos(prel_snp)+6;
-      }else{
-	break;
-      }
-    }
-    region_buffer.resize(prel_pos-cur_snp_pos);
-    fs.read(region_buffer.data(),prel_pos-cur_snp_pos);
-    buffer_pos.second=prel_pos;
-  }
+  void parse_buffer(const size_t sample_offset, const Region_buffer &region_buffer){
+    //stuff the buffered SNPs into the data vector until:
+    //  the buffer is empty
+    std::string_view tbuff(region_buffer.buffer);
+    //first snp in the buffer is always cur_snp,
+    //last snp in the buffer is in snp_indices
+    double tres;
 
-  bool get_current_sample(){
-    std::getline(fs,sample_id,'\t');
-    if(fs.eof()){
-      return(false);
-    }else{
-      auto ret = std::find(sample_names.begin(),sample_names.end(),sample_id);
-      if(ret == sample_names.end()){
-	Rcpp::stop("sample_id: "+sample_id+" not found!");
-      }else{
-	//	Rcpp::Rcerr<<"sample_id: "<<sample_id<<" found on line"<<line_no<<std::endl;
-	sample_offset=ret-sample_names.begin();
+    for(int i=0; i<snp_indices.size();i++)
+      {
+	auto tb = tbuff.substr(snp_line_pos(i),6);
+	str_to_value(tb,tres);
+	bw.push_data(tres,i,sample_offset);
       }
+
+  }
+  std::optional<size_t> read_good_line(Region_buffer &region_buffer){
+    if(!fs.eof()){
+      std::string sample_id;
+      std::getline(fs,sample_id,'\t');
+      if(fs.eof()){
+	return(std::nullopt);
+      }
+      // read and check that we're at "DOSE"
       std::string tst;
       std::getline(fs,tst,'\t');
-      // fs.read(region_buffer.data(),5);
       if(tst != "DOSE"){
 	Rcpp::stop("Not at the beginning of line_no:"+std::to_string(line_no)+":\n"+tst+"\nExpecting:\nDOSE");
       }
+      auto ret = get_current_sample(sample_id);
+      while(!ret.has_value()){
+	fs.ignore(6*p);
+	if(fs.eof()){
+	  return(ret);
+	}
+	std::getline(fs,sample_id,'\t');
+	std::getline(fs,tst,'\t');
+	if(tst != "DOSE"){
+	  Rcpp::stop("Not at the beginning of line_no:"+std::to_string(line_no)+":\n"+tst+"\nExpecting:\nDOSE");
+	}
+	ret = get_current_sample(sample_id);
+      }
+      std::getline(fs,region_buffer.buffer,'\n');
+      region_buffer.pos={0,6*p};
+      return(ret);
+    }else{
+      return(std::nullopt);
     }
-    return(true);
   }
-  bool advance_line(){
-    const size_t line_remaining=p*6-buffer_pos.second;
-    fs.ignore(line_remaining);
-    line_no++;
-    //    region_buffer.resize(name_sizes[line_no]+6);
-    if(get_current_sample()){
-      buffer_pos={0,0};
-      region_buffer.clear();
-      prog_bar.increment();
+
+
+    //now read all the SNPs;
+
+
+
+public:
+
+
+  void process_file(const size_t max_buffer_size,const bool progress=true){
+    //allocate buffer
+    Region_buffer region_buffer(max_buffer_size);
+    
+    std::string sample_id;
+    while(std::optional<size_t> samp_offset_o = read_good_line(region_buffer)){
+      parse_buffer(samp_offset_o.value(),region_buffer);
+      region_buffer.empty();
       if (Progress::check_abort() ){
 	Rcpp::stop("Process Interrupted!");
       }
-      snp_idx=0;
-      return(true);
-    }else{
-      return(false);
+      prog_bar.increment();
     }
-  }
-  bool parse_chunk(){
-    //stuff the buffered SNPs into the data vector until:
-    //1. the data vector is  full (return true)
-    //2. the buffer is empty (return false)
-    // If 1. We'll "artificially" advance the buffer to	the next SNP
-    std::string_view tbuff(region_buffer);
-    size_t buffer_size=buffer_pos.second-buffer_pos.first;
-    size_t n_buffer_snps=buffer_size/6;
-    size_t cur_snp_pos =snp_line_pos(snp_idx);
-    size_t cur_snp=snp_indices[snp_idx];
-    size_t buffer_snp=cur_snp;
-    size_t start_snp=cur_snp;
-    //first snp in the buffer is always cur_snp,
-    //last snp in the buffer is in snp_indices
-
-    double tres;
-
-    for(int i=0; i<n_buffer_snps;i++){
-      buffer_snp=start_snp+i;
-      if(buffer_snp == cur_snp){
-	str_to_value(tbuff,tres);
-	data.push_back(tres);
-	buffer_size-=6;
-	buffer_pos.first+=6;
-	tbuff=tbuff.substr(6,buffer_size);
-	if((snp_idx==(snp_ind_size-1)) || (data.capacity()==data.size())){
-	  write_buffer();
-	  if(snp_idx==(snp_ind_size-1)){
-	    if((line_no+1)<num_rows){
-	      return(advance_line());
-	    }else{
-	      return(false);
-	    }
-	  }
-	}
-	snp_idx++;
-	cur_snp=snp_indices[snp_idx];
-      }else{
-	buffer_size-=6;
-	buffer_pos.first+=6;
-	tbuff=tbuff.substr(6,buffer_size);
-      }
-    }
-    region_buffer=tbuff;
-    return(true);
-  }
-  //  size_t sample_offset(const std::string &sample_id){
-  void write_buffer(){
-    const size_t data_size=data.size();
-    const size_t data_start=(snp_idx>data_size) ? snp_idx-(data_size)+1 : (data_size-snp_idx-1);
-    //    prog_bar.increment(data_size);
-    // Rcpp::Rcerr<<"Writing sample_id: "<<sample_id<<" with data_offset: "<<data_start<<" sample_offset"<<sample_offset<<std::endl;
-    // Rcpp::NumericVector	tdat = Rcpp::wrap(data);
-    // Rcpp::Rcerr<<"sample_data: "<<tdat<<std::endl;
-    if(SNPfirst){
-      bw.push_buffer(data_slice<double>(data,{data_start,sample_offset},{data_size,1}));
-    }else{
-      bw.push_buffer(data_slice<double>(data,{sample_offset,data_start},{1,data_size}));
-    }
-    data.clear();
-    //    data_start+=datasize;
-  }
-public:
-  void process_file(const bool progress=true){
-    do{
-      if(scan_until_snp()){
-	extend_buffer();
-      }
-    }while(parse_chunk());
-
   }
 };
 
@@ -290,11 +268,11 @@ void mach2h5(const std::string dosagefile, const std::string h5file, const std::
   const size_t num_snps=snp_idx.size();
   size_t mp=p;
   // const bool SNPfirst =	get_list_scalar<bool>(options,"SNPfirst").value_or(true);
-  const int buffer_size= get_list_scalar<int>(options,"buffer_size").value_or(10000);
+  const size_t buffer_size= static_cast<size_t>(get_list_scalar<int>(options,"buffer_size").value_or(p*6));
   const bool prog= get_list_scalar<bool>(options,"progress").value_or(false);
 
 
-  const int buffer_vec= static_cast<size_t>(get_list_scalar<int>(options,"buffer_vec").value_or(1));
+  const int buffer_vec= static_cast<size_t>(get_list_scalar<int>(options,"buffer_vec").value_or(buffer_size/6));
 
 
   const bool SNPfirst =   [h5file,datapath,num_snps,num_elem](){
@@ -333,10 +311,9 @@ void mach2h5(const std::string dosagefile, const std::string h5file, const std::
   boost::iostreams::filtering_istream fs;
   fs.push(boost::iostreams::gzip_decompressor{});
   fs.push(textstream);
-  const size_t tbf=buffer_size;
-  buffered_writer<double> bw(h5file,datapath,buffer_vec);
-  mach_file mf(fs,names,snp_idx,mp,tbf,bw,SNPfirst,prog);
-  mf.process_file(prog);
+  buffered_writer<double> bw(h5file,datapath,buffer_vec,SNPfirst,num_snps,num_elem);
+  Mach_file mf(fs,names,snp_idx,mp,bw,prog);
+  mf.process_file(buffer_size,prog);
 }
 
 

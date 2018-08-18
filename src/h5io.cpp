@@ -18,47 +18,12 @@ void start_blosc(){
   env["..blosc"]=bv;
   auto rr = register_lzf();
   bv[0]=rr==1;
-  env["..lzf"]=bv;
+   env["..lzf"]=bv;
   auto nr = register_zstd();
   bv[0]=nr==1;
   env["..zstd"]=bv;
 
 }
-
-// void start_singleton(){
-//   Rcpp::Environment env = Rcpp::Environment::global_env();
-//   Rcpp::XPtr<FileManager> ptr( new FileManager(Rcpp), true );
-//   Rcpp::XPtr<FileManager> ptr( new FileManager(), true );
-//   env["..h5_r"] =	ptr;
-//   env["..h5_w"] =	ptr;
-// }
-//   // env["..blosc"]=bv;
-//   // auto rr = register_lzf();
-//   // bv[0]=rr==1;
-//   // env["..lzf"]=bv;
-//}
-
-
-// Rcpp::XPtr<FileManager> get_singleton(){
-//   Rcpp::Environment env = Rcpp::Environment::global_env();
-//   if(env.exists("..h5")){
-//     return(Rcpp::as<Rcpp::XPtr<FileManager>> (env["..h5"]));
-//   }else{
-//     Rcpp::XPtr<FileManager> ptr( new FileManager(), true );
-//     env["..h5"] =	ptr;
-//     return(ptr);
-//   }
-// }
-
-
-// void print_filemanager(const Rcpp::XPtr<FileManager> fm){
-//   fm->print();
-// }
-
-
-
-
-
 
 
 

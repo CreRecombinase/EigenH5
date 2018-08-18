@@ -11,6 +11,13 @@
 
 namespace HighFive {
 
+
+inline  const hid_t Filter::gzip = 1;
+inline  const hid_t Filter::blosc = 32001;
+inline  const hid_t Filter::lzf4 = 32000;
+inline  const hid_t Filter::zstd = 32015;
+inline  const hid_t Filter::no_filter = 0;
+
   inline Filter::Filter() {
     _hid = H5Pcreate(H5P_DATASET_CREATE);
   }
@@ -48,7 +55,7 @@ namespace HighFive {
       rr =H5Pset_deflate(_hid,comp_opt);
       break;
     }
-    case lzf:{
+    case lzf4:{
       rr = H5Pset_shuffle(_hid);
       rr = H5Pset_filter(_hid, filter_id, H5Z_FLAG_OPTIONAL, 0, NULL);
       break;

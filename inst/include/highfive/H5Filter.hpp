@@ -11,8 +11,6 @@
 
 #include <Eigen/Core>
 
-
-
 namespace HighFive {
 
 ///
@@ -20,11 +18,11 @@ namespace HighFive {
 ///
     class Filter {
     public:
-      static const hid_t gzip = 1;
-      static const hid_t blosc = 32001;
-      static const hid_t lzf = 32000;
-      static const hid_t zstd = 32015;
-      static const hid_t no_filter = 0;
+      static const hid_t gzip;// = 1;
+      static const hid_t blosc;// = 32001;
+      static const hid_t lzf4;// = 32000;
+      static const hid_t zstd;// = 32015;
+      static const hid_t no_filter;// = 0;
       static const size_t CHUNK_BASE = 16*1024;
       static const size_t CHUNK_MIN = 8*1024;
       static const size_t CHUNK_MAX = 1024*1024;

@@ -581,7 +581,7 @@ HighFive::Filter create_filter(std::vector<size_t> data_dimensions,
 					     {"none", Filter::no_filter},
 					     {"gzip", Filter::gzip},
 					     {"deflate", Filter::gzip},
-					     {"lzf", Filter::lzf},
+					     {"lzf", Filter::lzf4},
 					     {"zstd",Filter::zstd}};
   hid_t	filt = Filter::zstd;
   if (auto tfilt = get_list_scalar<std::string>(options,"filter")){
