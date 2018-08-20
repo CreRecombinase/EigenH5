@@ -466,7 +466,7 @@ SEXP read_matrix(std::string filename,
 //[[Rcpp::export]]
 bool update_matrix(RObject data,
                    const std::string filename,
-                   const std::string datapath,
+                   std::string datapath,
                    const Rcpp::List &options){
   using namespace Rcpp;
   namespace fs = stdx::filesystem;
