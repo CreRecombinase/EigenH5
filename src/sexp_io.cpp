@@ -471,6 +471,9 @@ bool update_matrix(RObject data,
   using namespace Rcpp;
   namespace fs = stdx::filesystem;
   fs::path dp=datapath;
+  if(datapath[0]!='/'){
+    datapath="/"+datapath;
+  }
   bool write_success=false;
   HighFive::File file(filename,HighFive::File::ReadWrite);
   if(auto dset = file.openDataSet(datapath)){
