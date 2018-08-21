@@ -357,12 +357,14 @@ inline std::vector<std::string> NodeTraits<Derivate>::listObjectNames() const {
 template <typename Derivate>
 inline bool NodeTraits<Derivate>::exist(fs::path p) const {
 
+  const fs::path dotp(".");
+  const fs::path rootp("/");
   if(p.has_root_path()){
     if(p == p.root_path()){
       return(true);
     }
   }
-  if(p=="."){
+  if(p==dotp){
     return(true);
   }
   if(p.empty()){
@@ -373,9 +375,9 @@ inline bool NodeTraits<Derivate>::exist(fs::path p) const {
   auto ip = p.begin();
   fs::path tp;
   do{
-    if(*ip!="."){
+    if(*ip!=dotp){
       tp/=*ip;
-      if(tp!="/"){
+      if(tp!=rootp){
 	htri_t val = H5Lexists(ttid,tp.c_str(), H5P_DEFAULT);
 	if(val<0){
 	  HDF5ErrMapper::ToException<GroupException>(std::string("Invalid path while checking for existence of "+p.string()));
