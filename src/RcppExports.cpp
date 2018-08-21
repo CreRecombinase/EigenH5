@@ -291,13 +291,13 @@ RcppExport SEXP _EigenH5_read_matrix(SEXP filenameSEXP, SEXP datapathSEXP, SEXP 
     return rcpp_result_gen;
 }
 // update_matrix
-bool update_matrix(RObject data, const std::string filename, const std::string datapath, const Rcpp::List& options);
+bool update_matrix(RObject data, const std::string filename, std::string datapath, const Rcpp::List& options);
 static SEXP _EigenH5_update_matrix_try(SEXP dataSEXP, SEXP filenameSEXP, SEXP datapathSEXP, SEXP optionsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::traits::input_parameter< RObject >::type data(dataSEXP);
     Rcpp::traits::input_parameter< const std::string >::type filename(filenameSEXP);
-    Rcpp::traits::input_parameter< const std::string >::type datapath(datapathSEXP);
+    Rcpp::traits::input_parameter< std::string >::type datapath(datapathSEXP);
     Rcpp::traits::input_parameter< const Rcpp::List& >::type options(optionsSEXP);
     rcpp_result_gen = Rcpp::wrap(update_matrix(data, filename, datapath, options));
     return rcpp_result_gen;
@@ -1020,7 +1020,7 @@ static int _EigenH5_RcppExport_validate(const char* sig) {
         signatures.insert("Rcpp::List(*permutation_order)(const Rcpp::List,Rcpp::IntegerVector)");
         signatures.insert("SEXP(*read_vector)(std::string,std::string,Rcpp::List)");
         signatures.insert("SEXP(*read_matrix)(std::string,std::string,const Rcpp::List)");
-        signatures.insert("bool(*update_matrix)(RObject,const std::string,const std::string,const Rcpp::List&)");
+        signatures.insert("bool(*update_matrix)(RObject,const std::string,std::string,const Rcpp::List&)");
         signatures.insert("bool(*update_vector)(RObject,std::string,std::string,Rcpp::List)");
         signatures.insert("bool(*write_attribute_h5)(const std::string&,std::string,const RObject&)");
         signatures.insert("SEXP(*read_attribute_h5)(const std::string&,std::string)");

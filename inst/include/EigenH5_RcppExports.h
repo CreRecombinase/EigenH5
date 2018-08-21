@@ -191,11 +191,11 @@ namespace EigenH5 {
         return Rcpp::as<SEXP >(rcpp_result_gen);
     }
 
-    inline bool update_matrix(RObject data, const std::string filename, const std::string datapath, const Rcpp::List& options) {
+    inline bool update_matrix(RObject data, const std::string filename, std::string datapath, const Rcpp::List& options) {
         typedef SEXP(*Ptr_update_matrix)(SEXP,SEXP,SEXP,SEXP);
         static Ptr_update_matrix p_update_matrix = NULL;
         if (p_update_matrix == NULL) {
-            validateSignature("bool(*update_matrix)(RObject,const std::string,const std::string,const Rcpp::List&)");
+            validateSignature("bool(*update_matrix)(RObject,const std::string,std::string,const Rcpp::List&)");
             p_update_matrix = (Ptr_update_matrix)R_GetCCallable("EigenH5", "_EigenH5_update_matrix");
         }
         RObject rcpp_result_gen;

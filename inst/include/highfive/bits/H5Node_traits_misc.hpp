@@ -160,10 +160,13 @@ inline Group NodeTraits<Derivate>::createGroup(const fs::path& group_name) {
     HDF5ErrMapper::ToException<GroupException>(std::string("Cannot create empty group"));
   }
   auto ip = group_name.begin();
-  Group group =	this->getGroup((*ip=="/") ? "/" : ".");
+  const fs::path dotp(".");
+  const fs::path rootp("/");
+  Group group =	this->getGroup((*ip==rootp) ? rootp : dotp);
   fs::path tp;
+
   do{
-    if((*ip != ".") && (*ip != "/")){
+    if((*ip != dotp) && (*ip != rootp)){
       tp = *ip;
       if(!group.exist(tp)){
 	group = grpCreate(group.getId(),tp.c_str());

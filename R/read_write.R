@@ -1,4 +1,18 @@
 
+
+# 
+# read_df <- function(filename,datapath,...){
+#   if(tools::file_ext(filename)==".h5"){
+#     return(read_df_h5(filename,datapath,...))
+#   }else{
+#     if(tolower(tools::file_ext(filename))=="rds"){
+#       return(readRDS(filename))
+#     }else{
+#       return(read_delim(file=filename,...))
+#     }
+#   }
+# }
+
 read_df_h5 <- function(filename,datapath,...){
   stopifnot(file.exists(filename))
   dsets <- ls_h5(filename,groupname = datapath)
