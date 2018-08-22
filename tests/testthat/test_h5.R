@@ -13,8 +13,8 @@ test_that("Can append a dataframe",{
   
 })
 
-library(EigenH5)
-library(testthat)
+# library(EigenH5)
+# library(testthat)
 test_that("Can read mach dosage files (in random order)",{
 # 
 # library(tidyverse)
@@ -226,7 +226,17 @@ test_that("can create nested groups",{
   tvec <- matrix(runif(9*3),9,3)
   tempf <- tempfile()
   write_matrix_h5(filename = tempf,datapath = "testg/tg2/test",data =tvec)
+  write_matrix_h5(filename=tempf,datapath="testg/tg3/test",data=tvec)
   rvec <- read_matrix_h5(tempf,"testg/tg2/test")
   expect_equal(tvec,rvec)
+})
+
+test_that("can create nested vector groups",{
+  tvec <- matrix(runif(9*3),9,3)
+  tempf <- tempfile()
+  write_vector_h5(filename = tempf,datapath = "testg/tg2/test",data =c(tvec))
+  write_vector_h5(filename=tempf,datapath="testg/tg3/test",data=c(tvec))
+  rvec <- read_vector_h5(tempf,"testg/tg2/test")
+  expect_equal(c(tvec),rvec)
 })
 

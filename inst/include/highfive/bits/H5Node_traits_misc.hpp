@@ -247,13 +247,15 @@ inline size_t NodeTraits<Derivate>::getNumberObjects() const{
 
   template<typename Derivate>
   inline std::variant<DataSet,Group> NodeTraits<Derivate>::getObject(const fs::path & object_name) const{
-    if(object_name=="."){
+    const fs::path dotp(".");
+    const fs::path rootp("/");
+    if(object_name==dotp){
       return(getObj(static_cast<const Derivate*>(this)->getId(),object_name.c_str()));
     }
 
     std::string pp = object_name.has_parent_path() ? object_name.parent_path() : ".";
     Group tg = this->getGroup(pp);
-    if(object_name.filename()=="."){
+    if(object_name.filename()==dotp){
       return(tg);
     }else{
       return(getObj(tg.getId(),object_name.filename().c_str()));
