@@ -13,42 +13,8 @@ void create_file_h5(const std::string filename){
   HighFive::File file(filename,HighFive::File::Create);
 }
 
-//[[Rcpp::export]]
-Rcpp::StringVector par_path(const std::string filename){
-  std::filesystem::path pt(filename);
-  
-  return(Rcpp::wrap(pt.parent_path().string()));
-}
-
-//[[Rcpp::export]]
-Rcpp::StringVector par_iter_path(const std::string filename){
-  std::filesystem::path pt(filename);
-  std::vector<std::string> retvec;
-  for(auto it = pt.begin(); it!=pt.end();it++){
-    retvec.push_back(it->string());
-  }
-  return(Rcpp::wrap(retvec));
-}
-
-//[[Rcpp::export]]
-Rcpp::StringVector exp_par_iter_path(const std::string filename){
-  std::experimental::filesystem::path pt(filename);
-  std::vector<std::string> retvec;
-  for(auto it = pt.begin(); it!=pt.end();it++){
-    retvec.push_back(it->string());
-  }
-  return(Rcpp::wrap(retvec));
-}
-
-  
 
 
-//[[Rcpp::export]]
-Rcpp::StringVector exp_par_path(const std::string filename){
-  std::experimental::filesystem::path pt(filename);
-  
-  return(Rcpp::wrap(pt.parent_path().string()));
-}
 
 //[[Rcpp::export]]
 Rcpp::IntegerVector dataset_chunks(const std::string filename,
