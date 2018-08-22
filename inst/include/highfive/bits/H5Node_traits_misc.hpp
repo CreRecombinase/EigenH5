@@ -366,19 +366,22 @@ inline bool NodeTraits<Derivate>::exist(fs::path p) const {
       return(true);
     }
   }
+
   if(p==dotp){
     return(true);
   }
+
   if(p.empty()){
     HDF5ErrMapper::ToException<GroupException>(std::string("Cannot check for existence of an empty path"));
   }
+
   const auto ttid=static_cast<const Derivate*>(this)->getId();
 
-  auto ip = p.begin();
   fs::path tp;
-  do{
-    if(*ip!=dotp){
-      tp/=*ip;
+
+  for(auto &ip:p){
+    if(ip!=dotp){
+      tp/=ip;
       if(tp!=rootp){
 	htri_t val = H5Lexists(ttid,tp.c_str(), H5P_DEFAULT);
 	if(val<0){
@@ -388,8 +391,7 @@ inline bool NodeTraits<Derivate>::exist(fs::path p) const {
 	}
       }
     }
-    ip++;
-  }while(ip!=p.end());
+  }
 
   return(true);
 }

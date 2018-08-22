@@ -61,6 +61,22 @@ create_file_h5 <- function(filename) {
     invisible(.Call(`_EigenH5_create_file_h5`, filename))
 }
 
+par_path <- function(filename) {
+    .Call(`_EigenH5_par_path`, filename)
+}
+
+par_iter_path <- function(filename) {
+    .Call(`_EigenH5_par_iter_path`, filename)
+}
+
+exp_par_iter_path <- function(filename) {
+    .Call(`_EigenH5_exp_par_iter_path`, filename)
+}
+
+exp_par_path <- function(filename) {
+    .Call(`_EigenH5_exp_par_path`, filename)
+}
+
 dataset_chunks <- function(filename, datapath) {
     .Call(`_EigenH5_dataset_chunks`, filename, datapath)
 }

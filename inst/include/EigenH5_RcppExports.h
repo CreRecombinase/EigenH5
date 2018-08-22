@@ -316,6 +316,90 @@ namespace EigenH5 {
             throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
     }
 
+    inline Rcpp::StringVector par_path(const std::string filename) {
+        typedef SEXP(*Ptr_par_path)(SEXP);
+        static Ptr_par_path p_par_path = NULL;
+        if (p_par_path == NULL) {
+            validateSignature("Rcpp::StringVector(*par_path)(const std::string)");
+            p_par_path = (Ptr_par_path)R_GetCCallable("EigenH5", "_EigenH5_par_path");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_par_path(Shield<SEXP>(Rcpp::wrap(filename)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::StringVector >(rcpp_result_gen);
+    }
+
+    inline Rcpp::StringVector par_iter_path(const std::string filename) {
+        typedef SEXP(*Ptr_par_iter_path)(SEXP);
+        static Ptr_par_iter_path p_par_iter_path = NULL;
+        if (p_par_iter_path == NULL) {
+            validateSignature("Rcpp::StringVector(*par_iter_path)(const std::string)");
+            p_par_iter_path = (Ptr_par_iter_path)R_GetCCallable("EigenH5", "_EigenH5_par_iter_path");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_par_iter_path(Shield<SEXP>(Rcpp::wrap(filename)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::StringVector >(rcpp_result_gen);
+    }
+
+    inline Rcpp::StringVector exp_par_iter_path(const std::string filename) {
+        typedef SEXP(*Ptr_exp_par_iter_path)(SEXP);
+        static Ptr_exp_par_iter_path p_exp_par_iter_path = NULL;
+        if (p_exp_par_iter_path == NULL) {
+            validateSignature("Rcpp::StringVector(*exp_par_iter_path)(const std::string)");
+            p_exp_par_iter_path = (Ptr_exp_par_iter_path)R_GetCCallable("EigenH5", "_EigenH5_exp_par_iter_path");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_exp_par_iter_path(Shield<SEXP>(Rcpp::wrap(filename)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::StringVector >(rcpp_result_gen);
+    }
+
+    inline Rcpp::StringVector exp_par_path(const std::string filename) {
+        typedef SEXP(*Ptr_exp_par_path)(SEXP);
+        static Ptr_exp_par_path p_exp_par_path = NULL;
+        if (p_exp_par_path == NULL) {
+            validateSignature("Rcpp::StringVector(*exp_par_path)(const std::string)");
+            p_exp_par_path = (Ptr_exp_par_path)R_GetCCallable("EigenH5", "_EigenH5_exp_par_path");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_exp_par_path(Shield<SEXP>(Rcpp::wrap(filename)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::StringVector >(rcpp_result_gen);
+    }
+
     inline Rcpp::IntegerVector dataset_chunks(const std::string filename, const std::string datapath) {
         typedef SEXP(*Ptr_dataset_chunks)(SEXP,SEXP);
         static Ptr_dataset_chunks p_dataset_chunks = NULL;
