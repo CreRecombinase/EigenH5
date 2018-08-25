@@ -95,11 +95,11 @@ if test -z "${BLOSC_LIBS}"; then
    ])
 fi	
 
-if test -z "${ZSTD_LIBS}"; then
-AC_SEARCH_LIBS([ZSTD_compress], [zstd], [], [
-  AC_MSG_ERROR([unable to find the ZSTD_compress() function])
-])
-fi
+dnl if test -z "${ZSTD_LIBS}"; then
+dnl AC_SEARCH_LIBS([ZSTD_compress], [zstd], [], [
+dnl   AC_MSG_ERROR([unable to find the ZSTD_compress() function])
+dnl ])
+dnl fi
 
 dnl AC_SEARCH_LIBS([std::filesystem::path::path],[std++fs],[],[
 dnl   AC_MSG_ERROR([unable to find the c++ filesystem library])
