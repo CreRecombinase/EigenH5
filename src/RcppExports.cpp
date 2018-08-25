@@ -472,17 +472,6 @@ RcppExport SEXP _EigenH5_create_dataset_h5(SEXP filenameSEXP, SEXP datapathSEXP,
     UNPROTECT(1);
     return rcpp_result_gen;
 }
-// split_ldd
-Rcpp::IntegerMatrix split_ldd(const std::vector<int>& region_ids);
-RcppExport SEXP _EigenH5_split_ldd(SEXP region_idsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::vector<int>& >::type region_ids(region_idsSEXP);
-    rcpp_result_gen = Rcpp::wrap(split_ldd(region_ids));
-    return rcpp_result_gen;
-END_RCPP
-}
 // create_file_h5
 void create_file_h5(const std::string filename);
 static SEXP _EigenH5_create_file_h5_try(SEXP filenameSEXP) {
@@ -1078,10 +1067,6 @@ RcppExport SEXP _EigenH5_RcppExport_registerCCallable() {
     return R_NilValue;
 }
 
-RcppExport SEXP _EigenH5_exp_par_iter_path(SEXP);
-RcppExport SEXP _EigenH5_exp_par_path(SEXP);
-RcppExport SEXP _EigenH5_par_iter_path(SEXP);
-RcppExport SEXP _EigenH5_par_path(SEXP);
 RcppExport SEXP run_testthat_tests();
 
 static const R_CallMethodDef CallEntries[] = {
@@ -1098,7 +1083,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_EigenH5_write_attribute_h5", (DL_FUNC) &_EigenH5_write_attribute_h5, 3},
     {"_EigenH5_read_attribute_h5", (DL_FUNC) &_EigenH5_read_attribute_h5, 2},
     {"_EigenH5_create_dataset_h5", (DL_FUNC) &_EigenH5_create_dataset_h5, 4},
-    {"_EigenH5_split_ldd", (DL_FUNC) &_EigenH5_split_ldd, 1},
     {"_EigenH5_create_file_h5", (DL_FUNC) &_EigenH5_create_file_h5, 1},
     {"_EigenH5_dataset_chunks", (DL_FUNC) &_EigenH5_dataset_chunks, 2},
     {"_EigenH5_extend_dataset", (DL_FUNC) &_EigenH5_extend_dataset, 3},
@@ -1115,10 +1099,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_EigenH5_dim_h5", (DL_FUNC) &_EigenH5_dim_h5, 2},
     {"_EigenH5_concat_mats", (DL_FUNC) &_EigenH5_concat_mats, 4},
     {"_EigenH5_RcppExport_registerCCallable", (DL_FUNC) &_EigenH5_RcppExport_registerCCallable, 0},
-    {"_EigenH5_exp_par_iter_path",            (DL_FUNC) &_EigenH5_exp_par_iter_path,            1},
-    {"_EigenH5_exp_par_path",                 (DL_FUNC) &_EigenH5_exp_par_path,                 1},
-    {"_EigenH5_par_iter_path",                (DL_FUNC) &_EigenH5_par_iter_path,                1},
-    {"_EigenH5_par_path",                     (DL_FUNC) &_EigenH5_par_path,                     1},
     {"run_testthat_tests",                    (DL_FUNC) &run_testthat_tests,                    0},
     {NULL, NULL, 0}
 };

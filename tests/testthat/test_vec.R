@@ -12,7 +12,7 @@ test_that("I can overwrite a vector", {
   expect_equal(read_vector_h5(tf,"test"),ntv)
 })
 
-test_that("I can append a vector",{
+test_that("I can append a vector", {
   tf <- tempfile()
   tv <- runif(3)
   write_vector_h5(tf,"test",tv,max_dims=c(NA_integer_))
@@ -24,7 +24,21 @@ test_that("I can append a vector",{
 
 
 
-test_that("can write string vector",{
+test_that("can write and read long strings", {
+
+    tvec  <- paste0(sample(letters,255,replace=T),collapse="")
+    tempf <- tempfile()
+    write_vector_h5(tvec,tempf,"testw")
+    expect_equal(read_vector_h5(tempf,"testw"),tvec)
+
+    tvec  <- paste0(sample(letters,555,replace=T),collapse="")
+    tempf <- tempfile()
+    write_vector_h5(tvec,tempf,"testw")
+    expect_equal(read_vector_h5(tempf,"testw"),tvec)
+
+})
+
+test_that("can write string vector", {
   library(testthat)
   library(EigenH5)
   tvec <- c("allb","allc","alld")

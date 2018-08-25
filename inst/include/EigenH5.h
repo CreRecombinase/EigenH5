@@ -59,6 +59,10 @@ public:
 
 
 
+inline stdx::filesystem::path root_path(const std::string & input){
+  return(stdx::filesystem::path("/") / stdx::filesystem::path(input));
+}
+
 
 template <typename T>
 struct cpp2r{

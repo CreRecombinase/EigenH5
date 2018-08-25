@@ -7,9 +7,9 @@ Author: Nicholas Knoblauch
 Maintainer: Nicholas Knoblauch <nwknoblauch@gmail.com>
 Description: Read and write R objects using blosc+HDF5. Also contains a C++ interface for using with other packages. The C++ interface can handle the reading/writing/converting between column-major matrices (as in R/fortran) and row-major matrices (as in HDF5) 
 License: What license is it under?
-Imports: Rcpp (>= 0.12.12), RcppEigen (>= 0.3.3.3.0),BH,dplyr,progress,tidyr,purrr,magrittr,future
+Imports: Rcpp (>= 0.12.12), RcppEigen (>= 0.3.3.3.0),BH,dplyr,progress,tidyr,purrr,magrittr
 LinkingTo: Rcpp, RcppEigen,BH,RcppProgress,testthat
-SystemRequirements: C++11, HDF5 (>= 1.8.13), c-blosc, zstd
+SystemRequirements: C++11, HDF5 (>= 1.8.13), blosc, zstd
 Suggests: testthat,
     knitr,
     rmarkdown

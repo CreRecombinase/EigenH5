@@ -221,13 +221,14 @@ test_that("can read and write NA",{
 })
 
 
-
+library(EigenH5)
+library(testthat)
 test_that("can create nested groups",{
   tvec <- matrix(runif(9*3),9,3)
   tempf <- tempfile()
-  write_matrix_h5(filename = tempf,datapath = "testg/tg2/test",data =tvec)
-  write_matrix_h5(filename=tempf,datapath="testg/tg3/test",data=tvec)
-  rvec <- read_matrix_h5(tempf,"testg/tg2/test")
+  write_matrix_h5(filename = tempf,datapath = "/testg/tg2/test",data =tvec)
+  write_matrix_h5(filename=tempf,datapath="/testg/tg3/test",data=tvec)
+  rvec <- read_matrix_h5(tempf,"/testg/tg2/test")
   expect_equal(tvec,rvec)
 })
 

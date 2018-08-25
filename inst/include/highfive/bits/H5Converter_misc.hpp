@@ -364,13 +364,6 @@ namespace HighFive {
 
     };
 
-
-
-
-
-
-
-
 #ifdef H5_USE_BOOST
     // apply conversion to boost multi array
     template <typename T, std::size_t Dims>
@@ -587,6 +580,49 @@ namespace HighFive {
       DataSpace &_space;
     };
 
+    template <>
+struct data_converter<std::vector<char*>, void> {
+    inline data_converter(std::vector<char*>& vec, DataSpace& space)
+        : _space(space) {
+        (void)vec;
+    }
+
+    // create a C vector adapted to HDF5
+    // fill last element with NULL to identify end
+    inline char** transform_read(std::vector<char*>& vec) {
+        (void)vec;
+        _c_vec.resize(_space.getDimensions()[0], NULL);
+        return (&_c_vec[0]);
+    }
+
+    // static inline char* char_converter(const std::string& str) {
+    //     return const_cast<char*>(str.c_str());
+    // }
+
+    inline char** transform_write(std::vector<char*>& vec) {
+        // _c_vec.resize(vec.size() + 1, NULL);
+        // std::transform(vec.begin(), vec.end(), _c_vec.begin(), &char_converter);
+        return (vec.data());
+    }
+
+    inline void process_result(std::vector<char*>& vec) {
+        (void)vec;
+        vec.resize(_c_vec.size());
+        for (size_t i = 0; i < vec.size(); ++i) {
+            vec[i] = _c_vec[i];
+        }
+
+        if (_c_vec.empty() == false && _c_vec[0] != NULL) {
+            AtomicType<char*> str_type;
+            (void)H5Dvlen_reclaim(str_type.getId(), _space.getId(), H5P_DEFAULT,
+                                  &(_c_vec[0]));
+        }
+    }
+
+    std::vector<char*> _c_vec;
+    DataSpace& _space;
+    };
+
     // template<>
     // struct data_converter<std::vector<char*>, void> {
     //   inline data_converter(std::vector<char*> &vec, DataSpace &space,const size_t dim=0)
@@ -619,8 +655,7 @@ namespace HighFive {
     // 	     }
     //   }
 
-    //   std::vector<char> _c_vec;
-    //   const size_t dim_;
+    //   std::vector<char*> _c_vec;
     //   DataSpace &_space;
     // };
 

@@ -349,7 +349,7 @@ std::vector<size_t> dataset_dims(std::string filename,
 				 std::string datapath){
 
   namespace fs = stdx::filesystem;
-  fs::path dp=datapath;
+  fs::path dp= root_path(datapath);
   HighFive::File file(filename,HighFive::File::ReadOnly);
   if(auto grp =file.openGroup(dp.parent_path())){
     if(auto dset = grp->openDataSet(dp.filename())){
@@ -368,7 +368,7 @@ SEXP read_vector(std::string filename,
 		 Rcpp::List options){
   using namespace Rcpp;
   namespace fs = stdx::filesystem;
-  fs::path dp=datapath;
+  fs::path dp=root_path(datapath);
 
   HighFive::File file(filename,HighFive::File::ReadOnly);
 
@@ -428,7 +428,8 @@ SEXP read_matrix(std::string filename,
   namespace fs = stdx::filesystem;
 
   HighFive::File file(filename,HighFive::File::ReadOnly);
-  fs::path dp=datapath;
+  fs::path dp= root_path(datapath);
+
   auto dset = file.getDataSet(datapath);
   auto dims = dset.getDataDimensions();
   auto datasel = DatasetSelection<2>::ProcessList(options,dims);
@@ -470,10 +471,10 @@ bool update_matrix(RObject data,
                    const Rcpp::List &options){
   using namespace Rcpp;
   namespace fs = stdx::filesystem;
-  fs::path dp=datapath;
-  if(datapath[0]!='/'){
-    datapath="/"+datapath;
-  }
+  fs::path dp= root_path(datapath);
+  // if(datapath[0]!='/'){
+  //   datapath="/"+datapath;
+  // }
   bool write_success=false;
   HighFive::File file(filename,HighFive::File::ReadWrite);
   if(auto dset = file.openDataSet(datapath)){
@@ -525,6 +526,7 @@ bool update_vector(RObject data,
 
   bool write_success=false;
   HighFive::File file(filename,HighFive::File::ReadWrite);
+
 
   if(datapath[0]!='/'){
     datapath="/"+datapath;
@@ -631,10 +633,10 @@ bool write_attribute_h5(const std::string &filename,
 
   using namespace HighFive;
   namespace fs = stdx::filesystem;
-  if(datapath[0]!='/'){
-    datapath="/"+datapath;
-  }
-  fs::path dp=datapath;
+  // if(datapath[0]!='/'){
+  //   datapath="/"+datapath;
+  // }
+  fs::path dp= root_path(datapath);
   //  bool create_success=false;
   HighFive::File file(filename,HighFive::File::Create | HighFive::File::ReadWrite);
   auto p_obj = file.getObject(dp.parent_path());
@@ -656,10 +658,10 @@ SEXP read_attribute_h5(const std::string &filename,
 		      std::string datapath){
   using namespace HighFive;
   namespace fs = stdx::filesystem;
-  if(datapath[0]!='/'){
-    datapath="/"+datapath;
-  }
-  fs::path dp=datapath;
+  // if(datapath[0]!='/'){
+  //   datapath="/"+datapath;
+  // }
+  fs::path dp= root_path(datapath);
   bool create_success=false;
   HighFive::File file(filename,HighFive::File::Create | HighFive::File::ReadWrite);
   auto p_obj = file.getObject(dp.parent_path());
@@ -684,10 +686,10 @@ bool create_dataset_h5(const std::string &filename,
 		       Rcpp::List options){
    using namespace HighFive;
    namespace fs = stdx::filesystem;
-   if(datapath[0]!='/'){
-     datapath="/"+datapath;
-   }
-   fs::path dp=datapath;
+   // if(datapath[0]!='/'){
+   //   datapath="/"+datapath;
+   // }
+   fs::path dp=root_path(datapath);
    bool create_success=false;
    HighFive::File file(filename,HighFive::File::Create | HighFive::File::ReadWrite);
 

@@ -145,26 +145,26 @@ inline DataSpace DataSpace::From(const std::vector<Value>& container) {
     return DataSpace(details::get_dim_vector<Value>(container));
 }
 
-    template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
-    inline DataSpace
-    DataSpace::From(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> &mat) {
-        auto retv = details::get_dim_vector<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>(mat);
-        return (DataSpace(retv));
-    }
+  template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+  inline DataSpace
+  DataSpace::From(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> &mat) {
+    auto retv = details::get_dim_vector<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>(mat);
+    return (DataSpace(retv));
+  }
 
-    template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
-    inline DataSpace
-    DataSpace::From(const Eigen::Map<const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat) {
-        auto retv = details::get_dim_vector<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>(mat);
-        return (DataSpace(retv));
-    }
+  template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+  inline DataSpace
+  DataSpace::From(const Eigen::Map<const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat) {
+    auto retv = details::get_dim_vector<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>(mat);
+    return (DataSpace(retv));
+  }
 
-    template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
-    inline DataSpace
-    DataSpace::From(const Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat) {
-        auto retv = details::get_dim_vector<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>(mat);
-        return (DataSpace(retv));
-    }
+  template<typename Scalar, int RowsAtCompileTime, int ColsAtCompileTime, int Options>
+  inline DataSpace
+  DataSpace::From(const Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options> > &mat) {
+    auto retv = details::get_dim_vector<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>(mat);
+    return (DataSpace(retv));
+  }
 
 
 

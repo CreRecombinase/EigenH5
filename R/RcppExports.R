@@ -53,10 +53,6 @@ create_dataset_h5 <- function(filename, datapath, data, options) {
     .Call(`_EigenH5_create_dataset_h5`, filename, datapath, data, options)
 }
 
-split_ldd <- function(region_ids) {
-    .Call(`_EigenH5_split_ldd`, region_ids)
-}
-
 create_file_h5 <- function(filename) {
     invisible(.Call(`_EigenH5_create_file_h5`, filename))
 }
