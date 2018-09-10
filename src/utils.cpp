@@ -3,8 +3,38 @@
 //[[Rcpp::plugins(cpp17)]]
 #include <optional>
 #include <array>
+#include <range/v3/algorithm/for_each.hpp>
 
 // [[Rcpp::interfaces(r, cpp)]]
+
+
+
+//[[Rcpp::export]]
+void link_objects_h5(Rcpp::StringVector filename_from ,const std::string filename_to, Rcpp::StringVector datapath_from, Rcpp::StringVector datapath_to){
+
+  auto to_file=HighFive::File(filename_to,HighFive::File::ReadWrite|HighFive::File::Create);
+  namespace fs = stdx::filesystem;
+
+
+  const size_t num_files=datapath_from.size();
+  if(num_files!=filename_from.size()){
+    Rcpp::stop("filename_from must be same length as datapath_from");
+  }
+  if(num_files !=datapath_to.size()){
+    Rcpp::stop("datapath_to must be same length as datapath_from");
+  }
+  for(int i=0 ;i<num_files;i++){
+    const auto dp_to=CHAR(STRING_ELT(datapath_to,i));
+    const auto fn_from=Rcpp::as<std::string>(filename_from[i]);
+    fs::path dp(CHAR(STRING_ELT(datapath_from,i)));
+
+    if(!dp.is_absolute()){
+      Rcpp::stop("datapath_from must be an absolute path(must begin with \'/\' ("+dp.string()+" is not an absolute path)");
+    }
+    H5Lcreate_external(HighFive::File::preprocess_path(fn_from).c_str(), dp.c_str(), to_file.getId(), dp_to, (hid_t)0, (hid_t)0);
+  }
+}
+
 
 
 
@@ -13,6 +43,24 @@ void create_file_h5(const std::string filename){
   HighFive::File file(filename,HighFive::File::Create);
 }
 
+
+
+//[[Rcpp::export]]
+std::string norm_file(const std::string filename){
+  namespace fs = stdx::filesystem;
+  fs::path dp(filename);
+  if((*dp.begin())==fs::path("~")){
+    //fs::path ost(std::next(dp.begin()),dp.end());
+    fs::path ost(std::string_view(std::getenv("HOME")));
+    for(auto it=std::next(dp.begin()); it!=dp.end();it++){
+      ost=ost / (*it);
+    }
+    /// ost;
+    return(fs::canonical(ost).string());
+  }else{
+  return(fs::canonical(dp).string());
+  }
+}
 
 
 
@@ -49,9 +97,6 @@ void extend_dataset_by(const std::string filename,
 }
 
 
-
-
-
 //[[Rcpp::export]]
 Rcpp::List get_datset_filter(const std::string filename, const std::string datapath){
   using namespace HighFive;
@@ -61,13 +106,6 @@ Rcpp::List get_datset_filter(const std::string filename, const std::string datap
   return(List::create(_["name"]=wrap(filt_pair.first),
 		      _["options"]=wrap(filt_pair.second)));
 }
-
-
-
-
-
-
-
 
 
 //[[Rcpp::export]]
@@ -204,6 +242,48 @@ Rcpp::StringVector typeof_h5(const std::string &filename,
 
   return(ret);
 }
+
+
+// 
+// Rcpp::IntegerVector subset_h5(const std::string	filename, Rcpp::DataFrame check,const std::string path_prefix="/",const int chunksize=5000){
+// 
+//   using namespace HighFive;
+// 
+// 
+//   HighFive::File file(filename,HighFive::File::ReadOnly);
+// 
+//   auto group=file.getGroup(path_prefix);
+//   auto test_names = df.attr("names");
+//   std::map<std::string,DataSet> ds;
+//   size_t op=0;
+//   for(auto it : test_names){
+//     if( auto dsn = group.openDataSet(it)){
+//       auto p_d = dsn->getDataDimensions();
+//       if(p_d.size()!=1){
+// 	if(p_d.[1]!=1){
+// 	  Rcpp::Rcerr<<"In datapath"<<path_prefix<<"/"<<it<<std::endl;
+// 	  Rcpp::Rcerr<<"dataset is of dimensions:";
+// 	  for( auto ip : p_d){
+// 	    Rcpp::Rcerr<<ip<<"\n";
+// 	  }
+// 
+// 	  Rcpp::stop("Dataset must be vector or one column matrix");
+// 	}
+//       }
+//       if(op=0){
+// 	op=p_d[0];
+//       }
+//       if(p_d[0]!=op){
+// 	Rcpp::Rcerr<<"In datapath"<<path_prefix<<"/"<<it<<std::endl;
+// 	Rcpp::Rcerr<<"data is of length "<<p_d[0]<<std::endl;
+// 	Rcpp::stop("datasets must all be of the same dimension!");
+//       }
+//       ds.insert(it,*dsn);
+//     }
+//   }
+// 
+// 
+// }
 
 
 inline bool exists_file (const std::string& name) {

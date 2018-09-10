@@ -4,6 +4,8 @@ context("vectors")
 
 test_that("I can overwrite a vector", {
   tf <- tempfile()
+  EigenH5::write_vector_h5(integer(0),tf,"empty_test",filter="none",chunksizes=integer())
+  # read_vector_h5(tf,"empty_test")
   tv <- runif(3)
   write_vector_h5(tv, tf, "test")
   expect_equal(read_vector_h5(tf, "test"), tv)

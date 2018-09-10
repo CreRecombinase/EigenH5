@@ -68,3 +68,91 @@ test_that("root group is created upon file creation",{
   isGroup(tf,"/")
   
 })
+
+
+test_that("we can symlink an entire root",{
+  
+  tv <- sample(1:100,10)
+  tf <- tempfile()
+  write_vector_h5(tv,tf,"testg/test")
+  ntf <- tempfile()
+
+  link_objects_h5(filename_from = tf,filename_to = ntf,datapath_from = "/",datapath_to = "/t1")
+  retv <- read_vector_h5(ntf,"/t1/testg/test")
+  expect_equal(retv,tv)
+})
+
+
+test_that("we can symlink a vector of roots",{
+  
+  num_objs <- 10
+  tfs <- replicate(num_objs,tempfile())
+  tvl <- purrr::rerun(num_objs,sample(1:100,10))
+  purrr::walk2(tfs,tvl,~write_vector_h5(.y,.x,"testg/te"))
+  ntf <- tempfile()
+  link_objects_h5(filename_from = tfs,filename_to = ntf,datapath_from = rep("/",num_objs),datapath_to = as.character(1:num_objs))
+  retl <- purrr::map(as.character(1:num_objs),~read_vector_h5(ntf,paste0(.x,"/testg/te")))
+  expect_equal(retl,tvl)
+})
+
+
+
+
+test_that("we can symlink a single group",{
+  
+  tv <- sample(1:100,10)
+  tf <- tempfile()
+  write_vector_h5(tv,tf,"testg/test")
+  ntf <- tempfile()
+  
+  link_objects_h5(filename_from = tf,filename_to = ntf,datapath_from = "/testg",datapath_to = "/t1")
+  link_objects_h5(filename_from = tf,filename_to = ntf,datapath_from = "/testg",datapath_to = "/testg")
+  link_objects_h5(filename_from = tf,filename_to = ntf,datapath_from = "/testg/test",datapath_to = "/newtest")
+  link_objects_h5(filename_from = tf,filename_to = ntf,datapath_from = "/testg/test",datapath_to = "/testg/subset")
+  link_objects_h5(filename_from = tf,filename_to = ntf,datapath_from = "/testg/test",datapath_to = "/testg/subset2")
+  
+  
+  
+  
+  retv <- read_vector_h5(ntf,"/t1/test")
+  expect_equal(retv,tv)
+  retv <- read_vector_h5(ntf,"/testg/test")
+  expect_equal(retv,tv)
+  retv <- read_vector_h5(ntf,"newtest")
+  expect_equal(retv,tv)
+  retv <- read_vector_h5(ntf,"testg/subset")
+  expect_equal(retv,tv)
+  retv <- read_vector_h5(ntf,"testg/subset2")
+  expect_equal(retv,tv)
+})
+
+
+test_that("we can symlink a vector of datapaths",{
+  
+  num_objs <- 10
+  tfs <- replicate(num_objs,tempfile())
+  tvl <- purrr::rerun(num_objs,sample(1:100,10))
+  purrr::walk2(tfs,tvl,~write_vector_h5(.y,.x,"testg/te"))
+  ntf <- tempfile()
+  link_objects_h5(filename_from = tfs,filename_to = ntf,datapath_from = rep("/testg",num_objs),datapath_to = as.character(1:num_objs))
+  retl <- purrr::map(as.character(1:num_objs),~read_vector_h5(ntf,paste0(.x,"/testg/te")))
+  expect_equal(retl,tvl)
+})
+
+test_that("we can reorder stuff using link_objects",{
+  tv <- sample(1:100,10)
+  tf <- tempfile()
+  write_vector_h5(tv,tf,"testg/test")
+  otv <- runif(50)
+  write_vector_h5(otv,tf,"test_d")
+  ntf <- tempfile()
+  
+  link_objects_h5(filename_from = tf,filename_to = ntf,datapath_from = "/testg",datapath_to = "/t1")
+  link_objects_h5(filename_from = tf,filename_to = ntf,datapath_from = "/testg",datapath_to = "/testg")
+  
+  retv <- read_vector_h5(ntf,"/t1/test")
+  expect_equal(retv,tv)
+  retv <- read_vector_h5(ntf,"/testg/test")
+  expect_equal(retv,tv)
+  
+})

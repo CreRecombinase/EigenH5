@@ -30,6 +30,7 @@
 #include <H5Dpublic.h>
 #include <H5Fpublic.h>
 #include <H5Gpublic.h>
+#include <H5Opublic.h>
 #include <H5Ppublic.h>
 #include <H5Tpublic.h>
 
@@ -210,7 +211,11 @@ inline size_t NodeTraits<Derivate>::getNumberObjects() const{
     if(auto group = this->openGroup(pp)){
       if(group->exist(object_name.filename())){
 	H5O_info_t tid;
-	if(H5Oget_info_by_name(group->getId(),object_name.filename().c_str(),&tid,H5P_DEFAULT)<0){
+#if defined(H5_USE_110_API)
+	if(H5Oget_info_by_name2(group->getId(),object_name.filename().c_str(),&tid,H5O_INFO_ALL,H5P_DEFAULT)<0){
+#else
+	  if(H5Oget_info_by_name(group->getId(),object_name.filename().c_str(),&tid,H5P_DEFAULT)<0){
+#endif
 	  HDF5ErrMapper::ToException<DataSetException>(
 						       std::string("Unable to open the object \"") + std::string(object_name.filename()) +
 						       "\":");

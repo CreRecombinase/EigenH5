@@ -8,58 +8,6 @@
 #include <Rcpp.h>
 
 
-struct IntegerVector_range
-  : ranges::view_facade<IntegerVector_range>
-{
-private:
-  friend struct ranges::range_access;
-  Rcpp::IntegerVector vec_;
-  struct cursor
-  {
-  private:
-    Rcpp::IntegerVector::const_iterator iter;
-  public:
-    cursor() = default;
-    cursor(Rcpp::IntegerVector::const_iterator it): iter(it){}
-    int const & read() const{
-      return *iter;
-    }
-    bool equal(cursor const &that) const
-    {
-      return iter == that.iter;
-    }
-    void next()
-    {
-      ++iter;
-    }
-    void prev()
-    {
-      --iter;
-    }
-    std::ptrdiff_t distance_to(cursor const &that) const
-    {
-      return that.iter - iter;
-    }
-    void advance(std::ptrdiff_t n)
-    {
-      iter += n;
-    }
-  };
-  cursor begin_cursor() const
-  {
-    return {vec_.begin()};
-  }
-  cursor end_cursor() const
-  {
-    return {vec_.end()};
-  }
-public:
-  IntegerVector_range()
-    : vec_()
-  {}
-  IntegerVector_range(Rcpp::IntegerVector vec):vec_(vec){};
-
-};
 
 
 std::vector<int> get_dims(const Rcpp::RObject m);

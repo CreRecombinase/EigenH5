@@ -12,6 +12,7 @@
 #include "../H5File.hpp"
 
 #include <H5Fpublic.h>
+#include <cstdlib>
 
 namespace HighFive {
 
@@ -48,14 +49,33 @@ inline int convert_open_flag(int openFlags) {
   }
 
 
+  inline std::string File::preprocess_path(const std::string filename){
+    	fs::path dp(filename);
+	if((*dp.begin())==fs::path("~")){
+	  //fs::path ost(std::next(dp.begin()),dp.end());
+	  fs::path ost(std::string_view(std::getenv("HOME")));
+	  for(auto it=std::next(dp.begin()); it!=dp.end();it++){
+	    ost=ost / (*it);
+	  }
+	  /// ost;
+
+	  return(ost.string());
+	}
+	return(dp.string());
+  }
+
 
 
 inline File::File(const std::string& filename, int openFlags,
-                  const FileDriver& driver)
-    : _filename(filename) {
+                  const FileDriver& driver):_filename(preprocess_path(filename))
+      {
+	namespace fs = stdx::filesystem;
+
+
 
     struct stat buffer;
-    const bool file_exists = stat(filename.c_str(), &buffer) == 0 ;
+    const bool file_exists = stat(_filename.c_str(), &buffer) == 0 ;
+
     if(file_exists){
         if(!(openFlags & File::Truncate)){
             if(openFlags & File::Create) {

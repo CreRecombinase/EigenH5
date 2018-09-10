@@ -92,6 +92,17 @@ public:
   }
 };
 
+
+template<typename string_type>
+inline bool str_to_value(const string_type& src, float& dest)
+{
+  namespace qi = boost::spirit::qi;
+  
+  return qi::parse(std::cbegin(src), std::cend(src), qi::float_, dest);
+}
+
+
+
 template<typename string_type>
 inline bool str_to_value(const string_type& src, double& dest)
 {
@@ -131,6 +142,7 @@ public:
 };
 
 
+template<typename T>
 class Mach_file{
   boost::iostreams::filtering_istream &fs;
   mutable std::unordered_map<std::string,size_t> sample_names;
@@ -139,7 +151,7 @@ class Mach_file{
   const size_t snp_ind_size;
   const size_t p;
 
-  buffered_writer<double> & bw;
+  buffered_writer<T> & bw;
   Progress prog_bar;
   //  Region_buffer region_buffer;
   // std::string region_buffer;
@@ -152,7 +164,7 @@ public:
   Mach_file(boost::iostreams::filtering_istream	&fs_,
 	    const std::vector<std::string> &sample_names_,
 	    const std::vector<int> &snp_indices_, const size_t p_,
-	    buffered_writer<double> & bw_,const bool progress=true):
+	    buffered_writer<T> & bw_,const bool progress=true):
     fs(fs_),
     num_rows(sample_names_.size()),
     snp_indices(snp_indices_),
@@ -193,7 +205,7 @@ private:
     std::string_view tbuff(region_buffer.buffer);
     //first snp in the buffer is always cur_snp,
     //last snp in the buffer is in snp_indices
-    double tres;
+    T tres;
 
     for(int i=0; i<snp_indices.size();i++)
       {
@@ -270,7 +282,8 @@ void mach2h5(const std::string dosagefile, const std::string h5file, const std::
   // const bool SNPfirst =	get_list_scalar<bool>(options,"SNPfirst").value_or(true);
   const size_t buffer_size= static_cast<size_t>(get_list_scalar<int>(options,"buffer_size").value_or(p*6));
   const bool prog= get_list_scalar<bool>(options,"progress").value_or(false);
-
+  const bool store_float= get_list_scalar<bool>(options,"float").value_or(false);
+  
 
   const int buffer_vec= static_cast<size_t>(get_list_scalar<int>(options,"buffer_vec").value_or(buffer_size/6));
 
@@ -311,9 +324,15 @@ void mach2h5(const std::string dosagefile, const std::string h5file, const std::
   boost::iostreams::filtering_istream fs;
   fs.push(boost::iostreams::gzip_decompressor{});
   fs.push(textstream);
-  buffered_writer<double> bw(h5file,datapath,buffer_vec,SNPfirst,num_snps,num_elem);
-  Mach_file mf(fs,names,snp_idx,mp,bw,prog);
-  mf.process_file(buffer_size,prog);
+  if(store_float){
+    buffered_writer<float> bw(h5file,datapath,buffer_vec,SNPfirst,num_snps,num_elem);
+    Mach_file mf(fs,names,snp_idx,mp,bw,prog);
+    mf.process_file(buffer_size,prog);
+  }else{
+    buffered_writer<double> bw(h5file,datapath,buffer_vec,SNPfirst,num_snps,num_elem);
+    Mach_file mf(fs,names,snp_idx,mp,bw,prog);
+    mf.process_file(buffer_size,prog);
+  }
 }
 
 

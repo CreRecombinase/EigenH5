@@ -54,11 +54,13 @@ test_that("We can read and dataframe slices correctly",{
   td <- tibble::data_frame(a=1:5,b=letters[1:5],c=runif(5))
   std <- dplyr::slice(td,c(1,3,5))
   tf <- tempfile()
-  write_df_h5(td,"test",tf)
+  write_df_h5(td,tf,"test")
   rtd <- read_df_h5(tf,"test")
   srtd <- read_df_h5(tf,"test",filtervec = c(1,3,5))
+  nstrd <- read_df_h5(tf,"test",subset=c(1,3,5))
   expect_equal(td,rtd)
   expect_equal(std,srtd)
+  expect_equal(srtd,nstrd)
 })
 
 

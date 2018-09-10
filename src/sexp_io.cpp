@@ -27,13 +27,6 @@ template<> struct r2cpp_t<STRSXP>{
 };
 
 
-
-
-
-
-
-  
-
 SEXPTYPE h2r_T(hid_t htype){
 
   Eigen::Triplet<double,typename Eigen::SparseMatrix<double>::StorageIndex > Trip;
@@ -90,6 +83,10 @@ int len(RObject x)
 {
     RCPP_RETURN_VECTOR(impl::len, x);
 }
+
+
+
+
 
 
 //[[Rcpp::export]]
@@ -692,7 +689,8 @@ bool create_dataset_h5(const std::string &filename,
    fs::path dp=root_path(datapath);
    bool create_success=false;
    HighFive::File file(filename,HighFive::File::Create | HighFive::File::ReadWrite);
-
+   const bool store_float= get_list_scalar<bool>(options,"float").value_or(false);
+   
 #ifdef DEBUG
    Rcpp::Rcerr<<"opening/creating group: "<<dp.parent_path()<<std::endl;
 #endif
@@ -730,9 +728,15 @@ bool create_dataset_h5(const std::string &filename,
    Rcpp::IntegerVector tvec;
    auto	filt = create_filter(dimvec,options);
    DataSpace space = DataSpace(dimvec,max_dvec);
+   if((data.sexp_type()!=STRSXP) && store_float){
+     
+     group->createDataSet(dp.filename().string(), space, HighFive::AtomicType<float>(), filt);
+     create_success=true;
+   }else{
    create_dataset(group.value(),dp.filename(),data,space,filt);
-   create_success=true;
-   file.flush();
+   }
+   create_success=true; 
+   file.flush();  
   return(create_success);
- }
+ }  
 

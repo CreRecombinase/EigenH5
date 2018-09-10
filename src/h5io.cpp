@@ -5,6 +5,18 @@
 #include <Rcpp.h>
 
 
+//[[Rcpp::export]]
+std::string openFileHandleRead(const std::string filepath){
+  namespace fs = stdx::filesystem;
+  fs::path dp(filepath);
+  return(std::to_string(H5Fopen(dp.c_str(), H5F_ACC_RDONLY, NULL)));
+}
+
+
+//[[Rcpp::export]]
+size_t closeFileHandle(const std::string fh){
+  return(H5Fclose( std::stoull(fh) ));
+}
 
 
 

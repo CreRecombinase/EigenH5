@@ -43,7 +43,7 @@ class File : public Object,
     /// Open flag: Create non existing file
   static const int Create = 0x10;
   static const int SWMR_Write = 0x16;
-
+  static std::string preprocess_path(const std::string filename);
     ///
     /// \brief File
     /// \param filename: filepath of the HDF5 file
