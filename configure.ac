@@ -50,13 +50,19 @@ if test -z "${R_HOME}"; then
   exit 1
 fi
 
+
+
+if test -z "${BLOSC_LIBS}"; then
+    BLOSC_CFLAGS = `echo 'libblosc::pkgconfig("PKG_CFLAGS")'| "${R_HOME}/bin/R" --vanilla --slave`
+    BLOSC_LIBS = `echo 'libblosc::pkgconfig("PKG_LIBS_static")' | "${R_HOME}/bin/R" --vanilla --slave`
+fi
 AC_MSG_RESULT([looking for .pc files in $PKG_CONFIG_PATH])
 
 PKG_CHECK_MODULES([BLOSC], [blosc], [
 LIBS="${BLOSC_LIBS} ${LIBS}"
 AC_MSG_RESULT([found the blosc package: $BLOSC_LIBS])],[
-AC_MSG_ERROR([unable to find the blosc package])
 ])
+
 
 PKG_CHECK_MODULES([HDF5], [hdf5], [
 LIBS="${HDF5_LIBS} ${LIBS}"
@@ -113,6 +119,8 @@ dnl   ])
 AC_MSG_RESULT([Libs will be : $LIBS])
 AC_MSG_RESULT([HDF5Libs will be : $HDF5_LIBS])
 AC_SUBST(LIBS)
+AC_SUBST(BLOSC_LIBS)
+AC_SUBST(BLOSC_CFLAGS)
 AC_SUBST(HDF5_LIBS)
 #AC_SUBST(BLOSC_CFLAGS)
 

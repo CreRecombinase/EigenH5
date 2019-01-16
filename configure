@@ -1826,6 +1826,12 @@ if test -z "${R_HOME}"; then
   exit 1
 fi
 
+
+
+if test -z "${BLOSC_LIBS}"; then
+    BLOSC_CFLAGS = `echo 'libblosc::pkgconfig("PKG_CFLAGS")'| "${R_HOME}/bin/R" --vanilla --slave`
+    BLOSC_LIBS = `echo 'libblosc::pkgconfig("PKG_LIBS_static")' | "${R_HOME}/bin/R" --vanilla --slave`
+fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: looking for .pc files in $PKG_CONFIG_PATH" >&5
 $as_echo "looking for .pc files in $PKG_CONFIG_PATH" >&6; }
 
@@ -2026,10 +2032,6 @@ LIBS="${BLOSC_LIBS} ${LIBS}"
 $as_echo "found the blosc package: $BLOSC_LIBS" >&6; }
 fi
 
-if test -z "${BLOSC_LIBS}"; then
-    BLOSC_CFLAGS=$(shell echo 'libblosc::pkgconfig("PKG_CFLAGS")'| "${R_HOME}/bin/R" --vanilla --slave)
-    BLOSC_LIBS=$(shell echo 'libblosc::pkgconfig("PKG_LIBS_static")' | "${R_HOME}/bin/R" --vanilla --slave)
-fi
 
 
 pkg_failed=no
