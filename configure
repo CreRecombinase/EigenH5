@@ -2009,13 +2009,11 @@ fi
 	echo "$BLOSC_PKG_ERRORS" >&5
 
 
-as_fn_error $? "unable to find the blosc package" "$LINENO" 5
 
 elif test $pkg_failed = untried; then
      	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
-as_fn_error $? "unable to find the blosc package" "$LINENO" 5
 
 else
 	BLOSC_CFLAGS=$pkg_cv_BLOSC_CFLAGS
@@ -2026,6 +2024,11 @@ $as_echo "yes" >&6; }
 LIBS="${BLOSC_LIBS} ${LIBS}"
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: found the blosc package: $BLOSC_LIBS" >&5
 $as_echo "found the blosc package: $BLOSC_LIBS" >&6; }
+fi
+
+if test -z "${BLOSC_LIBS}"; then
+    BLOSC_CFLAGS=$(shell echo 'libblosc::pkgconfig("PKG_CFLAGS")'| "${R_HOME}/bin/R" --vanilla --slave)
+    BLOSC_LIBS=$(shell echo 'libblosc::pkgconfig("PKG_LIBS_static")' | "${R_HOME}/bin/R" --vanilla --slave)
 fi
 
 
@@ -3039,6 +3042,8 @@ fi
 $as_echo "Libs will be : $LIBS" >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: HDF5Libs will be : $HDF5_LIBS" >&5
 $as_echo "HDF5Libs will be : $HDF5_LIBS" >&6; }
+
+
 
 
 #AC_SUBST(BLOSC_CFLAGS)
