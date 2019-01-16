@@ -6,6 +6,6 @@ CXX_STD = CXX17
 #PKG_LIBS+=$(shell echo 'libblosc::pkgconfig("PKG_LIBS_static")' |\
 "${R_HOME}/bin/R" --vanilla --slave)
 
-PKG_LIBS += @HDF5_LIBS@   -lstdc++fs @LIBS@
-PKG_LIBS += $(shell ${R_HOME}/bin/Rscript -e "RcppParallel::RcppParallelLibs()") -lboost_iostreams
+PKG_LIBS += @HDF5_LIBS@  -lstdc++fs @LIBS@
+PKG_LIBS += $(shell ${R_HOME}/bin/Rscript -e "RcppParallel::RcppParallelLibs()") #-lboost_iostreams
 PKG_CPPFLAGS += -I../inst/include -DUSE_MKL   -DUSE_BLOSC

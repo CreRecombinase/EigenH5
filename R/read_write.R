@@ -31,6 +31,9 @@ read_df_h5 <- function(filename,datapath,...){
 }
 
 
+
+
+
 write_df_h5 <- function(df, filename, datapath="/", ...){
   argl <- list(...)
   purrr::iwalk(df, ~purrr::invoke(write_vector_h5,

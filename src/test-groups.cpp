@@ -33,6 +33,19 @@ inline HighFive::File file_cw(const std::string filename){
 
 
 
+// context("Moving groups"){
+//   test_that("We can mount a file and move data from that file"){
+//        auto tf = test_file_w();
+
+//        auto tf2 = test_file_w();
+//        auto std::vector	df{1,2,3};
+//        using namespace HighFive;
+//        tf.createGroup("test").createDataSet("testd",DataSpace::From(df)).write(df);
+
+//        H5Fmount(tf2.getId(), "/G", fid2.getId(), H5P_DEFAULT);
+//        auto ng=tf2.getGroup("G");
+//        H5Lmove( hid_t src_loc_id, const char *src_name, hid_t dest_loc_id, const char *dest_name, hid_t lcpl_id, hid_t lapl_id )
+
 
 
 
@@ -43,9 +56,7 @@ inline HighFive::File file_cw(const std::string filename){
 
 //   // test_that("We can check for existence of groups"){
 
-//   //   auto tf = test_file_w();
-
-//   //   auto tf2 = test_file_w();
+//
 //   //   expect_true(tf.getObjCount(H5F_OBJ_FILE)==1);
 //   //   expect_true(tf.getObjCount(H5F_OBJ_GROUP)==0);
 //   //   expect_false(tf.exist("btest"));

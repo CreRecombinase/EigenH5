@@ -5,39 +5,22 @@ AC_INIT([EigenH5], [1.2], [nwknoblauch@gmail.com])
 #AC_CONFIG_SRCDIR([src])
 
 
-m4_include([inst/m4/ax_lib_hdf5.m4])
-m4_include([inst/m4/ax_compare_version.m4])
+#m4_include([inst/m4/ax_lib_hdf5.m4])
+#m4_include([inst/m4/ax_compare_version.m4])
 #m4_include([inst/m4/hh_hdf5rlib.m4])
 
 
-AX_LIB_HDF5()
-
-#AC_PATH_PROG([PKGCONF], [pkg-config], [], [$PATH:/usr/local/bin:ext/bin:ext:/sw/bin:/opt/bin])
-#PKG_CHECK_MODULES([BLOSC], [blosc])
-# If pkg-config is available, use it to find needed libraries
-#if test -n "${PKGCONF}"; then
-#    
-    # Check blosc
-#    AC_MSG_CHECKING([whether pkg-config could find blosc])
-#    if "${PKGCONF}" --exists zlib; then
-#        AC_MSG_RESULT([yes])
-#        BLOSC_CPPFLAGS=`"${PKGCONF}" --cflags blosc`
-#        BLOSC_LIBS=`"${PKGCONF}" --libs blosc`
-#    else
-#        AC_MSG_RESULT([no])
-#    fi
+#AX_LIB_HDF5()
 
 
-
-
-if test "$with_hdf5" = "yes"; then
-AC_MSG_RESULT([Found hdf5 with version: $HDF5_VERSION])
-AX_COMPARE_VERSION([$HDF5_VERSION], [ge], [1.10.2], [hdf5_version_sufficient="yes"], AC_MSG_ERROR([The version of hdf5 installed on your system is not sufficient. Please ensure that at least version 1.10.2 is installed]))
-else
-  AC_MSG_ERROR([hdf5 does not seem to be installed on your platform.
-  Please install the hdf5 library.
-  The required HDF5 library files can be installed using conda 'conda install -c crerecombinase r-eigenh5'])
-fi
+dnl if test "$with_hdf5" = "yes"; then
+dnl AC_MSG_RESULT([Found hdf5 with version: $HDF5_VERSION])
+dnl AX_COMPARE_VERSION([$HDF5_VERSION], [ge], [1.10.2], [hdf5_version_sufficient="yes"], AC_MSG_ERROR([The version of hdf5 installed on your system is not sufficient. Please ensure that at least version 1.10.2 is installed]))
+dnl else
+dnl   AC_MSG_ERROR([hdf5 does not seem to be installed on your platform.
+dnl   Please install the hdf5 library.
+dnl   The required HDF5 library files can be installed using conda 'conda install -c crerecombinase r-eigenh5'])
+dnl fi
 
 
 LDFLAGS=`"${R_HOME}/bin/R" CMD config LDFLAGS`
@@ -49,16 +32,16 @@ LDFLAGS=`"${R_HOME}/bin/R" CMD config LDFLAGS`
 
 #PKG_CHECK_MODULES([blosc]
 
-if test "$hdf5_version_sufficient" = "yes"; then
-  AX_COMPARE_VERSION(
-	[$HDF5_VERSION],
-	[ge],
-	[1.10.2],
-	[HDF5_VERSION_USE="1_10_2"])
-fi
+dnl if test "$hdf5_version_sufficient" = "yes"; then
+dnl   AX_COMPARE_VERSION(
+dnl 	[$HDF5_VERSION],
+dnl 	[ge],
+dnl 	[1.10.3],
+dnl 	[HDF5_VERSION_USE="1_10_3"])
+dnl fi
 
-AC_SUBST(HDF5_VERSION_USE)
-AC_SUBST(DEFINE_H5FREE_MEMORY)
+dnl AC_SUBST(HDF5_VERSION_USE)
+dnl AC_SUBST(DEFINE_H5FREE_MEMORY)
 
 dnl Now find the compiler and compiler flags to use
 : ${R_HOME=`R RHOME`}
@@ -75,6 +58,16 @@ AC_MSG_RESULT([found the blosc package: $BLOSC_LIBS])],[
 AC_MSG_ERROR([unable to find the blosc package])
 ])
 
+PKG_CHECK_MODULES([HDF5], [hdf5], [
+LIBS="${HDF5_LIBS} ${LIBS}"
+AC_MSG_RESULT([found the hdf5 package: $HDF5_LIBS])],[
+])
+
+if test -z "{HDF5_LIBS}"; then
+   HDF5_LIBS = `echo 'Rhdf5lib::pkgconfig("PKG_C_LIBS")'|\
+    "${R_HOME}/bin/R" --vanilla --slave`
+fi
+
 dnl PKG_CHECK_MODULES([LZF], [lzf], [
 dnl LIBS="${LZF_LIBS} ${LIBS}"
 dnl AC_MSG_RESULT([found the lzf package: LZF_LIBS])],[
@@ -88,6 +81,15 @@ dnl LIBS="${ZSTD_LIBS} ${LIBS}"
 dnl AC_MSG_RESULT([found the zstd package: $ZSTD_LIBS])],[
 dnl AC_MSG_ERROR([unable to find the zstd package])
 dnl ])
+
+AC_SEARCH_LIBS([H5open], [hdf5], [], [
+   AC_MSG_ERROR([hdf5 open function])
+   ])
+
+dnl AC_SEARCH_LIBS([H5Oget_info_by_name], [hdf5], [], [
+dnl    AC_MSG_ERROR([hdf5 info_by_name])
+dnl    ])
+
 
 if test -z "${BLOSC_LIBS}"; then
    AC_SEARCH_LIBS([blosc_compress], [blosc], [], [

@@ -51,7 +51,7 @@ get_dims_h5 <- function(f,...){
   return(dim_h5(f,construct_data_path(...)))
 }
 
-write_h5 <- function(h5filepath,datapath,data,offset=0L,subsets=list(subset_rows=integer(),subset_cols=integer())){
+write_h5 <- function(data,filename,datapath,offset=0L,subsets=list(subset_rows=integer(),subset_cols=integer())){
   if(is.list(data)){
     write_l_h5(h5filepath=h5filepath,datapath=datapath,datal=data)
   }else{
@@ -96,12 +96,12 @@ split_chunk_df<- function(info_df,pos_id,group_id,rowsel=T,colsel=T){
 
 # read_h
 
-write_l_h5 <- function(h5filepath,datapath,datal){
-  stopifnot(is.list(datal))
+write_l_h5 <- function(data,filename,datapath,...){
+  stopifnot(is.list(data))
   if(datapath=="/"){
     datapath <- ""
   }
-  purrr::iwalk(datal,~write_h5(h5filepath,normalizePath(paste(datapath,.y,sep="/"),mustWork = F),data = .x))
+  purrr::iwalk(datal,~write_h5(filename,normalizePath(paste(datapath,.y,sep="/"),mustWork = F),data = .x))
 }
 
 
