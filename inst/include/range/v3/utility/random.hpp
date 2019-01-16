@@ -43,6 +43,7 @@
 #ifndef RANGES_V3_UTILITY_RANDOM_HPP
 #define RANGES_V3_UTILITY_RANDOM_HPP
 
+#include <thread>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
