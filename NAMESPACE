@@ -1,3 +1,4 @@
+#useDynLib(rzstdlib)
 useDynLib(EigenH5)
 importFrom(Rcpp, evalCpp)
 importFrom(R6,R6Class)
