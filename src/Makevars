@@ -1,7 +1,7 @@
 CXX_STD = CXX17
 HDF5_LIBS=`echo 'Rhdf5lib::pkgconfig("PKG_C_LIBS")'|\
     "${R_HOME}/bin/R" --vanilla --slave`
-ZSTD_LIBS=`echo 'rzstdlib::pkgconfig("PKG_RPATH")'|\
+ZSTD_LIBS=`echo 'rzstdlib::pkgconfig("PKG_C_LIBS")'|\
     "${R_HOME}/bin/R" --vanilla --slave`
         
 PKG_LIBS += $(HDF5_LIBS) -lstdc++fs $(ZSTD_LIBS) 
