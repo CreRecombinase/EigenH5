@@ -3,7 +3,6 @@
 //[[Rcpp::plugins(cpp17)]]
 #include <optional>
 #include <array>
-#include <range/v3/algorithm/for_each.hpp>
 
 // [[Rcpp::interfaces(r, cpp)]]
 

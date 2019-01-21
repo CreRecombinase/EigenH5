@@ -2,9 +2,9 @@
 #include <cmath>
 #include <complex>
 #include <iostream>
-#include <range/v3/core.hpp>
-#include <range/v3/view.hpp>
-#include <range/v3/action.hpp>
+// #include <range/v3/core.hpp>
+// #include <range/v3/view.hpp>
+// #include <range/v3/action.hpp>
 
 #define EIGEN_PERMANENTLY_DISABLE_STUPID_WARNINGS
 #include <RcppEigen.h>

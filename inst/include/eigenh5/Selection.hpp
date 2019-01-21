@@ -1,8 +1,5 @@
 #pragma once
 #include <boost/icl/interval_set.hpp>
-#include <range/v3/core.hpp>
-#include <range/v3/view.hpp>
-#include <range/v3/action.hpp>
 #include "highfive/highfive.hpp"
 #include <RcppEigen.h>
 #include <Rcpp.h>
@@ -402,7 +399,7 @@ inline DatasetSelection<Dims> DatasetSelection<Dims>::ProcessList(const Rcpp::Li
 
 inline DimRange::DimRange(Rcpp::IntegerVector::const_iterator itb,Rcpp::IntegerVector::const_iterator ite){
   using namespace Rcpp;
-  using namespace ranges;
+  // using namespace ranges;
   using namespace boost;
   using namespace boost::icl;
 
