@@ -32,9 +32,9 @@ context("We can read and write matrices using the DataQueue"){
       auto space=	DataSpace::From(test_mat);
       auto space_v=	DataSpace::From(test_vec_t);
 
-      auto dset =	tf.createDataSet("test",space,AtomicType<int>(),Filter::From(space,FILTER_BLOSC));
-      auto dset_t =	tf.createDataSet("test_t",space,AtomicType<int>(),Filter::From(space,FILTER_BLOSC));
-      auto dset_v =	tfw.createDataSet("test_v",space_v,AtomicType<int>(),Filter::From(space_v,FILTER_BLOSC));
+      auto dset =	tf.createDataSet("test",space,AtomicType<int>(),Filter::From(space,Filter::zstd));
+      auto dset_t =	tf.createDataSet("test_t",space,AtomicType<int>(),Filter::From(space,Filter::zstd));
+      auto dset_v =	tfw.createDataSet("test_v",space_v,AtomicType<int>(),Filter::From(space_v,Filter::zstd));
 
 
       dset.write(test_mat);

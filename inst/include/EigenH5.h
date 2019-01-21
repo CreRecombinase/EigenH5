@@ -32,7 +32,9 @@ namespace stdx {
 
 
 #include "highfive/highfive.hpp"
+#ifdef USE_BLOSC
 #include "blosc_filter.h"
+#endif
 #include "lzf/lzf_filter.h"
 #include "zstd/zstd_h5plugin.h"
 #include "zstd/zstd.h"

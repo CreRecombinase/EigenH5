@@ -24,7 +24,11 @@ size_t closeFileHandle(const std::string fh){
 //[[Rcpp::export]]
 void start_blosc(){
   Rcpp::Environment env = Rcpp::Environment::global_env();
+  #ifdef USE_BLOSC
   auto r = register_blosc(nullptr,nullptr);
+  #else
+  auto r =0;
+  #endif
   Rcpp::LogicalVector bv(1);
   bv[0]=r==1;
   env["..blosc"]=bv;

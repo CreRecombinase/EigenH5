@@ -64,7 +64,7 @@ context("datasets"){
   std::vector<int> tvec = {1,2,3};
   using namespace HighFive;
   auto space=	DataSpace::From(tvec);
-  auto dset =	ntf.createDataSet("ntest",space,AtomicType<int>(),Filter::From(space,FILTER_BLOSC));
+  auto dset =	ntf.createDataSet("ntest",space,AtomicType<int>(),Filter::From(space,Filter::zstd));
   test_that("We can check for existence of datasets"){
 
 
@@ -76,7 +76,7 @@ context("datasets"){
     expect_true(ntf.isDataSet("/ntest"));
     expect_false(ntf.isGroup("/ntest"));
 
-    dset = ntf.createGroup("tgrp").createDataSet("test2",space,AtomicType<int>(),Filter::From(space,FILTER_BLOSC));
+    dset = ntf.createGroup("tgrp").createDataSet("test2",space,AtomicType<int>(),Filter::From(space,Filter::zstd));
     expect_true(ntf.exist("tgrp/test2"));
     expect_true(ntf.isDataSet("tgrp/test2"));
     expect_false(ntf.isGroup("tgrp/test2"));
@@ -100,7 +100,7 @@ context("ensuring const"){
   tmat<<0,1,2,3,4,5;
 
   auto space=	DataSpace::From(tmat);
-  auto dset =	ntf.createDataSet("ntest",space,AtomicType<int>(),Filter::From(space,FILTER_BLOSC));
+  auto dset =	ntf.createDataSet("ntest",space,AtomicType<int>(),Filter::From(space,Filter::zstd));
   Eigen::MatrixXi copy_t=tmat.eval();
   test_that("matrix copied succesffully"){
     expect_true(copy_t(0,0)==tmat(0,0));

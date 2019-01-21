@@ -9,6 +9,8 @@
     by Andrew Collette.
 
 */
+
+#ifdef USE_BLOSC
 #include "blosc_filter.h"
 #include "hdf5.h"
 #include <string.h>
@@ -278,3 +280,4 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
 // int blosc(){
 //   return(register_blosc(NULL,NULL));
 // }
+#endif
