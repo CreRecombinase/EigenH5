@@ -1,6 +1,6 @@
 #include "EigenH5.h"
 //[[depends(RcppEigen)]]
-//[[Rcpp::plugins(cpp17)]]
+//[[Rcpp::plugins(cpp11)]]
 #include <blosc_filter.h>
 #include <Rcpp.h>
 
