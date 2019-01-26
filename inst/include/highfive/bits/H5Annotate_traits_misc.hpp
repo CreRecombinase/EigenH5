@@ -20,7 +20,7 @@
 #include "../H5Exception.hpp"
 
 #include <H5Apublic.h>
-#include <experimental/filesystem>
+
 namespace HighFive {
 
 template <typename Derivate>
