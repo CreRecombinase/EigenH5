@@ -1,7 +1,6 @@
 #include "EigenH5.h"
 //[[depends(RcppEigen)]]
 //[[Rcpp::plugins(cpp17)]]
-#include <optional>
 #include <array>
 
 // [[Rcpp::interfaces(r, cpp)]]
