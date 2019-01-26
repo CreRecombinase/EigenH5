@@ -459,7 +459,6 @@ namespace HighFive {
                             const DataType dt)
 	: _space(space) {
         (void)vec;
-        hsize_t tdims;
         v_size = (H5Tget_size(dt.getId())) / sizeof(char);
       }
       // create a C vector adapted to HDF5
@@ -542,8 +541,8 @@ namespace HighFive {
       }
 
       std::vector<char> _c_vec;
-      const size_t dim_;
       DataSpace &_space;
+      const size_t dim_;
     };
 
     template <>

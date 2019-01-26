@@ -57,10 +57,10 @@ Path::Path(const std::string &path){
     isAbsolute = (path.front() == '/');
     PathToDirectory = (path.back() == '/');
 
-    std::regex dir_split("/+");
+    boost::regex dir_split("/+");
 
-    auto match_it = std::sregex_token_iterator(path.begin(), path.end(), dir_split,-1);
-    auto match_e = std::sregex_token_iterator();
+    auto match_it = boost::sregex_token_iterator(path.begin(), path.end(), dir_split,-1);
+    auto match_e = boost::sregex_token_iterator();
     std::string tmatch;
     do {
       tmatch = match_it->str();
