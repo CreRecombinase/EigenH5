@@ -1,19 +1,5 @@
-
-
-# 
-# read_df <- function(filename,datapath,...){
-#   if(tools::file_ext(filename)==".h5"){
-#     return(read_df_h5(filename,datapath,...))
-#   }else{
-#     if(tolower(tools::file_ext(filename))=="rds"){
-#       return(readRDS(filename))
-#     }else{
-#       return(read_delim(file=filename,...))
-#     }
-#   }
-# }
-
 read_df_h5 <- function(filename,datapath,...){
+    filename <- fs::path_expand(filename)
   stopifnot(file.exists(filename))
   dsets <- ls_h5(filename,groupname = datapath)
   argl <- list(...)
@@ -32,10 +18,9 @@ read_df_h5 <- function(filename,datapath,...){
 
 
 
-
-
 write_df_h5 <- function(df, filename, datapath="/", ...){
-  argl <- list(...)
+    argl <- list(...)
+    filename <- fs::path_expand(filename)
   purrr::iwalk(df, ~purrr::invoke(write_vector_h5,
                                   filename = filename,
                                   datapath = normalizePath(paste(datapath, .y, sep="/"),mustWork = F),
@@ -46,20 +31,18 @@ write_df_h5 <- function(df, filename, datapath="/", ...){
 
 
 create_vector_h5 <- function(filename,datapath,data,...){
-  argl <- list(...)
+    argl <- list(...)
+        filename <- fs::path_expand(filename)
   if(file.exists(filename)){
       stopifnot(!isObject_h5(filename,datapath))
   }
   create_dataset_h5(filename,datapath,data,argl)
 }
 
-update_matrix_h5 <- function(filename,datapath,data,...){
-  stopifnot(file.exists(filename),
-            isObject_h5(filename,datapath))
-}
 
 create_matrix_h5 <- function(filename, datapath, data, ...){
-  argl <- list(...)
+    argl <- list(...)
+    filename <- fs::path_expand(filename)
   if(file.exists(filename)){
     stopifnot(!isObject_h5(filename, datapath))
   }
@@ -72,6 +55,7 @@ write_vector_h5 <- function(data, filename, datapath, ...){
   argl <- list(...)
   ret <- FALSE
   app_v <- TRUE
+  filename <- fs::path_expand(filename)
   if(!file.exists(filename)){
     create_dataset_h5(filename, datapath, data, argl)
     app_v <- FALSE
@@ -97,7 +81,7 @@ write_vector_h5 <- function(data, filename, datapath, ...){
 
 append_vector_h5 <- function(data, filename, datapath, ...){
   argl <- list(...)
-  filename <- file.path(filename)
+  filename <- fs::path_expand(filename)
   argl[["offset"]]<- get_dims_h5(filename, datapath)
   extend_dataset_by(filename, datapath, newdims = length(data))
   ret <- update_vector(data, filename, datapath, argl)
@@ -110,6 +94,7 @@ append_vector_h5 <- function(data, filename, datapath, ...){
 write_matrix_h5 <- function(data, filename, datapath, ...){
     
     argl <- list(...)
+    filename <- fs::path_expand(filename)
     if(!file.exists(filename)){
         create_dataset_h5(filename,datapath,data,argl)
     }
@@ -128,6 +113,7 @@ read_vector_h5 <- function(filename,datapath,...){
     if(!is.null(argl[["filtervec"]])){
         argl[["subset"]] <- argl[["filtervec"]]
     }
+    filename <-fs::path_expand(filename)
     tr <- read_vector(filename =  filename,
                       datapath = datapath,
                       options = argl)
@@ -138,7 +124,7 @@ read_vector_h5 <- function(filename,datapath,...){
 
 read_matrix_h5 <- function(filename,datapath,...){
     argl <- list(...)
-    retr <- read_matrix(filename =  filename,
+    retr <- read_matrix(filename =  fs::path_expand(filename),
                         datapath = datapath,
                         option = argl)
     return(retr)

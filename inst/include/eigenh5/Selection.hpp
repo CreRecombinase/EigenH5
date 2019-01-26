@@ -1,6 +1,7 @@
 #pragma once
 #include <boost/icl/interval_set.hpp>
 #include "highfive/highfive.hpp"
+#include "boost/optional.hpp"
 #include <RcppEigen.h>
 #include <Rcpp.h>
 
@@ -107,13 +108,13 @@ public:
     sorted(true){}
   std::pair<size_t,size_t> unsorted_in() const{
     if(sorted){
-      return(std::pair(in_start,in_stop));
+      return(std::make_pair(in_start,in_stop));
     }else{
-      return(std::pair(in_stop,in_start));
+      return(std::make_pair(in_stop,in_start));
     }
   }
   std::pair<size_t,size_t> unsorted_out() const{
-    return(std::pair(out_start,out_stop));
+    return(std::make_pair(out_start,out_stop));
   }
 
   bool operator<(const dim_sel &other)const{
@@ -134,7 +135,7 @@ public:
 };
 
 inline std::vector<dim_sel> dim_sel::parse_chunk_list(const Rcpp::List &list,std::vector<size_t> datadims){
-    using int_o = std::optional<int>;
+    using int_o = boost::optional<int>;
 
   const size_t num_dims= datadims.size();
   if(num_dims>2){
@@ -191,7 +192,7 @@ public:
     isRepeated_(false){}
 
   static DimRange construct_dimrange(dim_sel chunk,
-				   std::optional<Rcpp::IntegerVector> subset);
+				   boost::optional<Rcpp::IntegerVector> subset);
   Eigen::ArrayXi permutation_order() const;
 
 
@@ -251,7 +252,7 @@ inline Eigen::ArrayXi DimRange::permutation_order() const {
 
 
 inline DimRange DimRange::construct_dimrange(dim_sel chunk,
-			    std::optional<Rcpp::IntegerVector> subset){
+			    boost::optional<Rcpp::IntegerVector> subset){
   if(subset){
     return(DimRange(subset->begin(),subset->end()));
   }
@@ -288,13 +289,9 @@ public:
 
 
 
-  DatasetSelection (std::array<DimRange,Dims> sels_,
-		    std::array<size_t,Dims> dataset_dimensions_,const bool doTranspose_=false):sels(sels_),doTranspose(doTranspose_),
+  DatasetSelection (std::array<DimRange,1> sels_,
+		    std::array<size_t,1> dataset_dimensions_,const bool doTranspose_=false):sels(sels_),doTranspose(doTranspose_),
 											       dataset_dimensions(dataset_dimensions_){
-
-    if constexpr(Dims > 2){
-      Rcpp::stop("Datasets with Dims>2 currently not supported");
-    }
 
     all_dim_compact=true;
     all_dim_sorted=true;
@@ -314,41 +311,91 @@ public:
     offsets_in.resize(tot_selections);
     chunksizes.resize(tot_selections);
 
-    if constexpr (Dims==1){
-	for(int i=0; i<tot_selections;i++){
-	  offsets_in[i]={sels[0].dim_sels[i].in_start};
-	  chunksizes[i]={sels[0].dim_sels[i].chunksize};
-	}
-      }else{
-      int tj=0;
-      for(int i=0; i<n_selections[0];i++){
-	for(int	j=0;j<n_selections[1];j++){
-	  offsets_in[tj]={sels[0].dim_sels[i].in_start,sels[1].dim_sels[j].in_start};
-	  chunksizes[tj]={sels[0].dim_sels[i].chunksize,sels[1].dim_sels[j].chunksize};
-	  tj++;
-	}
+    for(int i=0; i<tot_selections;i++){
+      offsets_in[i]={sels[0].dim_sels[i].in_start};
+      chunksizes[i] = {sels[0].dim_sels[i].chunksize};
+    }
+  }
+
+  DatasetSelection(std::array<DimRange, 2> sels_,
+		   std::array<size_t, 2> dataset_dimensions_,
+		   const bool doTranspose_ = false)
+    : sels(sels_), doTranspose(doTranspose_),
+      dataset_dimensions(dataset_dimensions_) {
+
+
+
+    all_dim_compact = true;
+    all_dim_sorted = true;
+    size_t tot_selections = 1;
+    for (int i = 0; i < Dims; i++) {
+      n_elem[i] = sels[i].get_n_elem();
+      n_selections[i] = sels[i].get_num_selections();
+      tot_selections = tot_selections * n_selections[i];
+      if (!sels[i].isCompact()) {
+	all_dim_compact = false;
+      }
+      if (!sels[i].isSorted()) {
+	all_dim_sorted = false;
+      }
+    }
+
+    offsets_in.resize(tot_selections);
+    chunksizes.resize(tot_selections);
+
+
+    int tj = 0;
+    for (int i = 0; i < n_selections[0]; i++) {
+      for (int j = 0; j < n_selections[1]; j++) {
+        offsets_in[tj] = {sels[0].dim_sels[i].in_start,
+                          sels[1].dim_sels[j].in_start};
+        chunksizes[tj] = {sels[0].dim_sels[i].chunksize,
+                          sels[1].dim_sels[j].chunksize};
+        tj++;
       }
     }
   }
 
-  static DatasetSelection<Dims>	ProcessList(const Rcpp::List options, std::vector<size_t> dims);
+  static DatasetSelection<Dims>	ProcessList(const Rcpp::List options, std::array<size_t,1> dims);
+  static DatasetSelection<Dims>	ProcessList(const Rcpp::List options, std::array<size_t,2> dims);
 
 
   template<typename T,int Options,int RN,int CN>
   void flipRows(Eigen::Map<Eigen::Matrix<T,RN,CN,Options> > retmat,
-					       const std::array<size_t,Dims> &offset,
-					       const std::array<size_t,Dims> &chunksize)const ;
+					       const std::array<size_t,1> &offset,
+					       const std::array<size_t,1> &chunksize)const ;
+
+  template<typename T,int Options,int RN,int CN>
+  void flipRows(Eigen::Map<Eigen::Matrix<T,RN,CN,Options> > retmat,
+					       const std::array<size_t,2> &offset,
+					       const std::array<size_t,2> &chunksize)const ;
 
   template<typename T,int Options,int RN,int CN>
   void flipCols(Eigen::Map<Eigen::Matrix<T,RN,CN,Options> > retmat,
-					       const std::array<size_t,Dims> &offset,
-					       const std::array<size_t,Dims> &chunksize)const ;
+		const std::array<size_t,1> &offset,
+		const std::array<size_t,1> &chunksize)const ;
+
+  template<typename T,int Options,int RN,int CN>
+  void flipCols(Eigen::Map<Eigen::Matrix<T,RN,CN,Options> > retmat,
+		const std::array<size_t,2> &offset,
+		const std::array<size_t,2> &chunksize)const ;
+
 
   HighFive::Selection makeSelection(const HighFive::DataSet &dset)const;
 
-  template<typename T,int Options,int RN,int CN>
+  template<typename T,int RN,int CN>
   void readEigen(HighFive::Selection &selection,
-		 Eigen::Map<Eigen::Matrix<T,RN,CN,Options> >& retmat)const;
+		 Eigen::Map<Eigen::Matrix<T,RN,CN,Eigen::RowMajor> >& retmat)const;
+
+  template<typename T,int RN>
+  void readEigen(HighFive::Selection &selection,
+		 Eigen::Map<Eigen::Matrix<T,RN,Eigen::Dynamic,Eigen::ColMajor> >& retmat)const;
+
+  template<typename T,int RN>
+  void readEigen(HighFive::Selection &selection,
+		 Eigen::Map<Eigen::Matrix<T,RN,1,Eigen::ColMajor> >& retmat)const;
+
+
 
   template<typename T,int Options,int RN,int CN>
   void writeEigen(HighFive::Selection &selection,
@@ -374,27 +421,39 @@ private:
 
   };
 
+
+
 template<size_t Dims>
-inline DatasetSelection<Dims> DatasetSelection<Dims>::ProcessList(const Rcpp::List options, std::vector<size_t> dims){
+inline DatasetSelection<Dims> DatasetSelection<Dims>::ProcessList(const Rcpp::List options, std::array<size_t,1> dims){
 
-  if(dims.size()!=Dims){
-    Rcpp::stop("dims must be either equal in size to Dims, or must be empty and accompany  valid filename+datapath arguments ");
-  }
+  static_assert(Dims==1,"dims must be either equal in size to Dims, or must be empty and accompany  valid filename+datapath arguments ");
 
-  auto dchunk_v = dim_sel::parse_chunk_list(options,dims);
+  auto dchunk_v = dim_sel::parse_chunk_list(options, {dims[0]});
   bool doTranspose_ =	get_list_scalar<bool>(options,"doTranspose").value_or(false);
-  auto dslice_v = parse_subset_list(options,dims);
-  if constexpr(Dims==2){
-      std::array<size_t,2>tdims={dims[0],dims[1]};
-      return(DatasetSelection<Dims>({
-	    DimRange::construct_dimrange(dchunk_v[0],dslice_v[0]),
-	    DimRange::construct_dimrange(dchunk_v[1],dslice_v[1])},tdims,doTranspose_));
-    }
-  if constexpr(Dims==1){
-      std::array<size_t,1>tdims={dims[0]};
-      return(DatasetSelection<1>({
-	    DimRange::construct_dimrange(dchunk_v[0],dslice_v[0])},tdims));
-    }
+  auto dslice_v = parse_subset_list(options, {dims[0]});
+  return (DatasetSelection<1>(
+      {DimRange::construct_dimrange(dchunk_v[0], dslice_v[0])}, dims));
+}
+
+
+
+
+
+
+
+template<size_t Dims>
+inline DatasetSelection<Dims> DatasetSelection<Dims>::ProcessList(const Rcpp::List options, std::array<size_t,2> dims){
+
+  static_assert(Dims==2,"dims must be either equal in size to Dims, or must be empty and accompany  valid filename+datapath arguments ");
+
+  auto dchunk_v = dim_sel::parse_chunk_list(options, {dims[0], dims[1]});
+  bool doTranspose_ =	get_list_scalar<bool>(options,"doTranspose").value_or(false);
+  auto dslice_v = parse_subset_list(options, {dims[0], dims[1]});
+
+  return (DatasetSelection<Dims>(
+      {DimRange::construct_dimrange(dchunk_v[0], dslice_v[0]),
+       DimRange::construct_dimrange(dchunk_v[1], dslice_v[1])},
+      dims, doTranspose_));
 }
 
 inline DimRange::DimRange(Rcpp::IntegerVector::const_iterator itb,Rcpp::IntegerVector::const_iterator ite){
@@ -557,12 +616,55 @@ inline void DatasetSelection<Dims>::flipMat(Eigen::Map<Eigen::Matrix<T,RN,CN,Opt
 
 
 template<size_t Dims>
-template<typename T,int Options,int RN,int CN>
+template<typename T,int RN>
 inline void DatasetSelection<Dims>::readEigen(HighFive::Selection &selection,
-					Eigen::Map<Eigen::Matrix<T,RN,CN,Options> >& retmat)const {
-  if constexpr(Dims>2){
-      Rcpp::stop("readEigen cannot be used when dimensions are greater than 2");
-    }
+					      Eigen::Map<Eigen::Matrix<T,RN,Eigen::Dynamic,Eigen::ColMajor> >& retmat)const {
+  static_assert(Dims<=2,"readEigen cannot be used when dimensions are greater than 2");
+  //  static_assert(CN !=1,"can't have colmajor matrix where col-number is 1")
+  const size_t elem_total= std::accumulate(n_elem.begin(),n_elem.end(),1,std::multiplies<size_t>());
+  if(elem_total!=retmat.size()){
+    Rcpp::Rcerr<<"retmat is "<<retmat.size()<<" and elem_total is "<<elem_total<<std::endl;
+    Rcpp::Rcerr<<"retmat is "<<retmat.rows()<<" x "<<retmat.cols()<<std::endl;
+    Rcpp::Rcerr<<"selection is  is "<<n_elem[0]<<" x "<<n_elem[1]<<std::endl;
+    Rcpp::stop("retmat must have same number of elements as dataset selection");
+  }
+  if (doTranspose) {
+    Eigen::Map<Eigen::Matrix<T, RN, Eigen::Dynamic, Eigen::RowMajor>> tretmat(
+        retmat.data(), retmat.cols(), retmat.rows());
+    selection.read(tretmat);
+    flipMat(tretmat);
+
+  } else {
+    selection.read(retmat);
+    flipMat(retmat);
+  }
+}
+
+template<size_t Dims>
+template<typename T,int RN>
+inline void DatasetSelection<Dims>::readEigen(HighFive::Selection &selection,
+					      Eigen::Map<Eigen::Matrix<T,RN,1,Eigen::ColMajor> >& retmat)const {
+  static_assert(Dims<=2,"readEigen cannot be used when dimensions are greater than 2");
+  const size_t elem_total= std::accumulate(n_elem.begin(),n_elem.end(),1,std::multiplies<size_t>());
+  if (elem_total != retmat.size()) {
+    Rcpp::Rcerr << "retmat is " << retmat.size() << " and elem_total is "
+                << elem_total << std::endl;
+    Rcpp::Rcerr << "retmat is " << retmat.rows() << " x " << retmat.cols()
+                << std::endl;
+    Rcpp::Rcerr << "selection is  is " << n_elem[0] << " x " << n_elem[1]
+                << std::endl;
+    Rcpp::stop("retmat must have same number of elements as dataset selection");
+  }
+  selection.read(retmat);
+  flipMat(retmat);
+}
+
+template<size_t Dims>
+template<typename T,int RN,int CN>
+inline void DatasetSelection<Dims>::readEigen(HighFive::Selection &selection,
+					      Eigen::Map<Eigen::Matrix<T,RN,CN,Eigen::RowMajor> >& retmat)const {
+  static_assert(Dims<=2,"readEigen cannot be used when dimensions are greater than 2");
+
   const size_t elem_total= std::accumulate(n_elem.begin(),n_elem.end(),1,std::multiplies<size_t>());
   if(elem_total!=retmat.size()){
     Rcpp::Rcerr<<"retmat is "<<retmat.size()<<" and elem_total is "<<elem_total<<std::endl;
@@ -571,23 +673,14 @@ inline void DatasetSelection<Dims>::readEigen(HighFive::Selection &selection,
     Rcpp::stop("retmat must have same number of elements as dataset selection");
   }
   if(doTranspose){
-    if constexpr(Options==Eigen::RowMajor){
-      Eigen::Map<Eigen::Matrix<T,RN,CN,Eigen::ColMajor> > tretmat(retmat.data(),retmat.cols(),retmat.rows());
-      selection.read(tretmat);
-      flipMat(tretmat);
-      }else{
-      if constexpr(Options==Eigen::ColMajor && CN!=1){
-	  Eigen::Map<Eigen::Matrix<T,RN,CN,Eigen::RowMajor> > tretmat(retmat.data(),retmat.cols(),retmat.rows());
-	  selection.read(tretmat);
-	  flipMat(tretmat);
-	}
-    }
-  }else{
+    Eigen::Map<Eigen::Matrix<T, RN, CN, Eigen::ColMajor>> tretmat(retmat.data(), retmat.cols(), retmat.rows());
+    selection.read(tretmat);
+    flipMat(tretmat);
+  } else {
     selection.read(retmat);
     flipMat(retmat);
   }
 }
-
 
 template<size_t Dims>
 template<typename T>
@@ -644,17 +737,37 @@ inline void DatasetSelection<Dims>::writeEigen(HighFive::Selection &selection,
 template<size_t Dims>
 template<typename T,int Options,int RN,int CN>
 inline void DatasetSelection<Dims>::flipRows(Eigen::Map<Eigen::Matrix<T,RN,CN,Options> > retmat,
-					      const std::array<size_t,Dims> &offset,
-					      const std::array<size_t,Dims> &chunksize) const{
+					      const std::array<size_t,1> &offset,
+					      const std::array<size_t,1> &chunksize) const{
 
-  if constexpr(Dims>2){
-      Rcpp::stop("flipBlock cannot be used when dimensions are greater than 2");
-    }
-  if constexpr(Dims==1){
-      retmat.block(offset[0],0,chunksize[0],1).colwise().reverse();
-    }else{
-    retmat.block(offset[0],offset[1],chunksize[0],chunksize[1]).colwise().reverse();
-  }
+  static_assert(Dims==1,"Wrong overload for flipRows");
+
+  retmat.block(offset[0],0,chunksize[0],1).colwise().reverse();
+}
+
+
+template <size_t Dims>
+template <typename T, int Options, int RN, int CN>
+inline void DatasetSelection<Dims>::flipRows(
+    Eigen::Map<Eigen::Matrix<T, RN, CN, Options>> retmat,
+    const std::array<size_t, 2> &offset,
+    const std::array<size_t, 2> &chunksize) const {
+
+  static_assert(Dims == 2, "Wrong overload for flipCols");
+  retmat.block(offset[0], offset[1], chunksize[0], chunksize[1])
+      .colwise()
+      .reverse();
+}
+
+template<size_t Dims>
+template<typename T,int Options,int RN,int CN>
+inline void DatasetSelection<Dims>::flipCols(Eigen::Map<Eigen::Matrix<T,RN,CN,Options> > retmat,
+					      const std::array<size_t,1> &offset,
+					      const std::array<size_t,1> &chunksize) const{
+
+  static_assert(Dims==1,"wrong overload for flipCols");
+
+      retmat.block(0,offset[0],1,chunksize[0]).rowwise().reverseInPlace();
 }
 
 
@@ -662,16 +775,9 @@ inline void DatasetSelection<Dims>::flipRows(Eigen::Map<Eigen::Matrix<T,RN,CN,Op
 template<size_t Dims>
 template<typename T,int Options,int RN,int CN>
 inline void DatasetSelection<Dims>::flipCols(Eigen::Map<Eigen::Matrix<T,RN,CN,Options> > retmat,
-					      const std::array<size_t,Dims> &offset,
-					      const std::array<size_t,Dims> &chunksize) const{
+					      const std::array<size_t,2> &offset,
+					      const std::array<size_t,2> &chunksize) const{
 
-  if constexpr(Dims>2){
-      Rcpp::stop("flipBlock cannot be used when dimensions are greater than 2");
-    }
-  if constexpr(Dims==1){
-      retmat.block(0,offset[0],1,chunksize[0]).rowwise().reverseInPlace();
-    }else{
-    retmat.block(offset[0],offset[1],chunksize[0],chunksize[1]).rowwise().reverseInPlace();
-  }
+  static_assert(Dims==2,"wrong overload for flipCols");
+  retmat.block(offset[0],offset[1],chunksize[0],chunksize[1]).rowwise().reverseInPlace();
 }
-

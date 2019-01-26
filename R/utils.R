@@ -4,6 +4,11 @@
 }
 
 
+ls_h5 <- function(filename,groupname="/",full_names=FALSE){
+    fs::path_norm(ls_h5_exp(filename = fs::path_expand(filename),
+                            groupname = groupname,
+                            full_names = full_names))
+}
 
 construct_data_path <- function(...){
     arguments <- list(...)

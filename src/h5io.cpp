@@ -7,9 +7,7 @@
 
 //[[Rcpp::export]]
 std::string openFileHandleRead(const std::string filepath){
-  namespace fs = stdx::filesystem;
-  fs::path dp(filepath);
-  return(std::to_string(H5Fopen(dp.c_str(), H5F_ACC_RDONLY, NULL)));
+  return(std::to_string(H5Fopen(filepath.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT)));
 }
 
 
@@ -58,5 +56,5 @@ bool check_blosc(){
 bool is_transposed(const std::string filename,
                    const std::string groupname,
                    const std::string dataname){
-  return(HighFive::File(filename,HighFive::File::ReadOnly).getGroup(groupname).getDataSet(dataname).isTransposed());
+  return(HighFive::File(filename,HighFive::File::ReadOnly).getGroup(Path(groupname)).getDataSet(PathNode(dataname)).isTransposed());
 }

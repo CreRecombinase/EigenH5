@@ -72,12 +72,6 @@ class DataSet : public Object,
 };
 
 
-  // class VirtualDataSet : DataSet {
-
-  // };
-}
-
-
+} // namespace HighFive
 
 #include "bits/H5DataSet_misc.hpp"
-

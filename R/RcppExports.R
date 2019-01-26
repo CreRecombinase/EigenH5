@@ -77,8 +77,8 @@ update_vector <- function(data, filename, datapath, options) {
     .Call('_EigenH5_update_vector', PACKAGE = 'EigenH5', data, filename, datapath, options)
 }
 
-write_attribute_h5 <- function(filename, datapath, data) {
-    .Call('_EigenH5_write_attribute_h5', PACKAGE = 'EigenH5', filename, datapath, data)
+write_attribute_h5 <- function(data, filename, datapath) {
+    .Call('_EigenH5_write_attribute_h5', PACKAGE = 'EigenH5', data, filename, datapath)
 }
 
 read_attribute_h5 <- function(filename, datapath) {
@@ -95,10 +95,6 @@ link_objects_h5 <- function(filename_from, filename_to, datapath_from, datapath_
 
 create_file_h5 <- function(filename) {
     invisible(.Call('_EigenH5_create_file_h5', PACKAGE = 'EigenH5', filename))
-}
-
-norm_file <- function(filename) {
-    .Call('_EigenH5_norm_file', PACKAGE = 'EigenH5', filename)
 }
 
 dataset_chunks <- function(filename, datapath) {
@@ -137,7 +133,7 @@ isGroup <- function(filename, dataname) {
     .Call('_EigenH5_isGroup', PACKAGE = 'EigenH5', filename, dataname)
 }
 
-ls_h5 <- function(filename, groupname = as.character( c("/")), full_names = FALSE) {
+ls_h5_exp <- function(filename, groupname = as.character( c("/")), full_names = FALSE) {
     .Call('_EigenH5_ls_h5', PACKAGE = 'EigenH5', filename, groupname, full_names)
 }
 

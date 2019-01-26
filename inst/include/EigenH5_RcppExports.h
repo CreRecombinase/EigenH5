@@ -255,17 +255,17 @@ namespace EigenH5 {
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
-    inline bool write_attribute_h5(const std::string& filename, std::string datapath, const RObject& data) {
+    inline bool write_attribute_h5(const RObject& data, const std::string& filename, std::string datapath) {
         typedef SEXP(*Ptr_write_attribute_h5)(SEXP,SEXP,SEXP);
         static Ptr_write_attribute_h5 p_write_attribute_h5 = NULL;
         if (p_write_attribute_h5 == NULL) {
-            validateSignature("bool(*write_attribute_h5)(const std::string&,std::string,const RObject&)");
+            validateSignature("bool(*write_attribute_h5)(const RObject&,const std::string&,std::string)");
             p_write_attribute_h5 = (Ptr_write_attribute_h5)R_GetCCallable("EigenH5", "_EigenH5_write_attribute_h5");
         }
         RObject rcpp_result_gen;
         {
             RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_write_attribute_h5(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(data)));
+            rcpp_result_gen = p_write_attribute_h5(Shield<SEXP>(Rcpp::wrap(data)), Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)));
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
@@ -356,27 +356,6 @@ namespace EigenH5 {
             throw Rcpp::LongjumpException(rcpp_result_gen);
         if (rcpp_result_gen.inherits("try-error"))
             throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-    }
-
-    inline std::string norm_file(const std::string filename) {
-        typedef SEXP(*Ptr_norm_file)(SEXP);
-        static Ptr_norm_file p_norm_file = NULL;
-        if (p_norm_file == NULL) {
-            validateSignature("std::string(*norm_file)(const std::string)");
-            p_norm_file = (Ptr_norm_file)R_GetCCallable("EigenH5", "_EigenH5_norm_file");
-        }
-        RObject rcpp_result_gen;
-        {
-            RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_norm_file(Shield<SEXP>(Rcpp::wrap(filename)));
-        }
-        if (rcpp_result_gen.inherits("interrupted-error"))
-            throw Rcpp::internal::InterruptedException();
-        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
-            throw Rcpp::LongjumpException(rcpp_result_gen);
-        if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-        return Rcpp::as<std::string >(rcpp_result_gen);
     }
 
     inline Rcpp::IntegerVector dataset_chunks(const std::string filename, const std::string datapath) {
@@ -566,17 +545,17 @@ namespace EigenH5 {
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
-    inline Rcpp::StringVector ls_h5(const std::string filename, Rcpp::CharacterVector groupname = Rcpp::CharacterVector::create("/"), bool full_names = false) {
-        typedef SEXP(*Ptr_ls_h5)(SEXP,SEXP,SEXP);
-        static Ptr_ls_h5 p_ls_h5 = NULL;
-        if (p_ls_h5 == NULL) {
-            validateSignature("Rcpp::StringVector(*ls_h5)(const std::string,Rcpp::CharacterVector,bool)");
-            p_ls_h5 = (Ptr_ls_h5)R_GetCCallable("EigenH5", "_EigenH5_ls_h5");
+    inline Rcpp::StringVector ls_h5_exp(const std::string filename, Rcpp::CharacterVector groupname = Rcpp::CharacterVector::create("/"), bool full_names = false) {
+        typedef SEXP(*Ptr_ls_h5_exp)(SEXP,SEXP,SEXP);
+        static Ptr_ls_h5_exp p_ls_h5_exp = NULL;
+        if (p_ls_h5_exp == NULL) {
+            validateSignature("Rcpp::StringVector(*ls_h5_exp)(const std::string,Rcpp::CharacterVector,bool)");
+            p_ls_h5_exp = (Ptr_ls_h5_exp)R_GetCCallable("EigenH5", "_EigenH5_ls_h5_exp");
         }
         RObject rcpp_result_gen;
         {
             RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_ls_h5(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(groupname)), Shield<SEXP>(Rcpp::wrap(full_names)));
+            rcpp_result_gen = p_ls_h5_exp(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(groupname)), Shield<SEXP>(Rcpp::wrap(full_names)));
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();

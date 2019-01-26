@@ -2,33 +2,13 @@
 #include <cmath>
 #include <complex>
 #include <iostream>
-// #include <range/v3/core.hpp>
-// #include <range/v3/view.hpp>
-// #include <range/v3/action.hpp>
+
+#include <boost/optional.hpp>
+#include <boost/optional/optional_io.hpp>
 
 #define EIGEN_PERMANENTLY_DISABLE_STUPID_WARNINGS
 #include <RcppEigen.h>
-
-#if __has_include(<filesystem>)
-
-//#include <filesystem>
-#   include <filesystem>
-namespace stdx {
-  using namespace ::std;
-  //using namespace ::std::experimental;
-}
-#elif __has_include(<experimental/filesystem>)
-#   include <experimental/filesystem>
-namespace stdx {
-  using namespace ::std;
-  using namespace ::std::experimental;
-
-}
-#else
-#   error <experimental/filesystem> and <filesystem> not found
-#endif
-
-
+#include "path/path.hpp"
 
 
 #include "highfive/highfive.hpp"
@@ -58,13 +38,7 @@ public:
 
 #include "EigenH5_RcppExports.h"
 
-
-
-
-inline stdx::filesystem::path root_path(const std::string & input){
-  return(stdx::filesystem::path("/") / stdx::filesystem::path(input));
-}
-
+inline Path root_path(const std::string &input) { return (Path("/" + input)); }
 
 template <typename T>
 struct cpp2r{
@@ -95,15 +69,15 @@ struct cpp2r<std::string>{
 HighFive::Filter create_filter(std::vector<size_t> data_dimensions,
 			       Rcpp::List &options);
 
-template<SEXPTYPE RTYPE> std::optional<Rcpp::Vector<RTYPE> > get_list_element(const Rcpp::List &list, const std::string name,const bool empty_is_false = true);
-template<typename T,SEXPTYPE RTYPE = cpp2r<T>::data_t > std::optional<T> get_list_scalar(const Rcpp::List &list, const std::string name);
-std::vector<std::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims);
+template<SEXPTYPE RTYPE> boost::optional<Rcpp::Vector<RTYPE> > get_list_element(const Rcpp::List &list, const std::string name,const bool empty_is_false = true);
+template<typename T,SEXPTYPE RTYPE = cpp2r<T>::data_t > boost::optional<T> get_list_scalar(const Rcpp::List &list, const std::string name);
+std::vector<boost::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims);
 
 
-inline std::vector<std::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix){
-  using int_o = std::optional<int>;
+inline std::vector<boost::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix){
+  using int_o = boost::optional<int>;
   const size_t num_dims= datadims.size();
-  std::vector<int_o> offset_v(num_dims,std::nullopt);
+  std::vector<int_o> offset_v(num_dims,boost::none);
   if(auto offset_o =get_list_element<INTSXP>(list,prefix)){
     if(offset_o->size()!=num_dims){
       Rcpp::stop("subset argument "+prefix+" must satisfy length(offset)==length(dim(data))");
@@ -133,11 +107,11 @@ inline std::vector<std::optional<int> > parse_option(const Rcpp::List &list, std
 
 
 
-//std::vector<std::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix);
+//std::vector<boost::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix);
 
 
-//std::vector<std::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix);
-//std::vector<std::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims);
+//std::vector<boost::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix);
+//std::vector<boost::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims);
 
 
 
@@ -160,10 +134,10 @@ bool isGroup(const std::string filename, std::string groupname);
 
 
 template<SEXPTYPE RTYPE>
-inline std::optional<Rcpp::Vector<RTYPE> > get_list_element(const Rcpp::List &list, const std::string name,const bool empty_is_false){
+inline boost::optional<Rcpp::Vector<RTYPE> > get_list_element(const Rcpp::List &list, const std::string name,const bool empty_is_false){
   Rcpp::RObject rnames =	list.names();
   if(rnames.isNULL()){
-    return(std::nullopt);
+    return(boost::none);
   }
   Rcpp::CharacterVector colnames(rnames);
   for(auto tc:colnames){
@@ -173,25 +147,25 @@ inline std::optional<Rcpp::Vector<RTYPE> > get_list_element(const Rcpp::List &li
 	if(mvec.size()>0){
 	  return(mvec);
 	}else{
-	  return(std::nullopt);
+	  return(boost::none);
 	}
       }else{
 	return(Rcpp::as<Rcpp::Vector<RTYPE> >(list[name]));
       }
     }
   }
-  return(std::nullopt);
+  return(boost::none);
 }
 
-inline std::vector<std::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims){
-  using rvec_o = std::optional<Rcpp::IntegerVector>;
+inline std::vector<boost::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims){
+  using rvec_o = boost::optional<Rcpp::IntegerVector>;
   const size_t num_dims= datadims.size();
 
 
   if(num_dims>2){
     Rcpp::stop("Datasets with Dims>2 currently not supported");
   }
-  std::vector<rvec_o> retvec(num_dims,std::nullopt);
+  std::vector<rvec_o> retvec(num_dims,boost::none);
   if(num_dims==1){
     if(auto subset_rv =get_list_element<INTSXP>(list,"subset")){
       retvec[0] = subset_rv.value();
@@ -222,24 +196,24 @@ inline std::vector<std::optional<Rcpp::IntegerVector> > parse_subset_list(const 
 
 
 template<typename T,SEXPTYPE RTYPE>
-inline std::optional<T> get_list_scalar(const Rcpp::List &list, const std::string name){
+inline boost::optional<T> get_list_scalar(const Rcpp::List &list, const std::string name){
   if(auto rel = get_list_element<RTYPE>(list,name)){
     T rel_b = *(Rcpp::as< std::vector<T> >(*rel).begin());
     return(rel_b);
   }else{
-    return(std::nullopt);
+    return(boost::none);
   }
 }
 
 template<typename T,SEXPTYPE RTYPE>
-  inline std::optional<T> list_get_any(const Rcpp::List &list, const std::vector<std::string> name_opts){
+  inline boost::optional<T> list_get_any(const Rcpp::List &list, const std::vector<std::string> name_opts){
   for( auto &name : name_opts){
     auto trel =	get_list_scalar<T>(list,name);
     if(trel){
       return(trel);
     }
   }
-  return(std::nullopt);
+  return(boost::none);
 }
 
 

@@ -49,7 +49,7 @@ class AnnotateTraits {
     /// \return the attribute object
     ///
     Attribute getAttribute(const std::string& attribute_name) const;
-  std::optional<Attribute> openAttribute(const std::string& attribute_name) const;
+  boost::optional<Attribute> openAttribute(const std::string& attribute_name) const;
 
     ///
     /// \brief return the number of attributes of the node / group

@@ -52,22 +52,22 @@ fi
 
 
 
-if test -z "${BLOSC_LIBS}"; then
-    BLOSC_CFLAGS = `echo 'libblosc::pkgconfig("PKG_CFLAGS")'| "${R_HOME}/bin/R" --vanilla --slave`
-    BLOSC_LIBS = `echo 'libblosc::pkgconfig("PKG_LIBS_static")' | "${R_HOME}/bin/R" --vanilla --slave`
-fi
-AC_MSG_RESULT([looking for .pc files in $PKG_CONFIG_PATH])
+dnl if test -z "${BLOSC_LIBS}"; then
+dnl     BLOSC_CFLAGS = `echo 'libblosc::pkgconfig("PKG_CFLAGS")'| "${R_HOME}/bin/R" --vanilla --slave`
+dnl     BLOSC_LIBS = `echo 'libblosc::pkgconfig("PKG_LIBS_static")' | "${R_HOME}/bin/R" --vanilla --slave`
+dnl fi
+dnl AC_MSG_RESULT([looking for .pc files in $PKG_CONFIG_PATH])
 
-PKG_CHECK_MODULES([BLOSC], [blosc], [
-LIBS="${BLOSC_LIBS} ${LIBS}"
-AC_MSG_RESULT([found the blosc package: $BLOSC_LIBS])],[
-])
+dnl PKG_CHECK_MODULES([BLOSC], [blosc], [
+dnl LIBS="${BLOSC_LIBS} ${LIBS}"
+dnl AC_MSG_RESULT([found the blosc package: $BLOSC_LIBS])],[
+dnl ])
 
 
-PKG_CHECK_MODULES([HDF5], [hdf5], [
-LIBS="${HDF5_LIBS} ${LIBS}"
-AC_MSG_RESULT([found the hdf5 package: $HDF5_LIBS])],[
-])
+dnl PKG_CHECK_MODULES([HDF5], [hdf5], [
+dnl LIBS="${HDF5_LIBS} ${LIBS}"
+dnl AC_MSG_RESULT([found the hdf5 package: $HDF5_LIBS])],[
+dnl ])
 
 if test -z "{HDF5_LIBS}"; then
    HDF5_LIBS = `echo 'Rhdf5lib::pkgconfig("PKG_C_LIBS")'|\
@@ -88,20 +88,20 @@ dnl AC_MSG_RESULT([found the zstd package: $ZSTD_LIBS])],[
 dnl AC_MSG_ERROR([unable to find the zstd package])
 dnl ])
 
-AC_SEARCH_LIBS([H5open], [hdf5], [], [
-   AC_MSG_ERROR([hdf5 open function])
-   ])
+dnl AC_SEARCH_LIBS([H5open], [hdf5], [], [
+dnl    AC_MSG_ERROR([hdf5 open function])
+dnl    ])
 
 dnl AC_SEARCH_LIBS([H5Oget_info_by_name], [hdf5], [], [
 dnl    AC_MSG_ERROR([hdf5 info_by_name])
 dnl    ])
 
 
-if test -z "${BLOSC_LIBS}"; then
-   AC_SEARCH_LIBS([blosc_compress], [blosc], [], [
-   AC_MSG_ERROR([unable to find the blosc_compress() function])
-   ])
-fi	
+dnl if test -z "${BLOSC_LIBS}"; then
+dnl    AC_SEARCH_LIBS([blosc_compress], [blosc], [], [
+dnl    AC_MSG_ERROR([unable to find the blosc_compress() function])
+dnl    ])
+dnl fi
 
 dnl if test -z "${ZSTD_LIBS}"; then
 dnl AC_SEARCH_LIBS([ZSTD_compress], [zstd], [], [
@@ -119,8 +119,8 @@ dnl   ])
 AC_MSG_RESULT([Libs will be : $LIBS])
 AC_MSG_RESULT([HDF5Libs will be : $HDF5_LIBS])
 AC_SUBST(LIBS)
-AC_SUBST(BLOSC_LIBS)
-AC_SUBST(BLOSC_CFLAGS)
+#AC_SUBST(BLOSC_LIBS)
+#AC_SUBST(BLOSC_CFLAGS)
 AC_SUBST(HDF5_LIBS)
 #AC_SUBST(BLOSC_CFLAGS)
 

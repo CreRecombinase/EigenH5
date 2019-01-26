@@ -56,7 +56,7 @@ namespace HighFive {
     // apply conversion operations to basic scalar type
     template <typename Scalar, class Enable = void>
     struct data_converter {
-      inline data_converter(Scalar &datamem, DataSpace &space) {
+      inline data_converter(Scalar &datamem, DataSpace &space,const DataType dt) {
         static_assert((std::is_arithmetic<Scalar>::value ||
                        std::is_same<std::string, Scalar>::value),
                       "supported datatype should be an arithmetic value, a "
@@ -79,7 +79,7 @@ namespace HighFive {
     template <typename CArray>
     struct data_converter<CArray,
 			  typename enable_if<(is_c_array<CArray>::value)>::type> {
-      inline data_converter(CArray &datamem, DataSpace &space) {
+      inline data_converter(CArray &datamem, DataSpace &space,const DataType dt) {
         (void)datamem;
         (void)space; // do nothing
       }
@@ -98,9 +98,9 @@ namespace HighFive {
     struct data_converter<
       std::vector<T>,
       typename enable_if<(is_same<T, typename type_of_array<T>::type>::value)>::type> {
-      inline data_converter(std::vector<T> &vec, DataSpace &space, size_t dim = 0)
+      inline data_converter(std::vector<T> &vec, DataSpace &space,const DataType dt)
 	: _space(
-		 &space), _dim(dim) {
+		 &space), _dim(0) {
 	assert(_space->getDimensions().size() > dim);
 	(void)vec;
       }
@@ -122,36 +122,6 @@ namespace HighFive {
       size_t _dim;
     };
 
-    // template <typename T,SEXPTYPE RTPE=cpp2r<T>::data_t>
-    // struct data_converter<
-    //   Rcpp::Vector<RTYPE>,
-    //   typename enable_if<(is_same<T, typename type_of_array<T>::type>::value)>::type> {
-    //   typedef     Rcpp::Vector<RTYPE> Vector;
-    //   inline data_converter(Vector &vec, DataSpace &space, size_t dim = 0)
-    //     : _space(
-    // 	       &space), _dim(dim) {
-    //     assert(_space->getDimensions().size() > dim);
-    //     (void)vec;
-    //   }
-    
-    //   inline typename type_of_array<T>::type*
-    //   transform_read(std::vector<T>& vec) {
-    //     assert(vec[0]);
-    //     vec.resize(_space->getDimensions()[_dim]);
-    //     return &(vec[0]);
-    //   }
-    
-    //   inline typename type_of_array<T>::type*
-    //   transform_write(std::vector<T>& vec) {
-    //     return &(vec[0]);
-    //   }
-
-    //   inline void process_result(std::vector<T>& vec) { (void)vec; }
-
-    //   DataSpace* _space;
-    //   size_t _dim;
-    // };
-
 
 
     // apply conversion to eigen vector
@@ -159,15 +129,11 @@ namespace HighFive {
     struct data_converter<Eigen::Matrix<Scalar,Eigen::Dynamic,1>, void> {
       typedef Eigen::Matrix<Scalar,Eigen::Dynamic,1>  Vector ;
 
-      inline data_converter(Vector &matrix, DataSpace &space, size_t dim = 0)
+      inline data_converter(Vector &matrix, DataSpace &space,const DataType dt)
 	: disk_dims(space.getDimensions()),
 	  mem_dims(disk_dims)
       {
 	assert(disk_dims.size() == 1);
-	(void)
-	  dim;
-	(void)
-	  matrix;
       }
 
       inline typename type_of_array<Scalar>::type *transform_read(Vector &matrix) {
@@ -204,7 +170,7 @@ namespace HighFive {
     struct data_converter<Eigen::Matrix<Scalar,RowsAtCompileTime,ColsAtCompileTime,Options>, void> {
       typedef Eigen::Matrix<Scalar,RowsAtCompileTime,ColsAtCompileTime,Options>  Matrix ;
 
-      inline data_converter(Matrix &matrix, DataSpace &space, size_t dim = 0)
+      inline data_converter(Matrix &matrix, DataSpace &space,const DataType dt)
 	: disk_dims(space.getDimensions()),
 	  mem_dims(disk_dims),
 	  is_row_major{Options == Eigen::RowMajor} {
@@ -212,8 +178,7 @@ namespace HighFive {
 	  _temp_row_matrix = matrix;
 	}
 	assert(disk_dims.size() == 2);
-	(void)
-	  dim;
+
 	(void)
 	  matrix;
       }
@@ -271,7 +236,7 @@ namespace HighFive {
     struct data_converter<Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>>, void> {
       typedef Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime, Options>> Matrix;
 
-      inline data_converter(Matrix &matrix, DataSpace &space, size_t dim = 0)
+      inline data_converter(Matrix &matrix, DataSpace &space,const DataType dt)
 	: disk_dims(space.getDimensions()),
 	  mem_dims(disk_dims),
 	  is_row_major{Options == Eigen::RowMajor} {
@@ -279,8 +244,7 @@ namespace HighFive {
 	  _temp_row_matrix = matrix;
 	}
 	assert(disk_dims.size() == 2);
-	(void)
-	  dim;
+
 	(void)
 	  matrix;
       }
@@ -331,12 +295,10 @@ namespace HighFive {
     struct data_converter<Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, 1, Options>>, void> {
       typedef Eigen::Map<Eigen::Matrix<Scalar, RowsAtCompileTime, 1, Options>> Matrix;
 
-      inline data_converter(Matrix &matrix, DataSpace &space, size_t dim = 0)
+      inline data_converter(Matrix &matrix, DataSpace &space,const DataType dt)
 	: disk_dims(space.getDimensions()),
 	  mem_dims(disk_dims) {
 	assert(disk_dims.size() <= 2);
-	(void)
-	  dim;
 	(void)
 	  matrix;
       }
@@ -493,14 +455,17 @@ namespace HighFive {
     // apply conversion to scalar string
     template <>
     struct data_converter<std::string, void> {
-      inline data_converter(std::string &vec, DataSpace &space) : _space(space) {
+      inline data_converter(std::string &vec, DataSpace &space,
+                            const DataType dt)
+	: _space(space) {
         (void)vec;
+        hsize_t tdims;
+        v_size = (H5Tget_size(dt.getId())) / sizeof(char);
       }
-
       // create a C vector adapted to HDF5
       // fill last element with NULL to identify end
       inline char *transform_read(std::string &) {
-        _c_vec.resize(255);
+        _c_vec.resize(v_size);
 
         return (_c_vec.data());
       }
@@ -510,7 +475,7 @@ namespace HighFive {
       }
 
       inline char *transform_write(std::string &str) {
-        _c_vec.resize(255);
+        _c_vec.resize(v_size);
         std::copy(str.begin(), str.end(), _c_vec.begin());
         return _c_vec.data();
       }
@@ -523,13 +488,14 @@ namespace HighFive {
 
       std::vector<char> _c_vec;
       DataSpace& _space;
+      size_t v_size;
     };
 
     template<>
     struct data_converter<std::vector<std::string>, void> {
-      inline data_converter(std::vector<std::string> &vec, DataSpace &space,const size_t dim=0)
-	: _space(space),dim_(dim==0 ? 255 : dim) {
-	(void) vec;
+      inline data_converter(std::vector<std::string> &vec, DataSpace &space,const DataType dt)
+	: _space(space),dim_((H5Tget_size(dt.getId())) / sizeof(char)) {
+
       }
 
       // create a C vector adapted to HDF5
@@ -582,7 +548,7 @@ namespace HighFive {
 
     template <>
 struct data_converter<std::vector<char*>, void> {
-    inline data_converter(std::vector<char*>& vec, DataSpace& space)
+    inline data_converter(std::vector<char*>& vec, DataSpace& space,const DataType dt)
         : _space(space) {
         (void)vec;
     }

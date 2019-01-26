@@ -83,6 +83,21 @@ class SliceTraits {
     template <typename T>
     void read(T &array);
 
+
+
+
+
+
+    /// Read the entire dataset into a buffer using an iterator
+    /// An exception is raised is if the numbers of dimension of the buffer and
+    /// of the dataset are different
+    ///
+    /// The array type can be a N-pointer or a N-vector. For plain pointers
+    /// no dimensionality checking will be performed, it is the user's
+    /// responsibility to ensure that the right amount of space has been
+    /// allocated.
+    void it_read(std::vector<std::string> &array);
+
     ///
     /// Read the entire dataset into a raw buffer
     ///

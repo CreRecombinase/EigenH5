@@ -37,14 +37,14 @@ private:
     auto mtd = dataset_map.find(fn+dfn);
     if(mtd==dataset_map.end()){
       auto mtf = f_map.get_file(fn);
-      mtd = dataset_map.emplace_hint(mtd,fn+dfn,std::make_shared<HighFive::DataSet>(mtf.getDataSet(dfn)));
+      mtd = dataset_map.emplace_hint(mtd,fn+dfn,std::make_shared<HighFive::DataSet>(mtf.getDataSet(Path(dfn))));
     }
     return(mtd->second);
   }
 public:
 
   DataQueue(Rcpp::List options,FileManager<isReadOnly> &f_map_):num_selections(options.size()),
-									  f_map(f_map_){
+								f_map(f_map_){
     selections.reserve(num_selections);
     file_selections.reserve(num_selections);
     for(int i=0; i<num_selections;i++){
@@ -55,7 +55,9 @@ public:
       }
       auto td = get_dataset(*fn,*dn);
       std::vector<size_t> tdims	= td->getDataDimensions();
-      selections.push_back(DatasetSelection<Dims>::ProcessList(options(i),tdims));
+      std::array<size_t,Dims> a_dims;
+      std::copy_n(tdims.begin(),Dims,a_dims.begin());
+      selections.push_back(DatasetSelection<Dims>::ProcessList(options(i),a_dims));
       file_selections.push_back(*fn+*dn);
     }
   }
@@ -81,7 +83,10 @@ public:
   template<int Options = Eigen::ColMajor>
   void readMat(const size_t i,Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> &datamat,bool doTranspose=false){
 
-    auto [dataset,data_sel] = get_index(i);
+    auto data_r = get_index(i);
+    auto &dataset = data_r.first;
+    auto &data_sel = data_r.second;
+
     auto file_sel = data_sel.makeSelection(*dataset);
     auto n_elem = file_sel.getDataDimensions();
     const size_t elem_total= std::accumulate(n_elem.begin(),n_elem.end(),1,std::multiplies<size_t>());
@@ -93,7 +98,11 @@ public:
     }
   }
   void readVector(const size_t i,Eigen::Matrix<T,Eigen::Dynamic,1> &datamat){
-    auto [dataset,data_sel] = get_index(i);
+
+    auto data_r = get_index(i);
+    auto &dataset = data_r.first;
+    auto &data_sel = data_r.second;
+
     auto file_sel = data_sel.makeSelection(*dataset);
     auto n_elem = file_sel.getDataDimensions();
     const size_t elem_total= std::accumulate(n_elem.begin(),n_elem.end(),1,std::multiplies<size_t>());
@@ -105,14 +114,21 @@ public:
   template<int Options = Eigen::ColMajor>
   void writeMat(const size_t i,Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,Options>  &retmat){
     static_assert(isReadOnly ==false,"cannot write to a readOnly DataQueue!");
-    auto [dataset,data_sel] = get_index(i);
+
+    auto data_r = get_index(i);
+    auto &dataset = data_r.first;
+    auto &data_sel = data_r.second;
+
     auto file_sel = data_sel.makeSelection(*dataset);
+
     Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,Options> >  tretmat(retmat.data(),retmat.rows(),retmat.cols());
     data_sel.writeEigen(file_sel,tretmat);
   }
   void writeVector(const size_t i,Eigen::Matrix<T,Eigen::Dynamic,1>  &retmat){
     static_assert(isReadOnly ==false,"cannot write to a readOnly DataQueue!");
-    auto [dataset,data_sel] = get_index(i);
+    auto data_r = get_index(i);
+    auto &dataset = data_r.first;
+    auto &data_sel = data_r.second;
     auto file_sel = data_sel.makeSelection(*dataset);
     Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,1> >  tretmat(retmat.data(),retmat.size());
     data_sel.template writeEigen<T,Eigen::ColMajor,Eigen::Dynamic,1>(file_sel,tretmat);
@@ -299,7 +315,6 @@ public:
       }
       num_chunks=tcset.size();
     }
-    //chunk_map.reserve(num_chunks);
     create_dset = has_col(colnames,"create_dynamic") ? dff["create_dynamic"] : Rcpp::LogicalVector(num_reg,false);
     row_offsets = has_col(colnames,"row_offsets") ? dff["row_offsets"] : Rcpp::IntegerVector(num_reg,0);
     col_offsets = has_col(colnames,"col_offsets") ? dff["col_offsets"] : Rcpp::IntegerVector(num_reg,0);
@@ -315,20 +330,21 @@ public:
     for(int i=0; i<num_reg;i++){
 
       tfn=Rcpp::as<std::string>(filenames(i));
-      tgn=Rcpp::as<std::string>(groupnames(i));
-      tdn=Rcpp::as<std::string>(datanames(i));
+      Path tgn(Rcpp::as<std::string>(groupnames(i)));
+      PathNode tdn(Rcpp::as<std::string>(datanames(i)));
+
       tgc=chunk_group(i);
       dyn_create = create_dset(i);
       
 
-      auto gmf=chunk_map[tgc].find(tdn);
+      auto gmf=chunk_map[tgc].find(tdn.string());
       if(gmf!=chunk_map[tgc].end()){
           Rcpp::Rcerr<<"In row: "<<i<<std::endl;
           Rcpp::Rcerr<<"In chunk: "<<tgc<<std::endl;
-          Rcpp::Rcerr<<tfn<<"/"<<tgn<<"/"<<tdn<<std::endl;
+          Rcpp::Rcerr<<tfn<<"/"<<tgn.string()<<"/"<<tdn.string()<<std::endl;
           Rcpp::stop("duplicate dataset in read/write chunk! Each read write chunk must contain only one reference to a given dataset");
       }else{
-        chunk_map[tgc].emplace_hint(gmf,tdn,i);
+        chunk_map[tgc].emplace_hint(gmf,tdn.string(),i);
       }
 
       auto mtf = m_file_map.find(tfn);
@@ -336,7 +352,7 @@ public:
         mtf = m_file_map.emplace_hint(mtf,tfn,std::make_shared<File>(tfn,rt));
       }
 
-      std::string g_arr=tfn+tgn;
+      std::string g_arr=tfn+tgn.string();
       auto mtg = m_group_map.find(g_arr);
 
       if(mtg==m_group_map.end()){
@@ -351,7 +367,7 @@ public:
         }
       }
 
-      std::string d_arr=tfn+tgn+tdn;
+      std::string d_arr=tfn+tgn.string()+tdn.string();
       auto mtd = m_dataset_map.find(d_arr);
 
       if(mtd==m_dataset_map.end()){
@@ -363,7 +379,6 @@ public:
       }
       if(!dyn_create){
         data_dimv=mtd->second->getDataDimensions();
-        
         if(row_chunksizes(i)<0){
           row_chunksizes(i)=data_dimv[0]-row_offsets(i);
         }
@@ -394,7 +409,7 @@ public:
       const size_t chunk_rows = static_cast<size_t>(std::min(static_cast<double>(b.rows()),std::ceil(static_cast<double>(MAX_CHUNK)/static_cast<double>(b.cols()))));
       chunk_dims = {chunk_rows, static_cast<size_t>(b.cols())};
 
-      Filter filter(chunk_dims, Filter::zstd, {});
+      Filter filter(chunk_dims, filter_zstd, {});
       DataSpace ds = DataSpace(mat_dims);
       DataSet dataset = mtg->createDataSet(dataname, ds, AtomicType<T>(), filter);
       dataset.write(b);
@@ -428,7 +443,7 @@ public:
       const size_t MAX_CHUNK = (1024*1024)/2;
       const size_t chunk_rows = static_cast<size_t>(std::min(static_cast<double>(b.size()),std::ceil(static_cast<double>(MAX_CHUNK))));
       chunk_dims = {chunk_rows};
-      Filter filter(chunk_dims, Filter::zstd, {});
+      Filter filter(chunk_dims, filter_zstd, {});
       DataSpace ds = DataSpace(vec_dims);
       DataSet dataset = mtg->createDataSet(dataname, ds, AtomicType<T>(), filter);
       dataset.write(b);

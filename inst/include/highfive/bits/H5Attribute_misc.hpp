@@ -1,4 +1,4 @@
-﻿/*
+/*
  *  Copyright (c), 2017, Ali Can Demiralp <ali.demiralp@rwth-aachen.de>
  *
  *  Distributed under the Boost Software License, Version 1.0.
@@ -39,6 +39,7 @@ inline size_t Attribute::getStorageSize() const {
 inline DataType Attribute::getDataType() const {
     DataType res;
     res._hid = H5Aget_type(_hid);
+   
     return res;
 }
 
@@ -71,12 +72,14 @@ inline void Attribute::read(T& array) const {
         throw DataSpaceException(ss.str());
     }
 
+    auto dt = this->getDataType();
+
     // Create mem datatype
     const AtomicType<typename details::type_of_array<type_no_const>::type>
         array_datatype;
 
     // Apply pre read convertions
-    details::data_converter<type_no_const> converter(nocv_array, mem_space);
+    details::data_converter<type_no_const> converter(nocv_array, mem_space,dt);
 
     if (H5Aread(getId(), array_datatype.getId(),
                 static_cast<void*>(converter.transform_read(nocv_array))) < 0) {
@@ -106,11 +109,13 @@ inline void Attribute::write(const T& buffer) {
         throw DataSpaceException(ss.str());
     }
 
+    auto dt = this->getDataType();
+
     const AtomicType<typename details::type_of_array<type_no_const>::type>
         array_datatype;
 
     // Apply pre write convertions
-    details::data_converter<type_no_const> converter(nocv_buffer, mem_space);
+    details::data_converter<type_no_const> converter(nocv_buffer, mem_space,dt);
 
     if (H5Awrite(getId(), array_datatype.getId(),
                  static_cast<const void*>(

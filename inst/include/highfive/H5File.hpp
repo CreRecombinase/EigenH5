@@ -43,7 +43,7 @@ class File : public Object,
     /// Open flag: Create non existing file
   static const int Create = 0x10;
   static const int SWMR_Write = 0x16;
-  static std::string preprocess_path(const std::string filename);
+
     ///
     /// \brief File
     /// \param filename: filepath of the HDF5 file
@@ -58,7 +58,7 @@ class File : public Object,
     ///
   const std::string& getName() const;
   size_t getObjCount(unsigned int types) const;
-  static std::optional<File> openFile(const std::string& filename, int openFlags = ReadOnly,
+  static boost::optional<File> openFile(const std::string& filename, int openFlags = ReadOnly,
 				      const FileDriver& driver = DefaultFileDriver());
     ///
     /// \brief flush

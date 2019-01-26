@@ -7,14 +7,14 @@ test_that("datasets are zstd by default",{
   retl <- get_datset_filter(tempf,"grp/grp2/dat")
   expect_equal(retl$name,"zstd")
 })
-
-test_that("can compress with blosc",{
-  tvec <- as.integer(1:10)
-  tempf <- tempfile()
-  write_vector_h5(tvec,tempf,"grp/grp2/dat",filter="blosc")
-  retl <- get_datset_filter(tempf,"grp/grp2/dat")
-  expect_equal(retl$name,"blosc")
-})
+# 
+# test_that("can compress with blosc",{
+#   tvec <- as.integer(1:10)
+#   tempf <- tempfile()
+#   write_vector_h5(tvec,tempf,"grp/grp2/dat",filter="blosc")
+#   retl <- get_datset_filter(tempf,"grp/grp2/dat")
+#   expect_equal(retl$name,"blosc")
+# })
 
 test_that("can write without compression",{
   tvec <- as.integer(1:10)

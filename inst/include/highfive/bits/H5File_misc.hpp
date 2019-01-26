@@ -49,27 +49,13 @@ inline int convert_open_flag(int openFlags) {
   }
 
 
-  inline std::string File::preprocess_path(const std::string filename){
-    	fs::path dp(filename);
-	if((*dp.begin())==fs::path("~")){
-	  //fs::path ost(std::next(dp.begin()),dp.end());
-	  fs::path ost(std::string_view(std::getenv("HOME")));
-	  for(auto it=std::next(dp.begin()); it!=dp.end();it++){
-	    ost=ost / (*it);
-	  }
-	  /// ost;
-
-	  return(ost.string());
-	}
-	return(dp.string());
-  }
 
 
 
 inline File::File(const std::string& filename, int openFlags,
-                  const FileDriver& driver):_filename(preprocess_path(filename))
+                  const FileDriver& driver):_filename(filename)
       {
-	namespace fs = stdx::filesystem;
+
 
 
 
@@ -110,14 +96,14 @@ inline File::File(const std::string& filename, int openFlags,
     }
 }
 
-  inline std::optional<File> File::openFile(const std::string& filename, int openFlags,const FileDriver& driver){
+  inline boost::optional<File> File::openFile(const std::string& filename, int openFlags,const FileDriver& driver){
     try{
       HighFive::SilenceHDF5 silence;
       File file(filename,openFlags,driver);
       return(file);
     }catch (HighFive::Exception& err) {
       // Rcpp::StringVector retvec(1);
-      return(std::nullopt);
+      return(boost::none);
     }
 
   }

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "H5Object.hpp"
-
+#include <boost/optional.hpp>
 namespace HighFive {
 
 struct TypeMapper;
@@ -25,7 +25,9 @@ class DataType : public Object {
 
     bool operator != (const DataType& other) const;
 
-  protected:
+
+protected:
+
     friend class Attribute;
     friend class File;
     friend class DataSet;
@@ -36,19 +38,21 @@ class DataType : public Object {
 ///
 ///  Support only basic data type
 ///
-template <typename T>
-class AtomicType : public DataType {
+  template <typename T>
+  class AtomicType : public DataType {
   public:
     AtomicType();
+    AtomicType(int size);
+
 
     typedef T basic_type;
-};
+  };
 }
 /*
-template<hid_t HT,is>
-struct CppType {
-    typedef HT type;
-}*/
+  template<hid_t HT,is>
+  struct CppType {
+  typedef HT type;
+  }*/
 
 
 #include "bits/H5DataType_misc.hpp"

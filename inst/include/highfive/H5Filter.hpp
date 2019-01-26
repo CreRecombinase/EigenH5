@@ -59,11 +59,16 @@ namespace HighFive {
 namespace HighFive {
 
 
-inline  const hid_t Filter::gzip = 1;
-inline  const hid_t Filter::blosc = 32001;
-inline  const hid_t Filter::lzf4 = 32000;
-inline  const hid_t Filter::zstd = 32015;
-inline  const hid_t Filter::no_filter = 0;
+
+
+const hid_t filter_gzip = 1;
+const hid_t filter_blosc = 32001;
+const hid_t filter_lzf4 = 32000;
+const hid_t filter_zstd = 32015;
+const hid_t filter_no_filter = 0;
+
+
+
 
   inline Filter::Filter() {
     _hid = H5Pcreate(H5P_DATASET_CREATE);
@@ -88,13 +93,13 @@ inline  const hid_t Filter::no_filter = 0;
 	HDF5ErrMapper::ToException<FilterException>("Unable to set chunk size");
       }
     }else{
-      if(filter_id!=no_filter){
+      if(filter_id!=filter_no_filter){
 	HDF5ErrMapper::ToException<FilterException>("Compression filter cannot be used without chunking");
       }
     }
 
     switch(filter_id){
-    case gzip:{
+    case filter_gzip:{
       unsigned int comp_opt = 1;
       if(!cd_values.empty()){
 	comp_opt = cd_values[0];
@@ -102,12 +107,12 @@ inline  const hid_t Filter::no_filter = 0;
       rr =H5Pset_deflate(_hid,comp_opt);
       break;
     }
-    case lzf4:{
+    case filter_lzf4:{
       rr = H5Pset_shuffle(_hid);
       rr = H5Pset_filter(_hid, filter_id, H5Z_FLAG_OPTIONAL, 0, NULL);
       break;
     }
-    case no_filter:{
+    case filter_no_filter:{
       break;
     }
     default:{
