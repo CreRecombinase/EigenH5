@@ -1,4 +1,4 @@
-CXX_STD = CXX14
+CXX_STD = CXX11
 HDF5_LIBS=`echo 'Rhdf5lib::pkgconfig("PKG_C_LIBS")'|\
     "${R_HOME}/bin/R" --vanilla --slave`
 ZSTD_LIBS=`echo 'rzstdlib::pkgconfig("PKG_C_LIBS")'|\

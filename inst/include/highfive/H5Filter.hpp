@@ -128,12 +128,13 @@ const hid_t filter_no_filter = 0;
     }
   }
   inline std::vector<size_t> Filter::guess_chunk(std::vector<size_t> data_shape){
-    auto bad_el = std::find_if(data_shape.begin(),data_shape.end(),[=](auto it){
+    using it_el = std::vector<size_t>::value_type;
+    auto bad_el = std::find_if(data_shape.begin(),data_shape.end(),[=](it_el it){
 	  return(it>=CHUNK_MAX);
       });
     while(bad_el!=data_shape.end()){
       *bad_el/=2;
-      bad_el = std::find_if(data_shape.begin(),data_shape.end(),[=](auto it){
+      bad_el = std::find_if(data_shape.begin(),data_shape.end(),[=](it_el it){
 								  return(it>=CHUNK_MAX);
 								});
     }

@@ -237,11 +237,12 @@ inline Eigen::ArrayXi DimRange::permutation_order() const {
       Eigen::ArrayXi retvec(in_size);
       auto rit= retvec.data();
       for(auto &t_sel : dim_sels){
-	const size_t t_size = t_sel.out_stop - t_sel.out_start + 1;
-	auto nrit = std::generate_n(rit, t_size, [n = static_cast<int>(t_sel.out_start)] () mutable { return n++; });
-	if(!t_sel.sorted){
-	  std::reverse(rit,nrit);
-	}
+        const size_t t_size = t_sel.out_stop - t_sel.out_start + 1;
+        int n=static_cast<int>(t_sel.out_start);
+        auto nrit = std::generate_n(rit, t_size, [n] () mutable { return n++; });
+        if(!t_sel.sorted){
+          std::reverse(rit,nrit);
+        }
 	rit=nrit;
       }
       return(retvec);
