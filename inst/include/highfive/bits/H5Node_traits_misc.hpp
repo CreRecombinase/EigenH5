@@ -15,8 +15,6 @@
 #include <vector>
 #include <boost/algorithm/string.hpp>
 
-
-
 #include "../H5Attribute.hpp"
 #include "../H5Filter.hpp"
 #include "../H5DataSet.hpp"
@@ -37,7 +35,7 @@
 namespace HighFive {
 
   template <typename Derivate>
-  inline DataSet NodeTraits<Derivate>::createDataSet(const PathNode& dataset_name,
+  inline DataSet NodeTraits<Derivate>::createDataSet(const Path& dataset_name,
 						     const DataSpace& space,
 						     const DataType &dtype,
 						     const Filter &filter) {
@@ -63,46 +61,10 @@ namespace HighFive {
 			       dataset_name.c_str(), dtype._hid, space._hid,
 			       H5P_DEFAULT, filter.getId(), H5P_DEFAULT)) < 0) {
       HDF5ErrMapper::ToException<DataSetException>(
-						   std::string("Unable to create the dataset \"") + dataset_name.string() +
+						   std::string("Unable to create the dataset \"") + dataset_name +
 						   "\":");
     }
     set.setTranspose(false);
-    return set;
-  }
-
-  template<typename Derivate>
-  inline DataSet
-  NodeTraits<Derivate>::createDataSet(const PathNode &dataset_name,
-				      const DataSpace &space,
-				      const DataType &dtype) {
-
-    return createDataSet(dataset_name, space, dtype, Filter());
-  }
-
-
-
-
-  template <typename Derivate>
-  template <typename Type>
-  inline DataSet
-  NodeTraits<Derivate>::createDataSet(const PathNode &dataset_name,
-				      const DataSpace& space) {
-    return createDataSet(dataset_name, space, AtomicType<Type>());
-  }
-
-  template <typename Derivate>
-  inline DataSet
-  NodeTraits<Derivate>::getDataSet(const PathNode &dataset_name) const {
-
-
-    DataSet set;
-    if ((set._hid = H5Dopen2(static_cast<const Derivate *>(this)->getId(),
-			     dataset_name.c_str(), H5P_DEFAULT)) < 0) {
-      HDF5ErrMapper::ToException<DataSetException>(
-						   std::string("Unable to open the dataset \"") + dataset_name.name +
-						   "\":");
-    }
-    set.doTranspose = set.isTransposed();
     return set;
   }
 
@@ -110,22 +72,16 @@ namespace HighFive {
   inline DataSet
   NodeTraits<Derivate>::getDataSet(const Path &dataset_name) const {
 
-    if (!dataset_name.has_parent_path()) {
-      return (this->getDataSet(dataset_name.filename()));
-    }
-    return (this->getGroup(dataset_name.parent_path())
-	    .getDataSet(dataset_name.filename()));
-  }
 
-  template <typename Derivate>
-  inline boost::optional<DataSet>
-  NodeTraits<Derivate>::openDataSet(const PathNode & dataset_name) const {
-
-    if(!this->exist(dataset_name)){
-      return(boost::none);
-    } else {
-      return (this->getDataSet(dataset_name));
+    DataSet set;
+    if ((set._hid = H5Dopen2(static_cast<const Derivate *>(this)->getId(),
+                             dataset_name.c_str(), H5P_DEFAULT)) < 0) {
+      HDF5ErrMapper::ToException<DataSetException>(
+          std::string("Unable to open the dataset \"") + dataset_name +
+          "\":");
     }
+    set.doTranspose = set.isTransposed();
+    return set;
   }
 
   template <typename Derivate>
@@ -139,21 +95,6 @@ namespace HighFive {
     }
   }
 
-
-  template <typename Derivate>
-  inline Group NodeTraits<Derivate>::createGroup(const PathNode & group_name) {
-
-
-    Group group;
-    if ((group._hid = H5Gcreate2(static_cast<const Derivate *>(this)->getId(),
-				 group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT,
-				 H5P_DEFAULT)) < 0) {
-      HDF5ErrMapper::ToException<GroupException>(
-						 std::string("Unable to create the group \"") + group_name.name + "\":");
-    }
-    return (group);
-  }
-
   template <typename Derivate>
   inline Group NodeTraits<Derivate>::createGroup(const Path & group_name) {
 
@@ -162,27 +103,13 @@ namespace HighFive {
     auto status = H5Pset_create_intermediate_group (gcpl, 1);
     Group group;
     if ((group._hid = H5Gcreate2(static_cast<const Derivate *>(this)->getId(),
-				 group_name.string().c_str(), gcpl, H5P_DEFAULT,
+				 group_name.c_str(), gcpl, H5P_DEFAULT,
 				 H5P_DEFAULT)) < 0) {
       HDF5ErrMapper::ToException<GroupException>(
-						 std::string("Unable to create the group ") + group_name.string() + ":");
+						 std::string("Unable to create the group ") + group_name + ":");
     }
     H5Pclose(gcpl);
     return (group);
-  }
-
-  template <typename Derivate>
-  inline Group
-  NodeTraits<Derivate>::getGroup(const PathNode  &group_name) const {
-
-    Group group;
-    if ((group._hid = H5Gopen2(static_cast<const Derivate *>(this)->getId(),
-                               group_name.c_str(), H5P_DEFAULT)) < 0) {
-      HDF5ErrMapper::ToException<GroupException>(
-						 std::string("Unable to open the group \"") + group_name.string() +
-						 "\":");
-    }
-    return group;
   }
 
   template <typename Derivate>
@@ -191,26 +118,13 @@ namespace HighFive {
 
     Group group;
     if ((group._hid = H5Gopen2(static_cast<const Derivate *>(this)->getId(),
-			       group_name.string().c_str(), H5P_DEFAULT)) < 0) {
+                               group_name.c_str(), H5P_DEFAULT)) < 0) {
       HDF5ErrMapper::ToException<GroupException>(
-						 std::string("Unable to open the group \"") + group_name.string() +
+						 std::string("Unable to open the group \"") + group_name +
 						 "\":");
     }
     return group;
   }
-
-
-  template <typename Derivate>
-  inline boost::optional<Group>
-  NodeTraits<Derivate>::openGroup(const PathNode  &group_name) const {
-    if(!this->exist(group_name)){
-      return(boost::none);
-    }else{
-      return(this->getGroup(group_name));
-    }
-  }
-
-
 
   template <typename Derivate>
   inline boost::optional<Group>
@@ -225,32 +139,6 @@ namespace HighFive {
 
 
   template<typename Derivate>
-  inline bool NodeTraits<Derivate>::isGroup(const PathNode  & object_name) const{
-
-    H5O_info_t tid;
-#if defined(H5_USE_110_API)
-    auto ret = H5Oget_info_by_name2(static_cast<const Derivate *>(this)->getId(),object_name.c_str(),&tid,H5O_INFO_ALL,H5P_DEFAULT)<0;
-#else
-    auto ret = H5Oget_info_by_name(static_cast<const Derivate *>(this)->getId(), object_name.c_str(), &tid,H5P_DEFAULT) < 0;
-#endif
-    if (ret) {
-      HDF5ErrMapper::ToException<DataSetException>(
-						   std::string("Unable to open the object \"") + object_name.string() +
-						   "\":");
-    }
-    // if ((tid.type == H5O_TYPE_GROUP) != (object_name.is_directory())) {
-    //   Rcpp::Rcerr << "path indicates group, but is not stored as a group"
-    //               << std::endl;
-    // }
-
-    return (tid.type == H5O_TYPE_GROUP);
-    // namespace HighFive
-    // HDF5ErrMapper::ToException<DataSetException>(
-    //     std::string("Object does not exist \"") + object_name.string() + "\":");
-    // return (false);
-  }
-
-  template<typename Derivate>
   inline bool NodeTraits<Derivate>::isGroup(const Path  & object_name) const{
 
     H5O_info_t tid;
@@ -261,7 +149,7 @@ namespace HighFive {
 #endif
     if (ret) {
       HDF5ErrMapper::ToException<DataSetException>(
-						   std::string("Unable to open the object \"") + object_name.string() +
+						   std::string("Unable to open the object \"") + object_name +
 						   "\":");
     }
     // if ((tid.type == H5O_TYPE_GROUP) != (object_name.is_directory())) {
@@ -272,40 +160,12 @@ namespace HighFive {
     return (tid.type == H5O_TYPE_GROUP);
     // namespace HighFive
     // HDF5ErrMapper::ToException<DataSetException>(
-    //     std::string("Object does not exist \"") + object_name.string() + "\":");
+    //     std::string("Object does not exist \"") + object_name + "\":");
     // return (false);
   }
-
 
   template<typename Derivate>
   inline bool NodeTraits<Derivate>::isDataSet(const Path  & object_name) const{
-
-    H5O_info_t tid;
-#if defined(H5_USE_110_API)
-    auto ret = H5Oget_info_by_name2(static_cast<const Derivate *>(this)->getId(),object_name.string().c_str(),&tid,H5O_INFO_ALL,H5P_DEFAULT)<0;
-#else
-    auto ret = H5Oget_info_by_name(static_cast<const Derivate *>(this)->getId(), object_name.string().c_str(), &tid,H5P_DEFAULT) < 0;
-#endif
-    if (ret) {
-      HDF5ErrMapper::ToException<DataSetException>(
-						   std::string("Unable to open the object \"") + object_name.string() +
-						   "\":");
-    }
-    // if ((tid.type == H5O_TYPE_GROUP) != (object_name.is_directory())) {
-    //   Rcpp::Rcerr << "path indicates group, but is not stored as a group"
-    //               << std::endl;
-    // }
-
-    return (tid.type == H5O_TYPE_DATASET);
-    // namespace HighFive
-    // HDF5ErrMapper::ToException<DataSetException>(
-    //     std::string("Object does not exist \"") + object_name.string() + "\":");
-    // return (false);
-  }
-
-
-  template<typename Derivate>
-  inline bool NodeTraits<Derivate>::isDataSet(const PathNode  & object_name) const{
 
     H5O_info_t tid;
 #if defined(H5_USE_110_API)
@@ -315,7 +175,7 @@ namespace HighFive {
 #endif
     if (ret) {
       HDF5ErrMapper::ToException<DataSetException>(
-						   std::string("Unable to open the object \"") + object_name.string() +
+						   std::string("Unable to open the object \"") + object_name +
 						   "\":");
     }
     // if ((tid.type == H5O_TYPE_GROUP) != (object_name.is_directory())) {
@@ -326,7 +186,7 @@ namespace HighFive {
     return (tid.type == H5O_TYPE_DATASET);
     // namespace HighFive
     // HDF5ErrMapper::ToException<DataSetException>(
-    //     std::string("Object does not exist \"") + object_name.string() + "\":");
+    //     std::string("Object does not exist \"") + object_name + "\":");
     // return (false);
   }
 
@@ -349,42 +209,16 @@ namespace HighFive {
 
 
   template<typename Derivate>
-  inline boost::variant<DataSet,Group> NodeTraits<Derivate>::getObject(const PathNode  & object_name) const{
-
-    if(isGroup(object_name)){
-    return (getGroup(object_name));
-      }
-      if (isDataSet(object_name)) {
-        return (getDataSet(object_name));
-      }
-      HDF5ErrMapper::ToException<ObjectException>(
-          std::string("Object is not a Group or DataSet: ") +
-          object_name.string());
-  }
-
-  template<typename Derivate>
   inline boost::variant<DataSet,Group> NodeTraits<Derivate>::getObject(const Path  & object_name) const{
 
     if(isGroup(object_name)){
-    return (getGroup(object_name));
-      }
-      if (isDataSet(object_name)) {
-        return (getDataSet(object_name));
-      }
-      HDF5ErrMapper::ToException<ObjectException>(
-          std::string("Object is not a Group or DataSet: ") +
-          object_name.string());
-  }
-
-  template<typename Derivate>
-  inline boost::optional<boost::variant<DataSet,Group> > NodeTraits<Derivate>::openObject(const PathNode & object_name) const{
-    if(this->exist(object_name)){
-      return(this->getObject(object_name));
-    }else{
-      return(boost::none);
+      return (getGroup(object_name));
     }
+    if (isDataSet(object_name)) {
+      return (getDataSet(object_name));
+    }
+    HDF5ErrMapper::ToException<ObjectException>(std::string("Object is not a Group or DataSet: ") + object_name);
   }
-
 
   template<typename Derivate>
   inline boost::optional<boost::variant<DataSet,Group> > NodeTraits<Derivate>::openObject(const Path & object_name) const{
@@ -407,7 +241,7 @@ namespace HighFive {
   }
 
   template <typename Derivate>
-  inline PathNode NodeTraits<Derivate>::getObjectName(size_t index) const {
+  inline Path NodeTraits<Derivate>::getObjectName(size_t index) const {
     std::string retstring;
     const ssize_t maxLength = 1023;
     char buffer[maxLength + 1];
@@ -431,14 +265,14 @@ namespace HighFive {
       retstring = std::string(bigBuffer.data(), length);
     }
 
-    return (PathNode(retstring, isGroup(PathNode(retstring))));
+    return (Path(retstring));
   }
 
   template <typename Derivate>
-  inline std::vector<PathNode> NodeTraits<Derivate>::listObjectNames() const {
+  inline std::vector<Path> NodeTraits<Derivate>::listObjectNames() const {
 
     
-    std::vector<PathNode> names;
+    std::vector<Path> names;
     details::HighFiveIterateData iterateData(names);
 
     size_t num_objs = getNumberObjects();
@@ -454,39 +288,52 @@ namespace HighFive {
     return names;
   }
 
-  template <typename Derivate>
-  inline bool NodeTraits<Derivate>::exist(PathNode  p) const {
 
-    if (p.is_root()) {
-      return true;
+  template <typename Derivate>
+  inline bool NodeTraits<Derivate>::_exist(const std::string& node_name) const {
+    htri_t val = H5Lexists(static_cast<const Derivate*>(this)->getId(),
+                           node_name.c_str(), H5P_DEFAULT);
+    if (val < 0) {
+      HDF5ErrMapper::ToException<GroupException>(
+						 std::string("Invalid link for exist() "));
     }
-    const auto ttid=static_cast<const Derivate*>(this)->getId();
-    auto val = H5Lexists(ttid,p.c_str(), H5P_DEFAULT);
-    if(val<0){
-      HDF5ErrMapper::ToException<GroupException>(std::string("Invalid path while checking for existence of "+p.string()));
-    }
-    // if (val == 0) {
-    //   return (false);
-    // }
-    return(val>0);
+
+    return (val > 0);
   }
 
   template <typename Derivate>
-  inline bool NodeTraits<Derivate>::exist(Path  p) const {
-
-    std::string	ret;
-    const auto ttid=static_cast<const Derivate*>(this)->getId();
-    for(auto &tb: p){
-      ret+=tb.to_name();
-      auto val = H5Lexists(ttid,ret.c_str(), H5P_DEFAULT);
-      if(val<0){
-	HDF5ErrMapper::ToException<GroupException>(std::string("Invalid path while checking for existence of "+p.string()));
-      }
-      if (val == 0) {
-        return (false);
+  inline bool NodeTraits<Derivate>::exist(const Path& group_path) const {
+    // When there are slashes, first check everything is fine
+    // so that subsequent errors are only due to missing intermediate groups
+    if (group_path.nodes.find('/') != std::string::npos) {
+      _exist("/");  // Shall not throw under normal circumstances
+      try {
+	SilenceHDF5 silencer;
+	return _exist(group_path);
+      } catch (const GroupException &) {
+        return false;
       }
     }
-    return (true);
+    return _exist(group_path);
   }
-
 }
+
+  // template <typename Derivate>
+  // inline bool NodeTraits<Derivate>::exist(Path  p) const {
+
+  //   std::string	ret;
+  //   const auto ttid=static_cast<const Derivate*>(this)->getId();
+  //   for(auto &tb: p){
+  //     ret+=tb.to_name();
+  //     auto val = H5Lexists(ttid,ret.c_str(), H5P_DEFAULT);
+  //     if(val<0){
+  // 	HDF5ErrMapper::ToException<GroupException>(std::string("Invalid path while checking for existence of "+p));
+  //     }
+  //     if (val == 0) {
+  //       return (false);
+  //     }
+  //   }
+  //   return (true);
+  // }
+
+

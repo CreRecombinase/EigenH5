@@ -282,7 +282,7 @@ int longest_string_size(Rcpp::StringVector input,const int min_size=255){
 }
 
 HighFive::DataSet create_dataset(HighFive::Group &group,
-				 const PathNode &dataname,
+				 const Path &dataname,
 				 const Rcpp::RObject &data,
 				 HighFive::DataSpace &space,
 				 HighFive::Filter &filter){
@@ -324,15 +324,7 @@ std::vector<size_t> dataset_dims(std::string filename,
 				 std::string datapath){
 
 
-  auto dp= root_path(datapath);
-  HighFive::File file(filename,HighFive::File::ReadOnly);
-  if(auto grp =file.openGroup(dp.parent_path())){
-    if(auto dset = grp->openDataSet(dp.filename())){
-      return(dset->getDataDimensions());
-    }
-  }
-  std::vector<size_t> retvec;
-  return(retvec);
+  return(HighFive::File(filename,HighFive::File::ReadOnly).getDataSet(root_path(datapath)).getDataDimensions());
 }
 
 
@@ -349,16 +341,13 @@ SEXP read_vector(std::string filename,
 
   auto groupname = dp.parent_path();
   auto dataname = dp.filename();
-  auto grp = file.getGroup(groupname);
-  auto dset = file.getGroup(groupname).getDataSet(dataname);
+  auto dset = file.getDataSet(dp);
   auto dims = dset.getDataDimensions();
   std::array<size_t,1> tdims{dims[0]};
   auto datasel = DatasetSelection<1>::ProcessList(options,tdims);
 
   auto file_sel=datasel.makeSelection(dset);
   auto my_t = typeof_h5_dset(dset);
-  //  auto my_t = check_dtype(filename,groupname,dataname);
-
 
   switch (my_t){
   case INTSXP: {
@@ -384,7 +373,7 @@ SEXP read_vector(std::string filename,
 	    "Invalid SEXPTYPE %d.\n",
 	    my_t
 	    );
-    Rcpp::Rcerr<<dataname.string()<<" has type that can't be read"<<std::endl;
+    Rcpp::Rcerr<<dataname<<" has type that can't be read"<<std::endl;
 
     Rcpp::stop("Can't read type");
     return R_NilValue;
@@ -482,7 +471,7 @@ bool update_matrix(RObject data,
 	      "Invalid SEXPTYPE %d.\n",
 	      my_t
 	      );
-      Rcpp::Rcerr<<dp.filename().string()<<" has type that can't be written"<<std::endl;
+      Rcpp::Rcerr<<dp<<" has type that can't be written"<<std::endl;
       Rcpp::stop("Can't read type");
     }
     }
@@ -622,11 +611,11 @@ bool write_attribute_h5(const RObject &data,
 
   if(file.isGroup(dp.parent_path())){
     auto p_obj = file.getGroup(dp.parent_path());
-    write_attribute<Group>(p_obj,dp.filename().string(),data);
+    write_attribute<Group>(p_obj,dp.filename(),data);
   }else{
     if(file.isDataSet(dp.parent_path())){
       auto p_obj = file.getDataSet(dp.parent_path());
-      write_attribute<DataSet>(p_obj,dp.filename().string(),data);
+      write_attribute<DataSet>(p_obj,dp.filename(),data);
     }
     else{
       Rcpp::stop("Attributes can only be written to DataSets or Groups");
@@ -650,14 +639,14 @@ SEXP read_attribute_h5(const std::string &filename,
   
   if(file.isGroup(dp.parent_path())){
     auto p_obj = file.getGroup(dp.parent_path());
-    return(read_attribute<Group>(p_obj,dp.filename().string()));
+    return(read_attribute<Group>(p_obj,dp.filename()));
   }else{
     if(file.isDataSet(dp.parent_path())){
       auto p_obj = file.getDataSet(dp.parent_path());
-      return(read_attribute<DataSet>(p_obj,dp.filename().string()));
+      return(read_attribute<DataSet>(p_obj,dp.filename()));
     }
     else{
-      Rcpp::Rcerr<<dp.parent_path().string()<<" Is not a dataset or group"<<std::endl;
+      Rcpp::Rcerr<<dp.parent_path()<<" Is not a dataset or group"<<std::endl;
       Rcpp::stop("Attributes can only be read from DataSets or Groups");
     }
   }
@@ -720,7 +709,7 @@ bool create_dataset_h5(const std::string &filename,
    DataSpace space = DataSpace(dimvec,max_dvec);
    if((data.sexp_type()!=STRSXP) && store_float){
      
-     group->createDataSet(dp.filename().string(), space, HighFive::AtomicType<float>(), filt);
+     group->createDataSet(dp.filename(), space, HighFive::AtomicType<float>(), filt);
      create_success=true;
    }else{
    create_dataset(group.value(),dp.filename(),data,space,filt);

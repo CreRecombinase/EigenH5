@@ -11,17 +11,16 @@
 #include <string>
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
-#include <path/path.hpp>
 #include "../H5Filter.hpp"
 
 
 namespace HighFive {
-  //namespace fs = boost::filesystem;
-class Attribute;
-class DataSet;
-class Group;
-class DataSpace;
-class DataType;
+
+  class Attribute;
+  class DataSet;
+  class Group;
+  class DataSpace;
+  class DataType;
 
   class Properties;
 
@@ -29,7 +28,7 @@ template <typename Derivate>
 class NodeTraits {
   public:
 
-  DataSet createDataSet(const PathNode &dataset_name,
+  DataSet createDataSet(const Path &dataset_name,
 			const DataSpace &space,
 			const DataType &dtype,
 			const Filter &filter);
@@ -42,7 +41,7 @@ class NodeTraits {
     /// informations
     /// \param type Type of Data
     /// \return DataSet Object
-    DataSet createDataSet(const PathNode& dataset_name,
+    DataSet createDataSet(const Path& dataset_name,
                           const DataSpace& space, const DataType& type);
 
     ///
@@ -71,7 +70,7 @@ class NodeTraits {
     ///
     ///
     template <typename Type>
-    DataSet createDataSet(const PathNode& dataset_name,
+    DataSet createDataSet(const Path& dataset_name,
                           const DataSpace& space);
 
     ///
@@ -79,11 +78,11 @@ class NodeTraits {
     /// \param dataset_name
     /// \return return the named dataset, or throw exception if not found
     ///
-  DataSet getDataSet(const PathNode& dataset_name) const;
   DataSet getDataSet(const Path& dataset_name) const;
 
-  boost::optional<DataSet> openDataSet(const PathNode& dataset_name) const;
+
   boost::optional<DataSet> openDataSet(const Path& dataset_name) const;
+
 
 
     ///
@@ -91,7 +90,6 @@ class NodeTraits {
     /// \param group_name
     /// \return the group object
     ///
-  Group createGroup(const PathNode &group_name);
   Group createGroup(const Path &group_name);
 
     ///
@@ -99,20 +97,20 @@ class NodeTraits {
     /// \param group_name
     /// \return the group object
     ///
-  Group getGroup(const PathNode &group_name) const;
   Group getGroup(const Path &group_name) const;
 
 
-  boost::optional<Group> openGroup(const PathNode& group_name) const;
+
   boost::optional<Group> openGroup(const Path& group_name) const;
 
 
-  bool isGroup(const PathNode& group_name) const;
+
   bool isGroup(const Path& group_name) const;
 
 
-  bool isDataSet(const PathNode& group_name) const;
+
   bool isDataSet(const Path& group_name) const;
+
 
 
 
@@ -123,36 +121,37 @@ class NodeTraits {
   ///
   /// \brief return the name of the object with the given index
   /// \return the name of the object
-  PathNode getObjectName(size_t index) const;
+  Path getObjectName(size_t index) const;
 
   ///
   /// \brief list all leaf objects name of the node / group
   /// \return number of leaf objects
-  std::vector<PathNode> listObjectNames() const;
+  std::vector<Path> listObjectNames() const;
 
   ///
   /// \brief return either a group or dataset
   /// \return variant containing either a group or dataset
-  boost::variant<DataSet,Group> getObject(const PathNode & object_name) const;
   boost::variant<DataSet,Group> getObject(const Path & object_name) const;
 
 
-  boost::optional<boost::variant<DataSet,Group>> openObject(const PathNode & object_name) const;
+
   boost::optional<boost::variant<DataSet,Group>> openObject(const Path & object_name) const;
+
 
   ///
   /// \brief return all leaf objects
   /// \return zero or more objects (represented as boost::variants)
   std::vector<boost::variant<DataSet,Group> > getObjects() const;
 
+
+  bool _exist(const std::string& node_name) const;
   ///
   /// \brief check a dataset or group exists in the current node / group
   ///
   /// \param dataset/group name to check
   /// \return true if a dataset/group with the asssociated name exist, or
   /// false
-  bool exist(const PathNode node_name) const;
-  bool exist(const Path node_name) const;
+  bool exist(const Path& node_name) const;
 private:
   static Group grpCreate(const hid_t root_id, const char* name);
   boost::variant<DataSet,Group> getObj(const hid_t root_id, const char* name) const;

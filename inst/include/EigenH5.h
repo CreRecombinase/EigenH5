@@ -2,14 +2,76 @@
 #include <cmath>
 #include <complex>
 #include <iostream>
+#include <iostream>
 
 #include <boost/optional.hpp>
 #include <boost/optional/optional_io.hpp>
 
 #define EIGEN_PERMANENTLY_DISABLE_STUPID_WARNINGS
 #include <RcppEigen.h>
-#include "path/path.hpp"
+//#include "path/path.hpp"
 
+
+
+class Path{
+public:
+  std::string nodes;
+  Path(const std::string name):nodes(name){
+  }
+  std::string parent_path() {
+    if(nodes.size()==0){
+      Rcpp::stop("path is empty!");
+    }
+    auto nodes_rend = nodes.crend();
+    auto nodes_rbegin = nodes.crbegin();
+
+    if (nodes.size() > 1 && nodes.back() == '/') {
+      nodes_rbegin++;
+    }
+    nodes_rbegin=	std::find(nodes_rbegin,nodes_rend,'/');
+    if (nodes_rbegin == nodes_rend) {
+      Rcpp::stop("can't find parent path in:" + nodes);
+    }
+    std::string ret(nodes_rbegin,nodes_rend);
+    std::reverse(ret.begin(),ret.end());
+    return (ret);
+  }
+  const char *c_str() const {
+    return(nodes.c_str());
+  }
+  std::string filename() {
+    if(nodes.size()==0){
+      Rcpp::stop("path is empty!");
+    }
+    auto nodes_rend = nodes.crend();
+    auto nodes_rbegin = nodes.crbegin();
+    auto nodes_rrbegin = nodes_rbegin;
+
+    if (nodes.size() > 1 && nodes.back() == '/') {
+      nodes_rbegin++;
+    }
+    nodes_rbegin=	std::find(nodes_rbegin,nodes_rend,'/');
+    if (nodes_rbegin == nodes_rend) {
+      Rcpp::stop("can't find parent path in:" + nodes);
+    }
+
+    std::string ret(nodes_rrbegin,nodes_rbegin);
+    std::reverse(ret.begin(),ret.end());
+
+    return (ret);
+  }
+  operator const std::string&() const { return(nodes); }
+
+};
+
+inline std::string operator+(const std::string a, const Path &b){
+  return(a+b.nodes);
+}
+
+inline std::ostream &operator<<(std::ostream &os, const Path &dt) {
+  os << dt.nodes;
+  return os;
+}
 
 #include "highfive/highfive.hpp"
 #ifdef USE_BLOSC
@@ -63,7 +125,8 @@ typename _Unique_if<T>::_Known_bound
 
 #endif
 
-
+// using Path = std::string;
+// using PathNode = std::string;
 
 template<class T> struct always_false : std::false_type {};
 
@@ -82,7 +145,9 @@ public:
 
 #include "EigenH5_RcppExports.h"
 
-inline Path root_path(const std::string &input) { return (Path("/" + input)); }
+inline Path root_path(const std::string &input) {
+  return (input.front() == '/' ? input : "/" + input);
+}
 
 template <typename T>
 struct cpp2r{

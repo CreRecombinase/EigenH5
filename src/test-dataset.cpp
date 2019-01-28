@@ -64,26 +64,26 @@ context("datasets"){
   std::vector<int> tvec = {1,2,3};
   using namespace HighFive;
   auto space=	DataSpace::From(tvec);
-  auto dset =	ntf.createDataSet(PathNode("ntest"),space,AtomicType<int>(),Filter::From(space,filter_zstd));
+  auto dset =	ntf.createDataSet(Path("ntest"),space,AtomicType<int>(),Filter::From(space,filter_zstd));
   test_that("We can check for existence of datasets"){
 
 
-    expect_true(ntf.exist(PathNode("ntest")));
-    expect_true(ntf.isDataSet(PathNode("ntest")));
-    expect_false(ntf.isGroup(PathNode("ntest",true)));
+    expect_true(ntf.exist(Path("ntest")));
+    expect_true(ntf.isDataSet(Path("ntest")));
+    expect_false(ntf.isGroup(Path("ntest")));
 
-    expect_true(ntf.exist(PathNode("ntest")));
-    expect_true(ntf.isDataSet(PathNode("ntest")));
-    expect_false(ntf.isGroup(PathNode("ntest",true)));
+    expect_true(ntf.exist(Path("ntest")));
+    expect_true(ntf.isDataSet(Path("ntest")));
+    expect_false(ntf.isGroup(Path("ntest")));
 
-    dset = ntf.createGroup(PathNode("tgrp",true)).createDataSet(PathNode("test2"),space,AtomicType<int>(),Filter::From(space,filter_zstd));
+    dset = ntf.createGroup(Path("tgrp")).createDataSet(Path("test2"),space,AtomicType<int>(),Filter::From(space,filter_zstd));
     expect_true(ntf.exist(Path("tgrp/test2")));
     expect_true(ntf.isDataSet(Path("tgrp/test2")));
     expect_false(ntf.isGroup(Path("tgrp/test2")));
-    expect_true(ntf.getGroup(PathNode("tgrp",true)).exist(PathNode("test2")));
-    expect_true(ntf.getGroup(PathNode("tgrp",true)).isDataSet(PathNode("test2")));
-    expect_false(ntf.getGroup(PathNode("tgrp",true)).isGroup(PathNode("test2")));
-    expect_false(ntf.getGroup(PathNode("tgrp",true)).exist(PathNode("ntest")));
+    expect_true(ntf.getGroup(Path("tgrp")).exist(Path("test2")));
+    expect_true(ntf.getGroup(Path("tgrp")).isDataSet(Path("test2")));
+    expect_false(ntf.getGroup(Path("tgrp")).isGroup(Path("test2")));
+    expect_false(ntf.getGroup(Path("tgrp")).exist(Path("ntest")));
     // expect_true(ntf.openDataSet("tgrp/test2"));
     // expect_true(ntf.openGroup("tgrp")->openDataSet("test2"));
   }

@@ -108,27 +108,6 @@ namespace EigenH5 {
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
-    inline bool is_transposed(const std::string filename, const std::string groupname, const std::string dataname) {
-        typedef SEXP(*Ptr_is_transposed)(SEXP,SEXP,SEXP);
-        static Ptr_is_transposed p_is_transposed = NULL;
-        if (p_is_transposed == NULL) {
-            validateSignature("bool(*is_transposed)(const std::string,const std::string,const std::string)");
-            p_is_transposed = (Ptr_is_transposed)R_GetCCallable("EigenH5", "_EigenH5_is_transposed");
-        }
-        RObject rcpp_result_gen;
-        {
-            RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_is_transposed(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(groupname)), Shield<SEXP>(Rcpp::wrap(dataname)));
-        }
-        if (rcpp_result_gen.inherits("interrupted-error"))
-            throw Rcpp::internal::InterruptedException();
-        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
-            throw Rcpp::LongjumpException(rcpp_result_gen);
-        if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-        return Rcpp::as<bool >(rcpp_result_gen);
-    }
-
     inline int len(RObject x) {
         typedef SEXP(*Ptr_len)(SEXP);
         static Ptr_len p_len = NULL;

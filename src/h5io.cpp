@@ -49,12 +49,3 @@ bool check_blosc(){
   return(env["..blosc"]);
 }
 
-
-
-
-//[[Rcpp::export]]
-bool is_transposed(const std::string filename,
-                   const std::string groupname,
-                   const std::string dataname){
-  return(HighFive::File(filename,HighFive::File::ReadOnly).getGroup(Path(groupname)).getDataSet(PathNode(dataname)).isTransposed());
-}

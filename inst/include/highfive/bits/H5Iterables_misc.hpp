@@ -18,7 +18,6 @@
 #include <H5Opublic.h>
 #include <H5Ppublic.h>
 
-#include <path/path.hpp>
 
 namespace HighFive {
 
@@ -40,10 +39,10 @@ namespace details {
 // iterator for H5 iterate
 
 struct HighFiveIterateData {
-    inline HighFiveIterateData(std::vector<PathNode>& my_names)
+    inline HighFiveIterateData(std::vector<Path>& my_names)
         : names(my_names), err(NULL) {}
 
-    std::vector<PathNode>& names;
+    std::vector<Path>& names;
     std::exception* err;
 
     inline void throwIfError() {
@@ -67,7 +66,7 @@ inline herr_t internal_high_five_iterate(hid_t id, const char* name,
       #else
       auto ret = H5Oget_info_by_name(static_cast<const Derivate *>(this)->getId(), object_name.c_str(), &tid,H5P_DEFAULT);
 #endif
-      data->names.push_back(PathNode(std::string(name),tid.type == H5O_TYPE_GROUP));
+      data->names.push_back(Path(std::string(name)));
         return 0;
     } catch (...) {
       data->err =

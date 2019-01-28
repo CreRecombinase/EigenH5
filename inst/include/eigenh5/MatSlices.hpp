@@ -331,20 +331,20 @@ public:
 
       tfn=Rcpp::as<std::string>(filenames(i));
       Path tgn(Rcpp::as<std::string>(groupnames(i)));
-      PathNode tdn(Rcpp::as<std::string>(datanames(i)));
+      Path tdn(Rcpp::as<std::string>(datanames(i)));
 
       tgc=chunk_group(i);
       dyn_create = create_dset(i);
       
 
-      auto gmf=chunk_map[tgc].find(tdn.string());
+      auto gmf=chunk_map[tgc].find(tdn);
       if(gmf!=chunk_map[tgc].end()){
           Rcpp::Rcerr<<"In row: "<<i<<std::endl;
           Rcpp::Rcerr<<"In chunk: "<<tgc<<std::endl;
-          Rcpp::Rcerr<<tfn<<"/"<<tgn.string()<<"/"<<tdn.string()<<std::endl;
+          Rcpp::Rcerr<<tfn<<"/"<<tgn<<"/"<<tdn<<std::endl;
           Rcpp::stop("duplicate dataset in read/write chunk! Each read write chunk must contain only one reference to a given dataset");
       }else{
-        chunk_map[tgc].emplace_hint(gmf,tdn.string(),i);
+        chunk_map[tgc].emplace_hint(gmf,tdn,i);
       }
 
       auto mtf = m_file_map.find(tfn);
@@ -352,7 +352,7 @@ public:
         mtf = m_file_map.emplace_hint(mtf,tfn,std::make_shared<File>(tfn,rt));
       }
 
-      std::string g_arr=tfn+tgn.string();
+      std::string g_arr=tfn+tgn;
       auto mtg = m_group_map.find(g_arr);
 
       if(mtg==m_group_map.end()){
@@ -367,7 +367,7 @@ public:
         }
       }
 
-      std::string d_arr=tfn+tgn.string()+tdn.string();
+      std::string d_arr=tfn+tgn+tdn;
       auto mtd = m_dataset_map.find(d_arr);
 
       if(mtd==m_dataset_map.end()){

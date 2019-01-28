@@ -26,8 +26,8 @@ void link_objects_h5(Rcpp::StringVector filename_from ,const std::string filenam
     const auto fn_from=CHAR(STRING_ELT(filename_from,i));
     Path dp(std::string(CHAR(STRING_ELT(datapath_from,i))));
 
-    if(!dp.is_absolute()){
-      Rcpp::stop("datapath_from must be an absolute path(must begin with \'/\' ("+dp.string()+" is not an absolute path)");
+    if(dp.nodes.front()!='/'){
+      Rcpp::stop("datapath_from must be an absolute path(must begin with \'/\' ("+dp+" is not an absolute path)");
     }
     H5Lcreate_external(fn_from, dp.c_str(), to_file.getId(), dp_to, (hid_t)0, (hid_t)0);
   }
@@ -97,13 +97,13 @@ bool exists_h5(const std::string filename,
   using namespace HighFive;
   bool ret = false;
   HighFive::File file(filename,HighFive::File::ReadOnly);
-  if(!file.exist(Path(groupname))){
+  if(!file.getGroup(Path("/")).exist(Path(groupname))){
     ret = false;
   }
   if(dataname==""){
     ret = true;
   } else {
-    ret = file.getGroup(Path(groupname)).exist(PathNode(dataname, false));
+    ret = file.getGroup(Path(groupname)).exist(Path(dataname));
   }
   return (ret);
 }
@@ -112,7 +112,7 @@ bool exists_h5(const std::string filename,
 bool isObject(const std::string filename, std::string dataname) {
   bool ret = false;
   HighFive::File file(filename, HighFive::File::ReadOnly);
-  ret = file.exist(Path("/" + dataname));
+  ret = file.getGroup(Path("/")).exist(Path("/" + dataname));
   return (ret);
 }
 
@@ -168,13 +168,13 @@ Rcpp::StringVector ls_h5(const std::string filename,Rcpp::CharacterVector groupn
 
   //HDF5ErrMapper::ToException<GroupException>(
   grp = file.getGroup(g_path);
-  std::string group_path = full_names ? g_path.string() : std::string();
+  std::string group_path = full_names ? g_path.nodes : std::string();
   const size_t num_cols = grp.getNumberObjects();
   Rcpp::StringVector retvec(num_cols);
 
   for (int i = 0; i < num_cols; i++) {
     std::string tpath = group_path;
-    tpath += grp.getObjectName(i).to_name();
+    tpath += grp.getObjectName(i);
     retvec[i] = tpath;
   }
 

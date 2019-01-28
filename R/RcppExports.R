@@ -2,155 +2,151 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 open_file_ro <- function(filename) {
-    .Call('_EigenH5_open_file_ro', PACKAGE = 'EigenH5', filename)
+    .Call(`_EigenH5_open_file_ro`, filename)
 }
 
 open_file_rw <- function(filename) {
-    .Call('_EigenH5_open_file_rw', PACKAGE = 'EigenH5', filename)
+    .Call(`_EigenH5_open_file_rw`, filename)
 }
 
 release_file <- function(p) {
-    invisible(.Call('_EigenH5_release_file', PACKAGE = 'EigenH5', p))
+    invisible(.Call(`_EigenH5_release_file`, p))
 }
 
 release_dataset <- function(p) {
-    invisible(.Call('_EigenH5_release_dataset', PACKAGE = 'EigenH5', p))
+    invisible(.Call(`_EigenH5_release_dataset`, p))
 }
 
 release_group <- function(p) {
-    invisible(.Call('_EigenH5_release_group', PACKAGE = 'EigenH5', p))
+    invisible(.Call(`_EigenH5_release_group`, p))
 }
 
 get_file_object <- function(f, object_name) {
-    .Call('_EigenH5_get_file_object', PACKAGE = 'EigenH5', f, object_name)
+    .Call(`_EigenH5_get_file_object`, f, object_name)
 }
 
 get_dataset <- function(f, object_name) {
-    .Call('_EigenH5_get_dataset', PACKAGE = 'EigenH5', f, object_name)
+    .Call(`_EigenH5_get_dataset`, f, object_name)
 }
 
 get_group <- function(f, object_name) {
-    .Call('_EigenH5_get_group', PACKAGE = 'EigenH5', f, object_name)
+    .Call(`_EigenH5_get_group`, f, object_name)
 }
 
 openFileHandleRead <- function(filepath) {
-    .Call('_EigenH5_openFileHandleRead', PACKAGE = 'EigenH5', filepath)
+    .Call(`_EigenH5_openFileHandleRead`, filepath)
 }
 
 closeFileHandle <- function(fh) {
-    .Call('_EigenH5_closeFileHandle', PACKAGE = 'EigenH5', fh)
+    .Call(`_EigenH5_closeFileHandle`, fh)
 }
 
 start_blosc <- function() {
-    invisible(.Call('_EigenH5_start_blosc', PACKAGE = 'EigenH5'))
+    invisible(.Call(`_EigenH5_start_blosc`))
 }
 
 check_blosc <- function() {
-    .Call('_EigenH5_check_blosc', PACKAGE = 'EigenH5')
-}
-
-is_transposed <- function(filename, groupname, dataname) {
-    .Call('_EigenH5_is_transposed', PACKAGE = 'EigenH5', filename, groupname, dataname)
+    .Call(`_EigenH5_check_blosc`)
 }
 
 len <- function(x) {
-    .Call('_EigenH5_len', PACKAGE = 'EigenH5', x)
+    .Call(`_EigenH5_len`, x)
 }
 
 permutation_order <- function(options, dims) {
-    .Call('_EigenH5_permutation_order', PACKAGE = 'EigenH5', options, dims)
+    .Call(`_EigenH5_permutation_order`, options, dims)
 }
 
 read_vector <- function(filename, datapath, options) {
-    .Call('_EigenH5_read_vector', PACKAGE = 'EigenH5', filename, datapath, options)
+    .Call(`_EigenH5_read_vector`, filename, datapath, options)
 }
 
 read_matrix <- function(filename, datapath, options) {
-    .Call('_EigenH5_read_matrix', PACKAGE = 'EigenH5', filename, datapath, options)
+    .Call(`_EigenH5_read_matrix`, filename, datapath, options)
 }
 
 update_matrix <- function(data, filename, datapath, options) {
-    .Call('_EigenH5_update_matrix', PACKAGE = 'EigenH5', data, filename, datapath, options)
+    .Call(`_EigenH5_update_matrix`, data, filename, datapath, options)
 }
 
 update_vector <- function(data, filename, datapath, options) {
-    .Call('_EigenH5_update_vector', PACKAGE = 'EigenH5', data, filename, datapath, options)
+    .Call(`_EigenH5_update_vector`, data, filename, datapath, options)
 }
 
 write_attribute_h5 <- function(data, filename, datapath) {
-    .Call('_EigenH5_write_attribute_h5', PACKAGE = 'EigenH5', data, filename, datapath)
+    .Call(`_EigenH5_write_attribute_h5`, data, filename, datapath)
 }
 
 read_attribute_h5 <- function(filename, datapath) {
-    .Call('_EigenH5_read_attribute_h5', PACKAGE = 'EigenH5', filename, datapath)
+    .Call(`_EigenH5_read_attribute_h5`, filename, datapath)
 }
 
 create_dataset_h5 <- function(filename, datapath, data, options) {
-    .Call('_EigenH5_create_dataset_h5', PACKAGE = 'EigenH5', filename, datapath, data, options)
+    .Call(`_EigenH5_create_dataset_h5`, filename, datapath, data, options)
 }
 
 link_objects_h5 <- function(filename_from, filename_to, datapath_from, datapath_to) {
-    invisible(.Call('_EigenH5_link_objects_h5', PACKAGE = 'EigenH5', filename_from, filename_to, datapath_from, datapath_to))
+    invisible(.Call(`_EigenH5_link_objects_h5`, filename_from, filename_to, datapath_from, datapath_to))
 }
 
 create_file_h5 <- function(filename) {
-    invisible(.Call('_EigenH5_create_file_h5', PACKAGE = 'EigenH5', filename))
+    invisible(.Call(`_EigenH5_create_file_h5`, filename))
 }
 
 dataset_chunks <- function(filename, datapath) {
-    .Call('_EigenH5_dataset_chunks', PACKAGE = 'EigenH5', filename, datapath)
+    .Call(`_EigenH5_dataset_chunks`, filename, datapath)
 }
 
 extend_dataset <- function(filename, datapath, newdims) {
-    invisible(.Call('_EigenH5_extend_dataset', PACKAGE = 'EigenH5', filename, datapath, newdims))
+    invisible(.Call(`_EigenH5_extend_dataset`, filename, datapath, newdims))
 }
 
 extend_dataset_by <- function(filename, datapath, newdims) {
-    invisible(.Call('_EigenH5_extend_dataset_by', PACKAGE = 'EigenH5', filename, datapath, newdims))
+    invisible(.Call(`_EigenH5_extend_dataset_by`, filename, datapath, newdims))
 }
 
 get_datset_filter <- function(filename, datapath) {
-    .Call('_EigenH5_get_datset_filter', PACKAGE = 'EigenH5', filename, datapath)
+    .Call(`_EigenH5_get_datset_filter`, filename, datapath)
 }
 
 guess_chunks <- function(dimsize) {
-    .Call('_EigenH5_guess_chunks', PACKAGE = 'EigenH5', dimsize)
+    .Call(`_EigenH5_guess_chunks`, dimsize)
 }
 
 exists_h5 <- function(filename, groupname = "/", dataname = "") {
-    .Call('_EigenH5_exists_h5', PACKAGE = 'EigenH5', filename, groupname, dataname)
+    .Call(`_EigenH5_exists_h5`, filename, groupname, dataname)
 }
 
 isObject <- function(filename, dataname) {
-    .Call('_EigenH5_isObject', PACKAGE = 'EigenH5', filename, dataname)
+    .Call(`_EigenH5_isObject`, filename, dataname)
 }
 
 isDataSet <- function(filename, dataname) {
-    .Call('_EigenH5_isDataSet', PACKAGE = 'EigenH5', filename, dataname)
+    .Call(`_EigenH5_isDataSet`, filename, dataname)
 }
 
 isGroup <- function(filename, dataname) {
-    .Call('_EigenH5_isGroup', PACKAGE = 'EigenH5', filename, dataname)
+    .Call(`_EigenH5_isGroup`, filename, dataname)
 }
 
 ls_h5_exp <- function(filename, groupname = as.character( c("/")), full_names = FALSE) {
-    .Call('_EigenH5_ls_h5', PACKAGE = 'EigenH5', filename, groupname, full_names)
+    .Call(`_EigenH5_ls_h5`, filename, groupname, full_names)
 }
 
 typeof_h5 <- function(filename, datapath) {
-    .Call('_EigenH5_typeof_h5', PACKAGE = 'EigenH5', filename, datapath)
+    .Call(`_EigenH5_typeof_h5`, filename, datapath)
 }
 
 file_acc_ct <- function(filename) {
-    .Call('_EigenH5_file_acc_ct', PACKAGE = 'EigenH5', filename)
+    .Call(`_EigenH5_file_acc_ct`, filename)
 }
 
 dim_h5 <- function(filename, datapath) {
-    .Call('_EigenH5_dim_h5', PACKAGE = 'EigenH5', filename, datapath)
+    .Call(`_EigenH5_dim_h5`, filename, datapath)
 }
 
 concat_mats <- function(newfile, newpath, selections, margin = 0L) {
-    invisible(.Call('_EigenH5_concat_mats', PACKAGE = 'EigenH5', newfile, newpath, selections, margin))
+    invisible(.Call(`_EigenH5_concat_mats`, newfile, newpath, selections, margin))
 }
 
 # Register entry points for exported C++ functions

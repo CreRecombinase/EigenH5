@@ -1,4 +1,4 @@
-useDynLib(EigenH5)
+useDynLib(EigenH5,.registration=TRUE)
 importFrom(Rcpp, evalCpp)
 exportPattern("^[[:alpha:]]+")
 importFrom(magrittr,"%>%")

@@ -32,9 +32,9 @@ context("We can read and write matrices using the DataQueue"){
       auto space=	DataSpace::From(test_mat);
       auto space_v=	DataSpace::From(test_vec_t);
 
-      auto dset =	tf.createDataSet(PathNode("test"),space,AtomicType<int>(),Filter::From(space,filter_zstd));
-      auto dset_t =	tf.createDataSet(PathNode("test_t"),space,AtomicType<int>(),Filter::From(space,filter_zstd));
-      auto dset_v =	tfw.createDataSet(PathNode("test_v"),space_v,AtomicType<int>(),Filter::From(space_v,filter_zstd));
+      auto dset =	tf.createDataSet(Path("test"),space,AtomicType<int>(),Filter::From(space,filter_zstd));
+      auto dset_t =	tf.createDataSet(Path("test_t"),space,AtomicType<int>(),Filter::From(space,filter_zstd));
+      auto dset_v =	tfw.createDataSet(Path("test_v"),space_v,AtomicType<int>(),Filter::From(space_v,filter_zstd));
 
 
       dset.write(test_mat);
@@ -66,18 +66,18 @@ context("We can read and write matrices using the DataQueue"){
 
       expect_true(fmb->second.getName()==fname);
       expect_true(fwb->second.getName()==fnamew);
-      if(!fmb->second.exist(PathNode("test"))){
+      if(!fmb->second.exist(Path("test"))){
 	Rcpp::stop("can't proceed if 'test' does not exist!");
       }
-      if(!fmb->second.exist(PathNode("test_t"))){
+      if(!fmb->second.exist(Path("test_t"))){
 	Rcpp::stop("can't proceed if 'test_t' does not exist!");
       }
-      if(!fwb->second.exist(PathNode("test_v"))){
+      if(!fwb->second.exist(Path("test_v"))){
 	Rcpp::stop("can't proceed if 'test_v' does not exist!");
       }
 
       Eigen::MatrixXi ttm_m;
-      fmb->second.getDataSet(PathNode("test")).read(ttm_m);
+      fmb->second.getDataSet(Path("test")).read(ttm_m);
       expect_true(ttm_m==test_mat);
 
 
@@ -98,7 +98,7 @@ context("We can read and write matrices using the DataQueue"){
       fwb->second.flush();
 
       Eigen::VectorXi ttm_v;
-      fwb->second.getDataSet(PathNode("test_v")).read(ttm_v);
+      fwb->second.getDataSet(Path("test_v")).read(ttm_v);
       expect_true(ttm_v==test_vec_t);
       test_queue_v.readVector(0,tm_v);
       expect_true(tm_v==test_vec_t);

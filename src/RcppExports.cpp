@@ -230,42 +230,6 @@ RcppExport SEXP _EigenH5_check_blosc() {
     UNPROTECT(1);
     return rcpp_result_gen;
 }
-// is_transposed
-bool is_transposed(const std::string filename, const std::string groupname, const std::string dataname);
-static SEXP _EigenH5_is_transposed_try(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::traits::input_parameter< const std::string >::type filename(filenameSEXP);
-    Rcpp::traits::input_parameter< const std::string >::type groupname(groupnameSEXP);
-    Rcpp::traits::input_parameter< const std::string >::type dataname(datanameSEXP);
-    rcpp_result_gen = Rcpp::wrap(is_transposed(filename, groupname, dataname));
-    return rcpp_result_gen;
-END_RCPP_RETURN_ERROR
-}
-RcppExport SEXP _EigenH5_is_transposed(SEXP filenameSEXP, SEXP groupnameSEXP, SEXP datanameSEXP) {
-    SEXP rcpp_result_gen;
-    {
-        Rcpp::RNGScope rcpp_rngScope_gen;
-        rcpp_result_gen = PROTECT(_EigenH5_is_transposed_try(filenameSEXP, groupnameSEXP, datanameSEXP));
-    }
-    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
-    if (rcpp_isInterrupt_gen) {
-        UNPROTECT(1);
-        Rf_onintr();
-    }
-    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
-    if (rcpp_isLongjump_gen) {
-        Rcpp::internal::resumeJump(rcpp_result_gen);
-    }
-    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
-    if (rcpp_isError_gen) {
-        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
-        UNPROTECT(1);
-        Rf_error(CHAR(rcpp_msgSEXP_gen));
-    }
-    UNPROTECT(1);
-    return rcpp_result_gen;
-}
 // len
 int len(RObject x);
 static SEXP _EigenH5_len_try(SEXP xSEXP) {
@@ -1158,7 +1122,6 @@ static int _EigenH5_RcppExport_validate(const char* sig) {
         signatures.insert("size_t(*closeFileHandle)(const std::string)");
         signatures.insert("void(*start_blosc)()");
         signatures.insert("bool(*check_blosc)()");
-        signatures.insert("bool(*is_transposed)(const std::string,const std::string,const std::string)");
         signatures.insert("int(*len)(RObject)");
         signatures.insert("Rcpp::List(*permutation_order)(const Rcpp::List,Rcpp::IntegerVector)");
         signatures.insert("SEXP(*read_vector)(std::string,std::string,Rcpp::List)");
@@ -1194,7 +1157,6 @@ RcppExport SEXP _EigenH5_RcppExport_registerCCallable() {
     R_RegisterCCallable("EigenH5", "_EigenH5_closeFileHandle", (DL_FUNC)_EigenH5_closeFileHandle_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_start_blosc", (DL_FUNC)_EigenH5_start_blosc_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_check_blosc", (DL_FUNC)_EigenH5_check_blosc_try);
-    R_RegisterCCallable("EigenH5", "_EigenH5_is_transposed", (DL_FUNC)_EigenH5_is_transposed_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_len", (DL_FUNC)_EigenH5_len_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_permutation_order", (DL_FUNC)_EigenH5_permutation_order_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_read_vector", (DL_FUNC)_EigenH5_read_vector_try);
@@ -1239,7 +1201,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_EigenH5_closeFileHandle", (DL_FUNC) &_EigenH5_closeFileHandle, 1},
     {"_EigenH5_start_blosc", (DL_FUNC) &_EigenH5_start_blosc, 0},
     {"_EigenH5_check_blosc", (DL_FUNC) &_EigenH5_check_blosc, 0},
-    {"_EigenH5_is_transposed", (DL_FUNC) &_EigenH5_is_transposed, 3},
     {"_EigenH5_len", (DL_FUNC) &_EigenH5_len, 1},
     {"_EigenH5_permutation_order", (DL_FUNC) &_EigenH5_permutation_order, 2},
     {"_EigenH5_read_vector", (DL_FUNC) &_EigenH5_read_vector, 3},
