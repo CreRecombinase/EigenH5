@@ -89,16 +89,10 @@ test_that("can check type of vectors", {
         expect_equal(dim_h5(filename = tempf, datapath = "dat"), 10)
 })
 
-test_that("can write a vector subset", {
-        tvec <- numeric(3)
-        tempf <- tempfile()
-        write_vector_h5(filename = tempf, datapath = "grp/dat", tvec)
-        write_vector_h5(filename = tempf, datapath="grp/dat", .5, subset = c(3))
-        trd <- read_vector_h5(filename = tempf, datapath="grp/dat", subset = 3)
-        expect_equal(trd, trd)
-        trd <- read_vector_h5(filename = tempf, datapath="grp/dat")
-        expect_equal(trd, c(0, 0, 0.5))
-})
+
+
+
+
 
 test_that("can write a vector out of order", {
         tvec <- c(1.0, 2.0, 3.0)

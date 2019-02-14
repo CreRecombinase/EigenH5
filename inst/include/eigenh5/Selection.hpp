@@ -137,6 +137,9 @@ public:
 inline std::vector<dim_sel> dim_sel::parse_chunk_list(const Rcpp::List &list,std::vector<size_t> datadims){
     using int_o = boost::optional<int>;
 
+
+
+
   const size_t num_dims= datadims.size();
   if(num_dims>2){
     Rcpp::stop("Datasets with Dims>2 currently not supported");
@@ -160,7 +163,7 @@ inline std::vector<dim_sel> dim_sel::parse_chunk_list(const Rcpp::List &list,std
 
 
 
-
+//template<typename T
 
 
 
@@ -218,8 +221,6 @@ private:
   bool isCompact_;
   bool all_sorted;
   bool isRepeated_;
-  //  static std::vector<dim_sel> find_cont(Rcpp::IntegerVector::const_iterator itb,Rcpp::IntegerVector::const_iterator ite);
-
 };
 
 
@@ -459,7 +460,6 @@ inline DatasetSelection<Dims> DatasetSelection<Dims>::ProcessList(const Rcpp::Li
 
 inline DimRange::DimRange(Rcpp::IntegerVector::const_iterator itb,Rcpp::IntegerVector::const_iterator ite){
   using namespace Rcpp;
-  // using namespace ranges;
   using namespace boost;
   using namespace boost::icl;
 
@@ -501,15 +501,16 @@ inline DimRange::DimRange(Rcpp::IntegerVector::const_iterator itb,Rcpp::IntegerV
 	}
       }
       if(ins){
-	if((t_it-itbb)!=abs((*t_it-*itbb))){
-	  Rcpp::stop("dim_sel is not compact!");
-	}
-	dim_sel tds((*itbb)-1,*(t_it)-1,tot_dist,tot_dist+(t_it-itbb));
-	in_sels.insert(construct<discrete_interval<int> >(tds.in_start,tds.in_stop,interval_bounds::closed()));
-	dim_sels.push_back(tds);
-	tot_dist=tot_dist+tds.chunksize;
-	itbb=nit;
-	t_it=nit;
+        if ((t_it - itbb) != abs((*t_it - *itbb))) {
+          Rcpp::stop("dim_sel is not compact!");
+        }
+        dim_sel tds((*itbb) - 1, *(t_it)-1, tot_dist, tot_dist + (t_it - itbb));
+        in_sels.insert(construct<discrete_interval<int>>(
+            tds.in_start, tds.in_stop, interval_bounds::closed()));
+        dim_sels.push_back(tds);
+        tot_dist = tot_dist + tds.chunksize;
+        itbb = nit;
+        t_it = nit;
       }
     }
   }
@@ -527,43 +528,10 @@ inline DimRange::DimRange(Rcpp::IntegerVector::const_iterator itb,Rcpp::IntegerV
     Rcpp::Rcerr<<"size of space for it is :"<<out_size<<std::endl;
     Rcpp::stop("out size must be greater than equal to in_size");
   }
-  if(!all_sorted){
-    std::sort(dim_sels.begin(),dim_sels.end());
+  if (!all_sorted) {
+    std::sort(dim_sels.begin(), dim_sels.end());
   }
 }
-
-
-
-  // while(it!=ite){
-  //   it = std::adjacent_find(itb,ite,[](int i,int j){
-  //     // Rcpp::Rcout<<"i is : "<<i<<std::endl;
-  //     // Rcpp::Rcout<<"j is : "<<j<<std::endl;
-  //     return(std::abs(j-i)!=1);
-  //   });
-  //   int iti = (it==ite ? *(it-1) : *(it))-1;
-  //   //    int itb_pos = itb-itbb;
-  //   int reg_size = it==ite ? it-itb : (it-itb+1);
-  //   dim_sel tds
-  //   dim_se.push_back(dim_sel((*itb)-1,iti,tot_dist,tot_dist+reg_size-1));
-  //   //			 piarray{{{*itb,iti}},{{tot_dist,tot_dist+reg_size-1}}});
-  //   if(it!=ite){
-  //     it++;
-  //   }
-  //   tot_dist=tot_dist+reg_size;
-  //   itb=it;
-  // }
-
-  // for(auto &te : ds){
-  //   in_sels.insert(
-  //   tout_size+=te.out_stop-te.out_start+1;
-  // }
-
-
-
-
-
-
-
 
 
 template<size_t Dims>

@@ -151,6 +151,9 @@ void write_elem_m_h5(HighFive::Selection &file_sel,
 
 
 
+
+
+
 template <typename Derivate>
 SEXP read_attribute(const Derivate der,const std::string attribute_name){
 
@@ -310,6 +313,7 @@ HighFive::DataSet create_dataset(HighFive::Group &group,
   }
 }
 
+
 SEXPTYPE typeof_h5_dset(HighFive::DataSet &dset){
   using namespace HighFive;
   return(h2r_T(dset.getDataType().getId()));
@@ -326,6 +330,27 @@ std::vector<size_t> dataset_dims(std::string filename,
 
   return(HighFive::File(filename,HighFive::File::ReadOnly).getDataSet(root_path(datapath)).getDataDimensions());
 }
+
+// Rcpp::RawVector	read_raw_chunk(std::string filename,
+// 			       std::string datapath,
+// 			       Rcpp::IntegerVector chunk_idx){
+
+//   auto dp=root_path(datapath);
+
+//   HighFive::File file(filename,HighFive::File::ReadOnly);
+//   auto ds=  file.getDataSet(dp);
+//   auto chunk_dims = ds.getFilter().get_chunksizes();
+//   std::vector<hsize_t> mchunk_idx(chunk_dims.size());
+//   for(int i=0; i<chunk_idx.size();i++){
+//     mchunk_idx[i]=chunk_idx*chunk_dims[i];
+//   }
+//   Rcpp::RawVector(
+//   void*	td=
+//   return(.read_raw_chunkmchunk_idx));
+// }
+
+
+
 
 
 
@@ -634,7 +659,7 @@ SEXP read_attribute_h5(const std::string &filename,
   //   datapath="/"+datapath;
   // }
   auto dp= root_path(datapath);
-  bool create_success=false;
+
   HighFive::File file(filename,HighFive::File::Create | HighFive::File::ReadWrite);
   
   if(file.isGroup(dp.parent_path())){

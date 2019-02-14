@@ -1,5 +1,15 @@
 context("metadata/utilities")
 
+
+test_that("Can get intervals",{
+        
+        interv <- c(1,5,2,4)
+        (retmat <- VecToInterval(interv))
+        
+        
+})
+
+
 test_that("Can get back chunksize", {
         tv <- sample(1:100, 10)
         tm <- matrix(1:9, 3, 3)
@@ -11,7 +21,7 @@ test_that("Can get back chunksize", {
         write_matrix_h5(filename = tf, datapath = "ltestm", data = ltm)
         dataset_chunks(tf, "ltestm")
 
-        # ltv <- rep(42,
+
 
         expect_equal(dataset_chunks(tf, "testm"), c(3, 3))
         # Verified using h5ls -rv

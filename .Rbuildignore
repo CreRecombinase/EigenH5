@@ -4,3 +4,4 @@
 .projectile
 compile_commands.json
 .cquery
+.ccls

@@ -1,9 +1,15 @@
 #include "EigenH5.h"
 //[[depends(RcppEigen)]]
+//[[depends(RcppParallel)]]
 //[[Rcpp::plugins(cpp11)]]
 #include <array>
-
 // [[Rcpp::interfaces(r, cpp)]]
+
+
+#include <set>
+#include <iostream>
+#include <algorithm>
+
 
 
 
@@ -43,7 +49,6 @@ void create_file_h5(const std::string filename){
 Rcpp::IntegerVector dataset_chunks(const std::string filename,
 				   const std::string datapath){
   using namespace HighFive;
-  bool ret = false;
   HighFive::File file(filename,HighFive::File::ReadOnly);
   return(Rcpp::wrap(file.getDataSet(Path(datapath)).getFilter().get_chunksizes()));
 }

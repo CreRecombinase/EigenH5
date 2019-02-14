@@ -135,11 +135,6 @@ inline ElementSet::ElementSet(const std::vector<std::size_t>& element_ids)
         std::copy(offset[i].begin(), offset[i].end(), offset_local.begin());
         std::copy(count[i].begin(), count[i].end(), count_local.begin());
 
-	// for(size_t j=0; j<Dims;j++){
-	//   count_total[j]=count_total[j]+count_local[j];
-	// }
-
-
         if (H5Sselect_hyperslab(space.getId(),H5S_SELECT_OR, offset_local.data(),
                                 nullptr,
                                 count_local.data(), NULL) < 0) {

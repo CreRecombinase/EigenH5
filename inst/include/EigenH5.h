@@ -1,4 +1,5 @@
 #pragma once
+#define ZSTD_STATIC_LINKING_ONLY
 #include <cmath>
 #include <complex>
 #include <iostream>
@@ -6,12 +7,15 @@
 
 #include <boost/optional.hpp>
 #include <boost/optional/optional_io.hpp>
+#include <boost/variant.hpp>
 
 #define EIGEN_PERMANENTLY_DISABLE_STUPID_WARNINGS
 #include <RcppEigen.h>
 //#include "path/path.hpp"
 
 
+
+boost::variant<std::pair<int,int>,Rcpp::IntegerVector> dispatch_subset(SEXP x);
 
 class Path{
 public:
@@ -183,7 +187,11 @@ template<typename T,SEXPTYPE RTYPE = cpp2r<T>::data_t > boost::optional<T> get_l
 std::vector<boost::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims);
 
 
+SEXPTYPE typeof_h5_dset(HighFive::DataSet &dset);
+
+
 inline std::vector<boost::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix){
+
   using int_o = boost::optional<int>;
   const size_t num_dims= datadims.size();
   std::vector<int_o> offset_v(num_dims,boost::none);
@@ -214,32 +222,8 @@ inline std::vector<boost::optional<int> > parse_option(const Rcpp::List &list, s
 
 
 
-
-
-//std::vector<boost::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix);
-
-
-//std::vector<boost::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix);
-//std::vector<boost::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims);
-
-
-
-
-
-
-
-
-
-
-
 SEXPTYPE h2r_T(hid_t htype);
 bool isGroup(const std::string filename, std::string groupname);
-
-
-
-
-
-
 
 
 template<SEXPTYPE RTYPE>
@@ -355,6 +339,8 @@ inline HighFive::DataSet getDataSet (const Rcpp::List file_l, std::unique_ptr<Fi
 #include <eigenh5/Singleton.hpp>
 #include <eigenh5/Selection.hpp>
 #include <eigenh5/MatSlices.hpp>
+#include <eigenh5/ChunkSelector.hpp>
+
 
 
 

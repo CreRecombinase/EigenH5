@@ -100,7 +100,7 @@ namespace HighFive {
 
 
     auto gcpl = H5Pcreate (H5P_LINK_CREATE);
-    auto status = H5Pset_create_intermediate_group (gcpl, 1);
+    H5Pset_create_intermediate_group (gcpl, 1);
     Group group;
     if ((group._hid = H5Gcreate2(static_cast<const Derivate *>(this)->getId(),
 				 group_name.c_str(), gcpl, H5P_DEFAULT,
@@ -214,10 +214,10 @@ namespace HighFive {
     if(isGroup(object_name)){
       return (getGroup(object_name));
     }
-    if (isDataSet(object_name)) {
-      return (getDataSet(object_name));
+    if (!isDataSet(object_name)) {
+      HDF5ErrMapper::ToException<ObjectException>(std::string("Object is not a Group or DataSet: ") + object_name);
     }
-    HDF5ErrMapper::ToException<ObjectException>(std::string("Object is not a Group or DataSet: ") + object_name);
+    return (getDataSet(object_name));
   }
 
   template<typename Derivate>
@@ -273,14 +273,14 @@ namespace HighFive {
 
     
     std::vector<Path> names;
-    details::HighFiveIterateData iterateData(names);
+    details::HighFiveIterateData<Path> iterateData(names);
 
     size_t num_objs = getNumberObjects();
     names.reserve(num_objs);
 
     if (H5Literate(static_cast<const Derivate *>(this)->getId(), H5_INDEX_NAME,
                    H5_ITER_NATIVE, NULL,
-                   &details::internal_high_five_iterate<H5L_info_t>,
+                   &details::internal_high_five_iterate<H5L_info_t,Path>,
                    static_cast<void *>(&iterateData)) < 0) {
       HDF5ErrMapper::ToException<GroupException>(
           std::string("Unable to list objects in group"));

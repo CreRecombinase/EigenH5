@@ -135,9 +135,9 @@ inline AtomicType<std::string>::AtomicType() {
 template <>
 inline AtomicType<std::string>::AtomicType(int size) {
   _hid = H5Tcopy(H5T_C_S1);
-  size = (size < 0) ? H5T_VARIABLE : size;
+  size_t rsize = (size < 0) ? H5T_VARIABLE : static_cast<size_t>(size);
 
-  if (H5Tset_size(_hid, size) < 0) {
+  if (H5Tset_size(_hid, rsize) < 0) {
     HDF5ErrMapper::ToException<DataTypeException>(
 						  "Unable to define datatype size to variable");
   }

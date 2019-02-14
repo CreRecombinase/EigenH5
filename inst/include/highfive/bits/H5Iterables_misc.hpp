@@ -37,12 +37,12 @@ inline herr_t convert_to_string(void *elem, hid_t type_id, unsigned ndim,
 namespace details {
 
 // iterator for H5 iterate
-
+  template<typename T>
 struct HighFiveIterateData {
-    inline HighFiveIterateData(std::vector<Path>& my_names)
+    inline HighFiveIterateData(std::vector<T>& my_names)
         : names(my_names), err(NULL) {}
 
-    std::vector<Path>& names;
+    std::vector<T>& names;
     std::exception* err;
 
     inline void throwIfError() {
@@ -52,13 +52,13 @@ struct HighFiveIterateData {
     }
 };
 
-template <typename InfoType>
+  template <typename InfoType, typename T>
 inline herr_t internal_high_five_iterate(hid_t id, const char* name,
                                          const InfoType* info, void* op_data) {
     (void)id;
     (void)info;
 
-    HighFiveIterateData* data = static_cast<HighFiveIterateData*>(op_data);
+    HighFiveIterateData<T>* data = static_cast<HighFiveIterateData<T>*>(op_data);
     try {
       H5O_info_t tid;
 #if defined(H5_USE_110_API)
@@ -66,7 +66,7 @@ inline herr_t internal_high_five_iterate(hid_t id, const char* name,
       #else
       auto ret = H5Oget_info_by_name(static_cast<const Derivate *>(this)->getId(), object_name.c_str(), &tid,H5P_DEFAULT);
 #endif
-      data->names.push_back(Path(std::string(name)));
+      data->names.push_back(T(std::string(name)));
         return 0;
     } catch (...) {
       data->err =

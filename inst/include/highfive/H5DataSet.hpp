@@ -35,25 +35,40 @@ class DataSet : public Object,
   void extend(const std::vector<size_t> &new_dims);
     size_t getStorageSize() const;
 
+
+  ///
+  /// /brief get_num_chunks
+  /// /return return the number of chunks in each dimension
+  std::vector<hsize_t> get_num_chunks() const;
+
+
+  ///
+  /// /brief get_chunk_offset
+  /// /return return the chunk offset at the specified chunk index
+  std::vector<hsize_t> get_chunk_offset(const std::vector<hsize_t> &chunk_idx) const;
+
     ///
     /// \brief getDataType
     /// \return return the datatype associated with this dataset
     ///
-    DataType getDataType() const;
+  DataType getDataType() const;
 
-    //std::vector<size_t> getDataDimensions() const;
 
-    ///
-    /// \brief getSpace
-    /// \return return the dataspace associated with this dataset
-    ///
-    DataSpace getSpace() const;
+  size_t read_raw_chunk(void* data_buff, const std::vector<size_t> &offsets)const;
 
-    ///
-    /// \brief getFilter
-    /// \return return the filter(compression) associated with this dataset 
-    ///
-    Filter getFilter() const;
+  //std::vector<size_t> getDataDimensions() const;
+
+  ///
+  /// \brief getSpace
+  /// \return return the dataspace associated with this dataset
+  ///
+  DataSpace getSpace() const;
+
+  ///
+  /// \brief getFilter
+  /// \return return the filter(compression) associated with this dataset
+  ///
+  Filter getFilter() const;
 
     ///
     /// \brief getMemSpace

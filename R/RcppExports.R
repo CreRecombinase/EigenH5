@@ -33,6 +33,30 @@ get_group <- function(f, object_name) {
     .Call(`_EigenH5_get_group`, f, object_name)
 }
 
+read_vector_c <- function(filename, datapath, row_offset = 0L, row_chunksize = -1L) {
+    .Call(`_EigenH5_read_vector_c`, filename, datapath, row_offset, row_chunksize)
+}
+
+read_vector_i <- function(filename, datapath, index = as.integer( c())) {
+    .Call(`_EigenH5_read_vector_i`, filename, datapath, index)
+}
+
+read_matrix_ci <- function(filename, datapath, row_offset = 0L, row_chunksize = -1L, index = as.integer( c())) {
+    .Call(`_EigenH5_read_matrix_ci`, filename, datapath, row_offset, row_chunksize, index)
+}
+
+read_matrix_ic <- function(filename, datapath, row_index = as.integer( c()), col_offset = 0L, col_chunksize = -1L) {
+    .Call(`_EigenH5_read_matrix_ic`, filename, datapath, row_index, col_offset, col_chunksize)
+}
+
+read_matrix_ii <- function(filename, datapath, row_index = as.integer( c()), col_index = as.integer( c())) {
+    .Call(`_EigenH5_read_matrix_ii`, filename, datapath, row_index, col_index)
+}
+
+read_matrix_cc <- function(filename, datapath, row_offset = 0L, row_chunksize = -1L, col_offset = 0L, col_chunksize = -1L) {
+    .Call(`_EigenH5_read_matrix_cc`, filename, datapath, row_offset, row_chunksize, col_offset, col_chunksize)
+}
+
 openFileHandleRead <- function(filepath) {
     .Call(`_EigenH5_openFileHandleRead`, filepath)
 }
