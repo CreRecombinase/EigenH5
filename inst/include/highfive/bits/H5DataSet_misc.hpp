@@ -99,23 +99,60 @@ namespace HighFive {
     return (retvec);
   }
 
-  inline size_t DataSet::read_raw_chunk(void *data_buff, const std::vector<size_t> &offsets) const {
+
+  inline std::optional<size_t> DataSet::read_raw_chunk(std::vector<std::byte> &data_buff, const std::vector<size_t> &offsets) const {
     hsize_t chunk_nbytes;
 
     //    T ret_vec(read_chunk_nbytes);
     uint32_t    read_filter_mask = 0; //filter mask after direct read
     std::vector<hsize_t> h_offsets(offsets.size());
     std::copy(offsets.begin(),offsets.end(),h_offsets.begin());
-    auto ret =H5Dget_chunk_storage_size(_hid, h_offsets.data(), &chunk_nbytes);
-    if ((H5Dread_chunk(_hid, H5P_DEFAULT, h_offsets.data(),
-                       &read_filter_mask, data_buff)) < 0) {
-      HDF5ErrMapper::ToException<DataSetException>(
-          "Unable to read direct chunk");
-    }
-    return chunk_nbytes;
 
+    auto ret =H5Dget_chunk_storage_size(_hid, h_offsets.data(), &chunk_nbytes);
+    auto buff_size = data_buff.size();
+    if(chunk_nbytes>buff_size){
+      size_t newsize=chunk_nbytes;
+      //      Rcpp::Rcerr<<"resizing from "<<data_buff.size()<<"to "<<newsize<<std::endl;
+      data_buff.resize(newsize);
+      // HDF5ErrMapper::ToException<DataSetException>(
+      //     "Chunk larger than allocated storage!");
+      //      return(
+    }
+
+    if ((H5Dread_chunk(_hid, H5P_DEFAULT, h_offsets.data(),
+		       &read_filter_mask, data_buff.data())) < 0) {
+      HDF5ErrMapper::ToException<DataSetException>(
+						   "Unable to read direct chunk");
+    }
+    if(read_filter_mask!=0){
+      return(std::nullopt);
+    }
+
+    return chunk_nbytes;
   }
 
+
+
+  inline void DataSet::write_raw_chunk(std::vector<std::byte> &data_buff, const std::vector<size_t> &offsets,std::optional<size_t> buff_size) const {
+    uint32_t    filter_mask = 0; //filter mask after direct read
+
+    std::vector<hsize_t> h_offsets(offsets.size());
+    std::copy(offsets.begin(),offsets.end(),h_offsets.begin());
+    if(buff_size){
+      if(H5Dwrite_chunk(_hid, H5P_DEFAULT, filter_mask,
+			h_offsets.data(), buff_size.value(), data_buff.data())<0){
+	      HDF5ErrMapper::ToException<DataSetException>(
+							   "Unable to write direct chunk");
+      }
+    }else{
+      filter_mask = 0x00000001;
+      if(H5Dwrite_chunk(_hid, H5P_DEFAULT, filter_mask,
+			h_offsets.data(), data_buff.size(), data_buff.data())){
+	HDF5ErrMapper::ToException<DataSetException>(
+						     "Unable to write direct chunk");
+      }
+    }
+  }
   // template<typename T>
   // inline T DataSet::read_raw_chunk(const std::vector<hsize_t> &chunk_idx) const {
 

@@ -1,4 +1,7 @@
+// [[Rcpp::depends(BH)]]
+#include <variant>
 #include <R.h>
+#include <Rcpp.h>
 #include <Rinternals.h>
 #include <Rversion.h>
 
@@ -26,6 +29,7 @@ extern "C" {
 #include <R_ext/Altrep.h>
 #endif
 
+// #include <EigenH5.h>
 
 bool is_compact_seq(SEXP x) {
 
@@ -45,14 +49,13 @@ bool is_compact_seq(SEXP x) {
 
 
 bool is_compact_forward(SEXP x){
-  PROTECT(x);
   if(!ALTREP(x)){
 
     return false;
   }
-  R_xlen_t info_l=::Rf_xlength(R_altrep_data1(x));
+  const auto info = R_altrep_data1(x);
+  R_xlen_t info_l=::Rf_xlength(info);
   if(info_l!=3){
-    UNPROTECT(1);
     return false;
   }
   if(((int) REAL0(info)[2])!=1){
@@ -66,14 +69,15 @@ std::pair<int,int> altrep_pair(SEXP x){
     Rcpp::stop("x is not a compact sequence!");
   }
   const auto ard = R_altrep_data1(x);
-  const int seq_start =INT(ard[0])-1;
-  const int seq_size= INT(ard[1])-seq_start;
+  const auto ardd = REAL0(ard);
+  const int seq_size =(int)ardd[0];
+  const int seq_start= (int)ardd[1]-1;
 
   return(std::make_pair(seq_start,seq_size));
 }
 
 
-boost::variant<std::pair<int,int>,Rcpp::IntegerVector> dispatch_subset(SEXP x){
+std::variant<std::pair<int,int>,Rcpp::IntegerVector> dispatch_subset(SEXP x){
 
   auto my_t = TYPEOF(x);
   if(my_t!=INTSXP){
@@ -84,7 +88,9 @@ boost::variant<std::pair<int,int>,Rcpp::IntegerVector> dispatch_subset(SEXP x){
     return(std::make_pair(0,-1));
   }
   if(is_compact_forward(x)){
-    return(altrep_pair(x));
+    std::pair<int,int> ap= altrep_pair(x);
+    return(ap);
   }
-  return(Rcpp::as<Rcpp::IntegerVector>(x));
+  Rcpp::IntegerVector av=Rcpp::as<Rcpp::IntegerVector>(x);
+  return(av);
 }

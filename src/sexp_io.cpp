@@ -314,7 +314,10 @@ HighFive::DataSet create_dataset(HighFive::Group &group,
 }
 
 
-SEXPTYPE typeof_h5_dset(HighFive::DataSet &dset){
+
+
+
+SEXPTYPE typeof_h5_dset(const HighFive::DataSet &dset){
   using namespace HighFive;
   return(h2r_T(dset.getDataType().getId()));
 }
@@ -330,6 +333,7 @@ std::vector<size_t> dataset_dims(std::string filename,
 
   return(HighFive::File(filename,HighFive::File::ReadOnly).getDataSet(root_path(datapath)).getDataDimensions());
 }
+
 
 // Rcpp::RawVector	read_raw_chunk(std::string filename,
 // 			       std::string datapath,

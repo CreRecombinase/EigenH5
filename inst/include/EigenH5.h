@@ -4,6 +4,17 @@
 #include <complex>
 #include <iostream>
 #include <iostream>
+#include <numeric>
+
+#include "xtensor-r/rarray.hpp"
+#include "xtensor-r/rtensor.hpp"
+#include "xtensor-r/rvectorize.hpp"
+#include "xtensor-r/rcontainer.hpp"
+#include <xtensor/xarray.hpp>
+#include <xtensor/xdynamic_view.hpp>
+#include <xtensor/xview.hpp>
+
+#define STRICT_R_HEADERS
 
 #include <boost/optional.hpp>
 #include <boost/optional/optional_io.hpp>
@@ -15,7 +26,8 @@
 
 
 
-boost::variant<std::pair<int,int>,Rcpp::IntegerVector> dispatch_subset(SEXP x);
+
+
 
 class Path{
 public:
@@ -78,12 +90,7 @@ inline std::ostream &operator<<(std::ostream &os, const Path &dt) {
 }
 
 #include "highfive/highfive.hpp"
-#ifdef USE_BLOSC
-#include "blosc_filter.h"
-#endif
-#include "lzf/lzf_filter.h"
-#include "zstd/zstd_h5plugin.h"
-#include "zstd/zstd.h"
+
 
 #include <H5Tpublic.h>
 
@@ -187,7 +194,7 @@ template<typename T,SEXPTYPE RTYPE = cpp2r<T>::data_t > boost::optional<T> get_l
 std::vector<boost::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims);
 
 
-SEXPTYPE typeof_h5_dset(HighFive::DataSet &dset);
+SEXPTYPE typeof_h5_dset(const HighFive::DataSet &dset);
 
 
 inline std::vector<boost::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix){
@@ -335,11 +342,13 @@ inline HighFive::DataSet getDataSet (const Rcpp::List file_l, std::unique_ptr<Fi
   return(file.getDataSet(dsn));
 }
 
-
 #include <eigenh5/Singleton.hpp>
 #include <eigenh5/Selection.hpp>
 #include <eigenh5/MatSlices.hpp>
-#include <eigenh5/ChunkSelector.hpp>
+//#include <eigenh5/ChunkSelector.hpp>
+
+
+std::variant<std::pair<int,int>,Rcpp::IntegerVector> dispatch_subset(SEXP x);
 
 
 

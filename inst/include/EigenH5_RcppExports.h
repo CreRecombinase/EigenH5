@@ -25,17 +25,17 @@ namespace EigenH5 {
         }
     }
 
-    inline SEXP read_vector_c(std::string filename, std::string datapath, int row_offset = 0, int row_chunksize = -1) {
-        typedef SEXP(*Ptr_read_vector_c)(SEXP,SEXP,SEXP,SEXP);
-        static Ptr_read_vector_c p_read_vector_c = NULL;
-        if (p_read_vector_c == NULL) {
-            validateSignature("SEXP(*read_vector_c)(std::string,std::string,int,int)");
-            p_read_vector_c = (Ptr_read_vector_c)R_GetCCallable("EigenH5", "_EigenH5_read_vector_c");
+    inline SEXP read_matrix_v(const std::string filename, const std::string datapath, SEXP rows, SEXP cols) {
+        typedef SEXP(*Ptr_read_matrix_v)(SEXP,SEXP,SEXP,SEXP);
+        static Ptr_read_matrix_v p_read_matrix_v = NULL;
+        if (p_read_matrix_v == NULL) {
+            validateSignature("SEXP(*read_matrix_v)(const std::string,const std::string,SEXP,SEXP)");
+            p_read_matrix_v = (Ptr_read_matrix_v)R_GetCCallable("EigenH5", "_EigenH5_read_matrix_v");
         }
         RObject rcpp_result_gen;
         {
             RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_read_vector_c(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(row_offset)), Shield<SEXP>(Rcpp::wrap(row_chunksize)));
+            rcpp_result_gen = p_read_matrix_v(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(rows)), Shield<SEXP>(Rcpp::wrap(cols)));
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
@@ -46,17 +46,17 @@ namespace EigenH5 {
         return Rcpp::as<SEXP >(rcpp_result_gen);
     }
 
-    inline SEXP read_vector_i(std::string filename, std::string datapath, Rcpp::IntegerVector index = Rcpp::IntegerVector::create()) {
-        typedef SEXP(*Ptr_read_vector_i)(SEXP,SEXP,SEXP);
-        static Ptr_read_vector_i p_read_vector_i = NULL;
-        if (p_read_vector_i == NULL) {
-            validateSignature("SEXP(*read_vector_i)(std::string,std::string,Rcpp::IntegerVector)");
-            p_read_vector_i = (Ptr_read_vector_i)R_GetCCallable("EigenH5", "_EigenH5_read_vector_i");
+    inline SEXP read_vector_v(const std::string filename, const std::string datapath, SEXP rows) {
+        typedef SEXP(*Ptr_read_vector_v)(SEXP,SEXP,SEXP);
+        static Ptr_read_vector_v p_read_vector_v = NULL;
+        if (p_read_vector_v == NULL) {
+            validateSignature("SEXP(*read_vector_v)(const std::string,const std::string,SEXP)");
+            p_read_vector_v = (Ptr_read_vector_v)R_GetCCallable("EigenH5", "_EigenH5_read_vector_v");
         }
         RObject rcpp_result_gen;
         {
             RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_read_vector_i(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(index)));
+            rcpp_result_gen = p_read_vector_v(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(rows)));
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
@@ -67,17 +67,17 @@ namespace EigenH5 {
         return Rcpp::as<SEXP >(rcpp_result_gen);
     }
 
-    inline SEXP read_matrix_ci(std::string filename, std::string datapath, int row_offset = 0, int row_chunksize = -1, Rcpp::IntegerVector index = Rcpp::IntegerVector::create()) {
-        typedef SEXP(*Ptr_read_matrix_ci)(SEXP,SEXP,SEXP,SEXP,SEXP);
-        static Ptr_read_matrix_ci p_read_matrix_ci = NULL;
-        if (p_read_matrix_ci == NULL) {
-            validateSignature("SEXP(*read_matrix_ci)(std::string,std::string,int,int,Rcpp::IntegerVector)");
-            p_read_matrix_ci = (Ptr_read_matrix_ci)R_GetCCallable("EigenH5", "_EigenH5_read_matrix_ci");
+    inline void update_matrix_v(Rcpp::RObject data, const std::string filename, const std::string datapath, SEXP rows, SEXP cols) {
+        typedef SEXP(*Ptr_update_matrix_v)(SEXP,SEXP,SEXP,SEXP,SEXP);
+        static Ptr_update_matrix_v p_update_matrix_v = NULL;
+        if (p_update_matrix_v == NULL) {
+            validateSignature("void(*update_matrix_v)(Rcpp::RObject,const std::string,const std::string,SEXP,SEXP)");
+            p_update_matrix_v = (Ptr_update_matrix_v)R_GetCCallable("EigenH5", "_EigenH5_update_matrix_v");
         }
         RObject rcpp_result_gen;
         {
             RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_read_matrix_ci(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(row_offset)), Shield<SEXP>(Rcpp::wrap(row_chunksize)), Shield<SEXP>(Rcpp::wrap(index)));
+            rcpp_result_gen = p_update_matrix_v(Shield<SEXP>(Rcpp::wrap(data)), Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(rows)), Shield<SEXP>(Rcpp::wrap(cols)));
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
@@ -85,20 +85,19 @@ namespace EigenH5 {
             throw Rcpp::LongjumpException(rcpp_result_gen);
         if (rcpp_result_gen.inherits("try-error"))
             throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-        return Rcpp::as<SEXP >(rcpp_result_gen);
     }
 
-    inline SEXP read_matrix_ic(std::string filename, std::string datapath, Rcpp::IntegerVector row_index = Rcpp::IntegerVector::create(), int col_offset = 0, int col_chunksize = -1) {
-        typedef SEXP(*Ptr_read_matrix_ic)(SEXP,SEXP,SEXP,SEXP,SEXP);
-        static Ptr_read_matrix_ic p_read_matrix_ic = NULL;
-        if (p_read_matrix_ic == NULL) {
-            validateSignature("SEXP(*read_matrix_ic)(std::string,std::string,Rcpp::IntegerVector,int,int)");
-            p_read_matrix_ic = (Ptr_read_matrix_ic)R_GetCCallable("EigenH5", "_EigenH5_read_matrix_ic");
+    inline void update_vector_v(Rcpp::RObject data, const std::string filename, const std::string datapath, SEXP rows) {
+        typedef SEXP(*Ptr_update_vector_v)(SEXP,SEXP,SEXP,SEXP);
+        static Ptr_update_vector_v p_update_vector_v = NULL;
+        if (p_update_vector_v == NULL) {
+            validateSignature("void(*update_vector_v)(Rcpp::RObject,const std::string,const std::string,SEXP)");
+            p_update_vector_v = (Ptr_update_vector_v)R_GetCCallable("EigenH5", "_EigenH5_update_vector_v");
         }
         RObject rcpp_result_gen;
         {
             RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_read_matrix_ic(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(row_index)), Shield<SEXP>(Rcpp::wrap(col_offset)), Shield<SEXP>(Rcpp::wrap(col_chunksize)));
+            rcpp_result_gen = p_update_vector_v(Shield<SEXP>(Rcpp::wrap(data)), Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(rows)));
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();
@@ -106,49 +105,6 @@ namespace EigenH5 {
             throw Rcpp::LongjumpException(rcpp_result_gen);
         if (rcpp_result_gen.inherits("try-error"))
             throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-        return Rcpp::as<SEXP >(rcpp_result_gen);
-    }
-
-    inline SEXP read_matrix_ii(std::string filename, std::string datapath, Rcpp::IntegerVector row_index = Rcpp::IntegerVector::create(), Rcpp::IntegerVector col_index = Rcpp::IntegerVector::create()) {
-        typedef SEXP(*Ptr_read_matrix_ii)(SEXP,SEXP,SEXP,SEXP);
-        static Ptr_read_matrix_ii p_read_matrix_ii = NULL;
-        if (p_read_matrix_ii == NULL) {
-            validateSignature("SEXP(*read_matrix_ii)(std::string,std::string,Rcpp::IntegerVector,Rcpp::IntegerVector)");
-            p_read_matrix_ii = (Ptr_read_matrix_ii)R_GetCCallable("EigenH5", "_EigenH5_read_matrix_ii");
-        }
-        RObject rcpp_result_gen;
-        {
-            RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_read_matrix_ii(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(row_index)), Shield<SEXP>(Rcpp::wrap(col_index)));
-        }
-        if (rcpp_result_gen.inherits("interrupted-error"))
-            throw Rcpp::internal::InterruptedException();
-        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
-            throw Rcpp::LongjumpException(rcpp_result_gen);
-        if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-        return Rcpp::as<SEXP >(rcpp_result_gen);
-    }
-
-    inline SEXP read_matrix_cc(std::string filename, std::string datapath, int row_offset = 0, int row_chunksize = -1, int col_offset = 0, int col_chunksize = -1) {
-        typedef SEXP(*Ptr_read_matrix_cc)(SEXP,SEXP,SEXP,SEXP,SEXP,SEXP);
-        static Ptr_read_matrix_cc p_read_matrix_cc = NULL;
-        if (p_read_matrix_cc == NULL) {
-            validateSignature("SEXP(*read_matrix_cc)(std::string,std::string,int,int,int,int)");
-            p_read_matrix_cc = (Ptr_read_matrix_cc)R_GetCCallable("EigenH5", "_EigenH5_read_matrix_cc");
-        }
-        RObject rcpp_result_gen;
-        {
-            RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_read_matrix_cc(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(row_offset)), Shield<SEXP>(Rcpp::wrap(row_chunksize)), Shield<SEXP>(Rcpp::wrap(col_offset)), Shield<SEXP>(Rcpp::wrap(col_chunksize)));
-        }
-        if (rcpp_result_gen.inherits("interrupted-error"))
-            throw Rcpp::internal::InterruptedException();
-        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
-            throw Rcpp::LongjumpException(rcpp_result_gen);
-        if (rcpp_result_gen.inherits("try-error"))
-            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
-        return Rcpp::as<SEXP >(rcpp_result_gen);
     }
 
     inline std::string openFileHandleRead(const std::string filepath) {

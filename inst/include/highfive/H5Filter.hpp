@@ -10,72 +10,324 @@
 #include "H5DataSpace.hpp"
 #include <functional>
 #include <numeric>
-
+#include <variant>
 #include <Eigen/Core>
 
 
+#ifdef USE_BLOSC
+#include "blosc_filter.h"
+#endif
+
+
+#include "lzf/lzf_filter.h"
+#include "zstd/zstd_h5plugin.h"
+#include "zstd/zstd.h"
+#include "zlib.h"
+
+
+// template<int FT>
+// class Compressor{
+// public:
+//   DeCompressor(){}
+//   void decompress(void* output,size_t osize,const void* input,size_t isize){
+//     static_assert(1<0,"Filter type not found");
+//   }
+// };
+
+class NoCompressor{
+public:
+  NoCompressor(const std::vector<unsigned int> &cd){}
+
+  void memcpy(void* output,size_t osize,const void* input,size_t isize){
+    std::memcpy(output,input,osize);
+  }
+  void decompress(void* output,size_t osize,const void* input,size_t isize){
+    std::memcpy(output,input,osize);
+  }
+  size_t compress(void* output,size_t osize,const void* input,size_t isize){
+    std::memcpy(output,input,osize);
+    return osize;
+  }
+};
 
 
 
+class GzipCompressor{
+public:
+  const int aggression;
+
+  GzipCompressor(const std::vector<unsigned int> &cd_):aggression(static_cast<int>(cd_[0])){}
+  void decompress(void* output,size_t osize,const void* input,size_t isize){
+    Rcpp::stop("gzip is giving me problems right now");
+    // auto ret = uncompress((unsigned char*)output, (long unsigned int)osize, (unsigned char*)input, (long unsigned int) isize);
+    auto ret=Z_BUF_ERROR;
+    if(Z_BUF_ERROR == ret) {
+      Rcpp::stop("Error decompressing data");
+    }
+  }
+  void memcpy(void* output,size_t osize,const void* input,size_t isize){
+    std::memcpy(output,input,osize);
+  }
+  std::optional<size_t> compress(void* output,size_t osize,const void* input,size_t isize){
+    size_t o_osize=osize;
+    Rcpp::stop("gzip is giving me problems right now");
+    //    auto ret = compress2(output, &osize, input,isize, aggression);
+    auto ret=Z_BUF_ERROR;
+    if(Z_BUF_ERROR == ret) {
+      Rcpp::stop("zbuff overflow");
+    } else if(Z_MEM_ERROR == ret) {
+      Rcpp::stop("deflate memory error");
+    } else if(Z_OK != ret) {
+      Rcpp::stop("other deflate error");
+    }
+    if(osize<o_osize){
+      return osize;
+    }
+    return std::nullopt;
+  }
+};
+
+
+class LzfCompressor{
+public:
+  //  const std::vector<unsigned int> cd;
+  LzfCompressor(const std::vector<unsigned int> &cd_){}
+  void memcpy(void* output,size_t osize,const void* input,size_t isize){
+    std::memcpy(output,input,osize);
+  }
+  void decompress(void* output,size_t osize,const void* input,size_t isize){
+    auto ret = lzf_decompress(input,isize,output,osize);
+    if(!ret){
+
+      if(errno == E2BIG){
+        Rcpp::stop("lzf too small");
+      } else if(errno == EINVAL) {
+
+       Rcpp::stop("Invalid data for LZF decompression");
+
+      } else {
+       Rcpp::stop("Unknown LZF decompression error");
+      }
+
+
+      if(Z_BUF_ERROR == ret) {
+        Rcpp::stop("Error decompressing data");
+      }
+    }
+  }
+  std::optional<size_t> compress(void* output,size_t osize,const void* input,size_t isize){
+    auto ret = lzf_compress(input,isize,output,osize);
+    if(ret>0){
+      return(ret);
+    }
+    return std::nullopt;
+  }
+
+
+  
+};
+  
+  
+  
+class BloscCompressor{
+#ifdef USE_BLOSC
+  int clevel;
+  int doshuffle;
+  int compcode;
+  int code;
+  int typesize;
+  int outbuf_size;
+#endif
+
+public:
+  BloscCompressor(const std::vector<unsigned int> cd_){
+#ifndef USE_BLOSC
+    Rcpp::stop("please recompile EigenH5 with -DUSE_BLOSC (and the blosc library)");
+#else
+
+    char tstr [] = "blosclz";
+    char* compname = tstr;     /* The compressor by default */
+    auto cds =cd_.size();
+    if(cds>4){
+      typesize=static_cast<int>(cd_[2]);
+      outbuf_size=static_cast<int>(cd_[3]);
+    }else{
+      Rcpp::stop("Blosc Compressor needs the values from cd_");
+    }
+    if(cds>=5){
+      clevel=static_cast<int>(cd_[4]);
+    }else{
+      clevel=5;
+    }
+    if(cds>=6){
+      doshuffle=static_cast<int>(cd_[5]);
+    }else{
+      doshuffle=1;
+    }
+    if(cds>=7){
+      compcode=static_cast<int>(cd_[6]);
+      auto complist = blosc_list_compressors();
+      code = blosc_compcode_to_compname(compcode, &compname);
+      if (code == -1) {
+	Rcpp::Rcerr<<"this Blosc library does not have support for the "<<compname<<" compressor, but only for:"<<complist<<std::endl;
+	Rcpp::stop("Can't initialize blosc");
+      }
+    }
+
+    blosc_set_compressor(compname);
+#endif
+  }
+
+
+  void memcpy(void* output,size_t osize,const void* input,size_t isize){
+    std::memcpy(output,input,osize);
+  }
+  void decompress(void* output,size_t osize,const void* input,size_t isize){
+#ifdef USE_BLOSC
+    size_t cbytes, blocksize,outbuf_size;
+
+    blosc_cbuffer_sizes(input, &outbuf_size, &cbytes, &blocksize);
+    if(outbuf_size>osize){
+      Rcpp::stop("output buffer size larger than total size!");
+    }
+    auto  status = blosc_decompress(input, output, osize);
+    if (status <= 0) {    /* decompression failed */
+      Rcpp::stop("Blosc decompression error");
+    }
+#endif
+  }
+  std::optional<size_t> compress(void* output,size_t osize,const void* input,size_t isize){
+#ifdef USE_BLOSC
+    auto  status = blosc_compress(clevel,doshuffle,typesize,nbytes,input,output,osize);
+    if (status <= 0) {    /* decompression failed */
+      return std::nullopt;
+    }
+    return(status);
+    #else
+    Rcpp::stop("Rebuild EigenH5 using BLOSC");
+    return(std::nullopt);
+#endif
+  }
+};
+  
+  
+  
+  
+class ZstdCompressor{
+public:
+  std::unique_ptr<ZSTD_DCtx,decltype(&ZSTD_freeDCtx)> ctxt_d;
+  std::unique_ptr<ZSTD_CCtx,decltype(&ZSTD_freeCCtx)> ctxt_c;
+  int aggression;
+  ZstdCompressor(const std::vector<unsigned int> cd_):ctxt_d(ZSTD_createDCtx(),&ZSTD_freeDCtx),
+						      ctxt_c(ZSTD_createCCtx(),&ZSTD_freeCCtx){
+    if(cd_.size()>0){
+      aggression=static_cast<int>(cd_[0]);
+    }else{
+      aggression=22;
+    }
+  }
+  void decompress(void* output,size_t osize,const void* input,size_t isize){
+
+    auto rc = ZSTD_decompressDCtx(ctxt_d.get(),output, osize, input,isize);
+    if(ZSTD_isError(rc)){
+      Rcpp::Rcerr<<ZSTD_getErrorName(rc)<<std::endl;
+      // for(int ik =0; ik<isize;ik++){
+      // 	Rcpp::Rcerr<<static_cast<const int>(input[ik])<<std::endl;
+      // }
+      if(ZSTD_isFrame((void*) input, isize)){
+	Rcpp::Rcerr<<"Frame is valid"<<std::endl;
+      }
+      else{
+	Rcpp::Rcerr<<"Frame is not valid"<<std::endl;
+      }
+      auto ret2 = ZSTD_getFrameContentSize((void*) input,isize);
+
+      if(ret2==0){
+	Rcpp::Rcerr<<"Frame valid but empty"<<std::endl;
+	Rcpp::stop("Error decompressing zstd");
+      }
+      if(ret2==ZSTD_CONTENTSIZE_ERROR){
+	Rcpp::Rcerr<<"invalid magic number, or srcSize is too small"<<std::endl;
+	Rcpp::stop("Error decompressing zstd");
+      }
+      if(ret2==ZSTD_CONTENTSIZE_UNKNOWN){
+	Rcpp::Rcerr<<"Frame size cannot be determined"<<std::endl;
+	Rcpp::stop("Error decompressing zstd");
+      }else{
+	Rcpp::Rcerr<<"Frame size is :"<<ret2<<" and you said it was :"<<osize<<std::endl;
+	Rcpp::stop("Error decompressing zstd");
+      }
+      Rcpp::stop("Error decompressing zstd");
+    }
+  }
+  std::optional<size_t> compress(const void* input,size_t isize,void* output,size_t osize){
+
+    auto rc = ZSTD_compressCCtx(ctxt_c.get(),output, osize, input,isize,aggression);
+    if(ZSTD_isError(rc)){
+      Rcpp::Rcerr<<"There was an error with compression!"<<std::endl;
+      Rcpp::Rcerr<<ZSTD_getErrorName(rc)<<std::endl;
+      return std::nullopt;
+    }
+    if(rc<0){
+      return std::nullopt;
+    }
+    return rc;
+  }
+  void memcpy(void* output,size_t osize,const void* input,size_t isize){
+    std::memcpy(output,input,osize);
+  }
+  
+};
+  
 
 
 namespace HighFive {
-
-
-  // class VFilter :public Object{
-
-  // };
-///
 /// \brief Generic HDF5 property List
 ///
-    class Filter {
-    public:
-      static const hid_t gzip;// = 1;
-      static const hid_t blosc;// = 32001;
-      static const hid_t lzf4;// = 32000;
-      static const hid_t zstd;// = 32015;
-      static const hid_t no_filter;// = 0;
-      static const size_t CHUNK_BASE = 16*1024;
-      static const size_t CHUNK_MIN = 8*1024;
-      static const size_t CHUNK_MAX = 1024*1024;
-      Filter(const std::vector<size_t> &chunk_dims, const hid_t filter_id, std::vector<unsigned int> cd_values);
-      // std::function<void(void*,size_t,void*,size_t)> get_compression_fun() const{
-      // 	auto filt_pair = get_filter_info();
-      // 	// if(filt_pair[1]=="zstd"){
-      // 	//   return(std::function<void(void*,size_t,void*,size_t)>([]
 
+  class Filter: public Object {
 
-      // }
-      Filter();
-      static std::vector<size_t> guess_chunk(const std::vector<size_t> data_shape);
-      static Filter From(const DataSpace &dataspace,const hid_t filter_id,std::vector<unsigned int> cd_values={});
-      hid_t getId() const;
-      std::vector<size_t> get_chunksizes()const;
-      std::pair<std::string,std::vector<unsigned int> > get_filter_info() const;
-    protected:
-      std::vector<size_t> chunksizes;
-      hid_t _hid;
-      friend class ::HighFive::DataSet;
-    };
+  public:
+    static const hid_t gzip;// = 1;
+    static const hid_t blosc;// = 32001;
+    static const hid_t lzf4;// = 32000;
+    static const hid_t zstd;// = 32015;
+    static const hid_t no_filter;// = 0;
+    static const size_t CHUNK_BASE = 16*1024;
+    static const size_t CHUNK_MIN = 8*1024;
+    static const size_t CHUNK_MAX = 1024*1024;
+    Filter(const std::vector<size_t> &chunk_dims, const hid_t filter_id, std::vector<unsigned int> cd_values);
+    using compressors = std::variant<NoCompressor,LzfCompressor,BloscCompressor,GzipCompressor,ZstdCompressor>;
+    Filter();
+    static std::vector<size_t> guess_chunk(const std::vector<size_t> data_shape);
+    static Filter From(const DataSpace &dataspace,const hid_t filter_id,std::vector<unsigned int> cd_values={});
+    hid_t getId() const;
+    std::vector<size_t> get_chunksizes()const;
+    compressors getDecompressor() const;
+    std::pair<std::string,std::vector<unsigned int> > get_filter_info() const;
+  protected:
+    std::vector<size_t> chunksizes;
+    //    hid_t _hid;
+    friend class ::HighFive::DataSet;
+  };
 
 
 } // HighFive
 
 
 
+
+
 namespace HighFive {
 
 
 
 
-const hid_t filter_gzip = 1;
-const hid_t filter_blosc = 32001;
-const hid_t filter_lzf4 = 32000;
-const hid_t filter_zstd = 32015;
-const hid_t filter_no_filter = 0;
-
-
-
+  const hid_t filter_gzip = 1;
+  const hid_t filter_blosc = 32001;
+  const hid_t filter_lzf4 = 32000;
+  const hid_t filter_zstd = 32015;
+  const hid_t filter_no_filter = 0;
 
   inline Filter::Filter() {
     _hid = H5Pcreate(H5P_DATASET_CREATE);
@@ -147,9 +399,7 @@ const hid_t filter_no_filter = 0;
     }
     auto chunk_size=data_shape;
     size_t prop_chunk_size = std::accumulate(chunk_size.begin(), chunk_size.end(), 1, std::multiplies<size_t>());
-    size_t iti=0;
     while(prop_chunk_size>=CHUNK_MAX){
-      // auto it=data_shape[(iti++ %
       auto it=chunk_size.begin();
       *it/=2;
       prop_chunk_size = std::accumulate(chunk_size.begin(), chunk_size.end(), 1, std::multiplies<size_t>());
@@ -180,6 +430,9 @@ const hid_t filter_no_filter = 0;
 				  nname,
 				  name.data(),
 				  &tflg);
+      if(filt_ret<0){
+	HDF5ErrMapper::ToException<FilterException>("Unable to get filter");
+      }
       std::string	nameret(name.data());
       std::vector<unsigned int> ret(ncd);
       std::copy(cd.begin(),cd.begin()+ncd,ret.begin());
@@ -187,9 +440,54 @@ const hid_t filter_no_filter = 0;
     }else{
       return(std::make_pair("no_filter",std::vector<unsigned int>()));
     }
+  }
 
-
-
+  inline Filter::compressors Filter::getDecompressor() const{
+    std::vector<unsigned int> cd(10);
+    std::array<unsigned int,10> flgs;
+    unsigned int tflg;
+    std::vector<char> name(30);
+    size_t ncd=cd.size();
+    size_t nname = name.size();
+    //We want to get the last filter
+    int num_filt=H5Pget_nfilters(_hid);
+    if(num_filt>0){
+      auto filt_ret=H5Pget_filter(_hid,
+				  num_filt-1,
+				  flgs.data(),
+				  &ncd,
+				  cd.data(),
+				  nname,
+				  name.data(),
+				  &tflg);
+      if(filt_ret<0){
+	HDF5ErrMapper::ToException<FilterException>("Unable to get filter");
+      }
+      switch(filt_ret){
+      case H5Z_FILTER_DEFLATE:{
+	//	GzipCompressor gzd(cd);
+	return(GzipCompressor(cd));
+      }
+      case 32001:{
+	//	BloscCompressor blodo(cd);
+      	return(BloscCompressor(cd));
+      }
+      case 32000:{
+	//	LzfCompressor lzd(cd);
+	return(LzfCompressor(cd));
+      }
+      case 32015:{
+	//        ZstdCompressor zstdd(cd);
+	return(ZstdCompressor(cd));
+      }
+      default: {
+	Rcpp::Rcerr<<"Invalid filter:"<< filt_ret<<std::endl;
+	return NoCompressor(cd);
+      }
+      }
+    }else{
+      return NoCompressor(cd);
+    }
   }
 
   inline std::vector<size_t> Filter::get_chunksizes()const{

@@ -216,7 +216,7 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
       goto failed;
     }
 
-    blosc_set_compressor(compname);
+
     status = blosc_compress(clevel, doshuffle, typesize, nbytes,
                             *buf, outbuf, nbytes);
     if (status < 0) {
