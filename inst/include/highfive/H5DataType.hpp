@@ -12,26 +12,27 @@
 #include <boost/optional.hpp>
 namespace HighFive {
 
-struct TypeMapper;
+  struct TypeMapper;
 
-///
-/// \brief HDF5 Data Type
-///
-class DataType : public Object {
+  ///
+  /// \brief HDF5 Data Type
+  ///
+  class DataType : public Object {
   public:
     DataType();
 
     bool operator == (const DataType& other) const;
 
     bool operator != (const DataType& other) const;
+    size_t n_elem() const;
 
 
-protected:
+  protected:
 
     friend class Attribute;
     friend class File;
     friend class DataSet;
-};
+  };
 
 ///
 /// \brief create an HDF5 DataType from a C++ type

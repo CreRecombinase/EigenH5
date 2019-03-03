@@ -6,13 +6,6 @@
 #include <iostream>
 #include <numeric>
 
-#include "xtensor-r/rarray.hpp"
-#include "xtensor-r/rtensor.hpp"
-#include "xtensor-r/rvectorize.hpp"
-#include "xtensor-r/rcontainer.hpp"
-#include <xtensor/xarray.hpp>
-#include <xtensor/xdynamic_view.hpp>
-#include <xtensor/xview.hpp>
 
 #define STRICT_R_HEADERS
 

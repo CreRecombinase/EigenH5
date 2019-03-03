@@ -114,9 +114,6 @@ namespace HighFive {
       size_t newsize=chunk_nbytes;
       //      Rcpp::Rcerr<<"resizing from "<<data_buff.size()<<"to "<<newsize<<std::endl;
       data_buff.resize(newsize);
-      // HDF5ErrMapper::ToException<DataSetException>(
-      //     "Chunk larger than allocated storage!");
-      //      return(
     }
 
     if ((H5Dread_chunk(_hid, H5P_DEFAULT, h_offsets.data(),

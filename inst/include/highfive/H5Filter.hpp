@@ -38,15 +38,18 @@ class NoCompressor{
 public:
   NoCompressor(const std::vector<unsigned int> &cd){}
 
-  void memcpy(void* output,size_t osize,const void* input,size_t isize){
-    std::memcpy(output,input,osize);
+  void decompress(void* uncompressed,size_t uc_size,const void* compressed,std::optional<size_t> cb_size){
+    std::memcpy(uncompressed,compressed,cb_size.value_or(uc_size));
   }
-  void decompress(void* output,size_t osize,const void* input,size_t isize){
-    std::memcpy(output,input,osize);
-  }
-  size_t compress(void* output,size_t osize,const void* input,size_t isize){
-    std::memcpy(output,input,osize);
-    return osize;
+
+  std::optional<size_t> compress(void* compressed,size_t cb_size,const void* uncompressed,size_t uc_size){
+#ifdef DEBUG
+    if(uc_size>cb_size){
+      Rcpp::stop("compressed buffer is smaller than uncompressed buffer in NoCompressor");
+    }
+#endif
+    std::memcpy(compressed,uncompressed,uc_size);
+    return uc_size;
   }
 };
 
@@ -55,24 +58,26 @@ public:
 class GzipCompressor{
 public:
   const int aggression;
-
   GzipCompressor(const std::vector<unsigned int> &cd_):aggression(static_cast<int>(cd_[0])){}
-  void decompress(void* output,size_t osize,const void* input,size_t isize){
-    Rcpp::stop("gzip is giving me problems right now");
-    // auto ret = uncompress((unsigned char*)output, (long unsigned int)osize, (unsigned char*)input, (long unsigned int) isize);
-    auto ret=Z_BUF_ERROR;
-    if(Z_BUF_ERROR == ret) {
-      Rcpp::stop("Error decompressing data");
+  void decompress(void* uncompressed,size_t uc_size,const void* compressed,std::optional<size_t> cb_size){
+    if(cb_size){
+      size_t tcb_size=cb_size.value();
+
+      auto ret = uncompress(reinterpret_cast<unsigned char*>(uncompressed), &tcb_size,reinterpret_cast<const unsigned char*>(compressed),cb_size.value());
+
+      if(Z_BUF_ERROR == ret) {
+	Rcpp::stop("Error decompressing data");
+      }
+    }
+    else{
+      std::memcpy(uncompressed,compressed,uc_size);
     }
   }
-  void memcpy(void* output,size_t osize,const void* input,size_t isize){
-    std::memcpy(output,input,osize);
-  }
-  std::optional<size_t> compress(void* output,size_t osize,const void* input,size_t isize){
-    size_t o_osize=osize;
-    Rcpp::stop("gzip is giving me problems right now");
-    //    auto ret = compress2(output, &osize, input,isize, aggression);
-    auto ret=Z_BUF_ERROR;
+
+
+  std::optional<size_t> compress(void* compressed,size_t cb_size,const void* uncompressed,size_t uc_size){
+    size_t o_cb_size=cb_size;
+    auto ret = compress2(reinterpret_cast<unsigned char*>(compressed), &cb_size,reinterpret_cast<const unsigned char*>(uncompressed),uc_size, aggression);
     if(Z_BUF_ERROR == ret) {
       Rcpp::stop("zbuff overflow");
     } else if(Z_MEM_ERROR == ret) {
@@ -80,47 +85,53 @@ public:
     } else if(Z_OK != ret) {
       Rcpp::stop("other deflate error");
     }
-    if(osize<o_osize){
-      return osize;
+    if(cb_size<o_cb_size){
+      return cb_size;
+    }else{
+      std::memcpy(compressed,uncompressed,uc_size);
+      return std::nullopt;
     }
-    return std::nullopt;
   }
 };
 
 
 class LzfCompressor{
 public:
-  //  const std::vector<unsigned int> cd;
   LzfCompressor(const std::vector<unsigned int> &cd_){}
   void memcpy(void* output,size_t osize,const void* input,size_t isize){
     std::memcpy(output,input,osize);
   }
-  void decompress(void* output,size_t osize,const void* input,size_t isize){
-    auto ret = lzf_decompress(input,isize,output,osize);
-    if(!ret){
+  void decompress(void* uncompressed,size_t uc_size,const void* compressed,std::optional<size_t> cb_size){
+    if(cb_size){
+      auto ret = lzf_decompress(compressed,cb_size.value(),uncompressed,uc_size);
+      if(!ret){
+	if(errno == E2BIG){
+	  Rcpp::stop("lzf too small");
+	} else if(errno == EINVAL) {
 
-      if(errno == E2BIG){
-        Rcpp::stop("lzf too small");
-      } else if(errno == EINVAL) {
+	  Rcpp::stop("Invalid data for LZF decompression");
 
-       Rcpp::stop("Invalid data for LZF decompression");
+	} else {
+	  Rcpp::stop("Unknown LZF decompression error");
+	}
 
-      } else {
-       Rcpp::stop("Unknown LZF decompression error");
+
+	if(Z_BUF_ERROR == ret) {
+	  Rcpp::stop("Error decompressing data");
+	}
       }
-
-
-      if(Z_BUF_ERROR == ret) {
-        Rcpp::stop("Error decompressing data");
-      }
+    }else{
+      std::memcpy(uncompressed,compressed,uc_size);
     }
   }
-  std::optional<size_t> compress(void* output,size_t osize,const void* input,size_t isize){
-    auto ret = lzf_compress(input,isize,output,osize);
+  std::optional<size_t> compress(void* compressed,size_t cb_size,const void* uncompressed,const size_t uc_size) noexcept{
+    auto ret = lzf_compress(uncompressed,uc_size,compressed,cb_size);
     if(ret>0){
       return(ret);
+    }else{
+      std::memcpy(compressed,uncompressed,uc_size);
+      return std::nullopt;
     }
-    return std::nullopt;
   }
 
 
@@ -177,29 +188,31 @@ public:
     blosc_set_compressor(compname);
 #endif
   }
-
-
-  void memcpy(void* output,size_t osize,const void* input,size_t isize){
-    std::memcpy(output,input,osize);
-  }
-  void decompress(void* output,size_t osize,const void* input,size_t isize){
+  void decompress(void* uncompressed,size_t uc_size,const void* compressed,std::optional<size_t> cb_size){
 #ifdef USE_BLOSC
-    size_t cbytes, blocksize,outbuf_size;
-
-    blosc_cbuffer_sizes(input, &outbuf_size, &cbytes, &blocksize);
-    if(outbuf_size>osize){
-      Rcpp::stop("output buffer size larger than total size!");
-    }
-    auto  status = blosc_decompress(input, output, osize);
-    if (status <= 0) {    /* decompression failed */
-      Rcpp::stop("Blosc decompression error");
+    if(cb_size){
+      size_t cbytes, blocksize,outbuf_size;
+      size_t osize=uc_size;
+      blosc_cbuffer_sizes(compressed, &outbuf_size, &cbytes, &blocksize);
+      if(outbuf_size>osize){
+	Rcpp::stop("output buffer size larger than total size!");
+      }
+      auto  status = blosc_decompress(compressed, uncompressed, uc_size);
+      if (status <= 0) {    /* decompression failed */
+	Rcpp::stop("Blosc decompression error");
+      }
+    }else{
+      std::memcpy(uncompressed,compressed,uc_size);
     }
 #endif
   }
-  std::optional<size_t> compress(void* output,size_t osize,const void* input,size_t isize){
+
+  std::optional<size_t> compress(void* compressed,size_t cb_size,const void* uncompressed,size_t uc_size){
 #ifdef USE_BLOSC
-    auto  status = blosc_compress(clevel,doshuffle,typesize,nbytes,input,output,osize);
+    size_t cbytes, blocksize,outbuf_size;
+    auto  status = blosc_compress(clevel,doshuffle,typesize,uc_size,uncompressed,compressed,cb_size);
     if (status <= 0) {    /* decompression failed */
+      std::memcpy(compressed,uncompressed,uc_size);
       return std::nullopt;
     }
     return(status);
@@ -226,55 +239,55 @@ public:
       aggression=22;
     }
   }
-  void decompress(void* output,size_t osize,const void* input,size_t isize){
+  //  std::optional<size_t> compress(void* compressed,size_t cb_size,const void* uncompressed,size_t uc_size){
+  void decompress(void* uncompressed,size_t uc_size,const void* compressed,std::optional<size_t> cb_size){
+    if(cb_size){
+      auto rc = ZSTD_decompressDCtx(ctxt_d.get(),uncompressed, uc_size, compressed,cb_size.value());
+      if(ZSTD_isError(rc)){
+	Rcpp::Rcerr<<ZSTD_getErrorName(rc)<<std::endl;
+	if(ZSTD_isFrame((void*) compressed, cb_size.value())){
+	  Rcpp::Rcerr<<"Frame is valid"<<std::endl;
+	}
+	else{
+	  Rcpp::Rcerr<<"Frame is not valid"<<std::endl;
+	}
+	auto ret2 = ZSTD_getFrameContentSize((void*) compressed,cb_size.value());
 
-    auto rc = ZSTD_decompressDCtx(ctxt_d.get(),output, osize, input,isize);
-    if(ZSTD_isError(rc)){
-      Rcpp::Rcerr<<ZSTD_getErrorName(rc)<<std::endl;
-      // for(int ik =0; ik<isize;ik++){
-      // 	Rcpp::Rcerr<<static_cast<const int>(input[ik])<<std::endl;
-      // }
-      if(ZSTD_isFrame((void*) input, isize)){
-	Rcpp::Rcerr<<"Frame is valid"<<std::endl;
-      }
-      else{
-	Rcpp::Rcerr<<"Frame is not valid"<<std::endl;
-      }
-      auto ret2 = ZSTD_getFrameContentSize((void*) input,isize);
-
-      if(ret2==0){
-	Rcpp::Rcerr<<"Frame valid but empty"<<std::endl;
+	if(ret2==0){
+	  Rcpp::Rcerr<<"Frame valid but empty"<<std::endl;
+	  Rcpp::stop("Error decompressing zstd");
+	}
+	if(ret2==ZSTD_CONTENTSIZE_ERROR){
+	  Rcpp::Rcerr<<"invalid magic number, or srcSize is too small"<<std::endl;
+	  Rcpp::stop("Error decompressing zstd");
+	}
+	if(ret2==ZSTD_CONTENTSIZE_UNKNOWN){
+	  Rcpp::Rcerr<<"Frame size cannot be determined"<<std::endl;
+	  Rcpp::stop("Error decompressing zstd");
+	}else{
+	  Rcpp::Rcerr<<"Frame size is :"<<ret2<<" and you said it was :"<<uc_size<<std::endl;
+	  Rcpp::stop("Error decompressing zstd");
+	}
 	Rcpp::stop("Error decompressing zstd");
       }
-      if(ret2==ZSTD_CONTENTSIZE_ERROR){
-	Rcpp::Rcerr<<"invalid magic number, or srcSize is too small"<<std::endl;
-	Rcpp::stop("Error decompressing zstd");
-      }
-      if(ret2==ZSTD_CONTENTSIZE_UNKNOWN){
-	Rcpp::Rcerr<<"Frame size cannot be determined"<<std::endl;
-	Rcpp::stop("Error decompressing zstd");
-      }else{
-	Rcpp::Rcerr<<"Frame size is :"<<ret2<<" and you said it was :"<<osize<<std::endl;
-	Rcpp::stop("Error decompressing zstd");
-      }
-      Rcpp::stop("Error decompressing zstd");
+    }else{
+      std::memcpy(uncompressed,compressed,uc_size);
     }
   }
-  std::optional<size_t> compress(const void* input,size_t isize,void* output,size_t osize){
 
-    auto rc = ZSTD_compressCCtx(ctxt_c.get(),output, osize, input,isize,aggression);
+  std::optional<size_t> compress(void* compressed,size_t cb_size,const void* uncompressed,size_t uc_size){
+
+    auto rc = ZSTD_compressCCtx(ctxt_c.get(),compressed, cb_size,uncompressed,uc_size,aggression);
     if(ZSTD_isError(rc)){
       Rcpp::Rcerr<<"There was an error with compression!"<<std::endl;
       Rcpp::Rcerr<<ZSTD_getErrorName(rc)<<std::endl;
       return std::nullopt;
     }
     if(rc<0){
+      std::memcpy(compressed,uncompressed,uc_size);
       return std::nullopt;
     }
     return rc;
-  }
-  void memcpy(void* output,size_t osize,const void* input,size_t isize){
-    std::memcpy(output,input,osize);
   }
   
 };

@@ -270,7 +270,12 @@ void write_elem_v_h5(HighFive::Selection &file_sel,
 }
 
 
-int longest_string_size(Rcpp::StringVector input,const int min_size=255){
+int longest_string_size(Rcpp::StringVector input,int min_size=255){
+
+  #ifdef DEBUG
+  min_size=0;
+  #endif
+
 
   using input_elem = decltype(input.begin());
   int ret_size=0;

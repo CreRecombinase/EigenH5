@@ -19,6 +19,17 @@ namespace HighFive {
 
   inline DataType::DataType(){}
 
+  inline size_t	DataType::n_elem() const{
+    auto sup =H5Tget_class(_hid);
+    bool is_str = sup==H5T_STRING;
+    //    H5Tclose(sup);
+    if(is_str){
+
+      return(H5Tget_size(_hid));
+    }
+    return 1;
+  }
+
 inline bool DataType::operator==(const DataType& other) const {
     return (H5Tequal(_hid, other._hid) > 0);
 }

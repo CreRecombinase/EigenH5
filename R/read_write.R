@@ -13,7 +13,11 @@ read_df_h5 <- function(filename,datapath,...){
   }
   dsp <- normalizePath(paste(datapath,dsets,sep="/"), mustWork = F)
   names(dsp) <- basename(dsp)
-  return(purrr::map_dfc(dsp,~read_vector_h5(filename, datapath = .x, ...), ...=...))
+  if(!hasArg(subset)){
+    return(purrr::map_dfc(dsp,~read_vector_h5v(filename = filename,datapath =  .x)))
+  }else{
+    return(purrr::map_dfc(dsp,~read_vector_h5v(filename = filename,datapath = .x,i=as.integer(argl[["subset"]]))))
+  }
 }
 
 

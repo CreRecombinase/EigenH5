@@ -33,6 +33,10 @@ get_group <- function(f, object_name) {
     .Call(`_EigenH5_get_group`, f, object_name)
 }
 
+read_matrix_rl <- function(filename, datapath, rows, cols) {
+    .Call(`_EigenH5_read_matrix_rl`, filename, datapath, rows, cols)
+}
+
 read_matrix_v <- function(filename, datapath, rows, cols) {
     .Call(`_EigenH5_read_matrix_v`, filename, datapath, rows, cols)
 }

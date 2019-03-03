@@ -1,14 +1,6 @@
 context("metadata/utilities")
 
 
-test_that("Can get intervals",{
-        
-        interv <- c(1,5,2,4)
-        (retmat <- VecToInterval(interv))
-        
-        
-})
-
 
 test_that("Can get back chunksize", {
         tv <- sample(1:100, 10)
@@ -141,3 +133,4 @@ test_that("we can reorder stuff using link_objects", {
         retv <- read_vector_h5(ntf, "/testg/test")
         expect_equal(retv, tv)
 })
+
