@@ -1300,7 +1300,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_EigenH5_dim_h5", (DL_FUNC) &_EigenH5_dim_h5, 2},
     {"_EigenH5_concat_mats", (DL_FUNC) &_EigenH5_concat_mats, 4},
     {"_EigenH5_RcppExport_registerCCallable", (DL_FUNC) &_EigenH5_RcppExport_registerCCallable, 0},
-    {"run_testthat_tests",                    (DL_FUNC) &run_testthat_tests,                    0},
+    {"run_testthat_tests", (DL_FUNC) &run_testthat_tests, 0},
     {NULL, NULL, 0}
 };
 

@@ -1,3 +1,4 @@
+#pragma once
 #include "hdf5.h"
 
 #if defined(_MSC_VER)

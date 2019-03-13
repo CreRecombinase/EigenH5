@@ -1,7 +1,9 @@
 #include "EigenH5.h"
 //[[depends(RcppEigen)]]
 //[[Rcpp::plugins(cpp11)]]
+#ifdef USE_BLOSC
 #include <blosc_filter.h>
+#endif
 #include <Rcpp.h>
 
 
@@ -30,9 +32,11 @@ void start_blosc(){
   Rcpp::LogicalVector bv(1);
   bv[0]=r==1;
   env["..blosc"]=bv;
+#ifdef USE_LZF
   auto rr = register_lzf();
   bv[0]=rr==1;
    env["..lzf"]=bv;
+#endif
   auto nr = register_zstd();
   bv[0]=nr==1;
   env["..zstd"]=bv;

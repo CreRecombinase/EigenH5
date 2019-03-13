@@ -176,6 +176,19 @@ test_that("can compress with gzip",{
   expect_equal(retl$name,"deflate")
 })
 
+test_that("can read a matrix compressed with gzip (using chunk iterator)",{
+  tmat <- matrix(as.integer(1:100),1000,100)
+  tempf <- tempfile()
+  write_matrix_h5(tmat,tempf,"grp/grp2/dat",filter="gzip")
+  retl <- get_datset_filter(tempf,"grp/grp2/dat")
+  expect_equal(retl$name,"deflate")
+  rm <- read_matrix_h5v(tempf,"grp/grp2/dat")
+  expect_equal(rm,tmat)
+})
+
+
+
+
 
 test_that("can compress with gzip level 9",{
   tvec <- as.integer(1:10)
@@ -184,15 +197,27 @@ test_that("can compress with gzip level 9",{
   retl <- get_datset_filter(tempf,"grp/grp2/dat")
   expect_equal(retl$options,9L)
 })
-
-test_that("can compress with lzf",{
-  tvec <- as.integer(1:10)
-  tempf <- tempfile()
-  write_vector_h5(tvec,tempf,"grp/grp2/dat",filter="lzf")
-  retl <- get_datset_filter(tempf,"grp/grp2/dat")
-  expect_equal(retl$name,"lzf")
-  expect_equal(retl$options,numeric())
-})
+# 
+# test_that("can compress with lzf",{
+#   tvec <- as.integer(1:10)
+#   tempf <- tempfile()
+#   write_vector_h5(tvec,tempf,"grp/grp2/dat",filter="lzf")
+#   retl <- get_datset_filter(tempf,"grp/grp2/dat")
+#   expect_equal(retl$name,"lzf")
+#   expect_equal(retl$options,numeric())
+# })
+# 
+# test_that("can compress with lzf and read with chunk iterator",{
+#   # library(EigenH5)
+#   
+#   tmat <- matrix(as.integer(1:100),1000,100)
+#   tempf <- tempfile()
+#   write_matrix_h5(tmat,tempf,"grp/grp2/dat",filter="lzf")
+#   retl <- get_datset_filter(tempf,"grp/grp2/dat")
+#   expect_equal(retl$name,"lzf")
+#   rm <- read_matrix_h5v(tempf,"grp/grp2/dat")
+#   expect_equal(rm,tmat)
+# })
 
 test_that("can compress with zstd",{
   tvec <- as.integer(1:10)
