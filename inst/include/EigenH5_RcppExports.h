@@ -67,6 +67,48 @@ namespace EigenH5 {
         return Rcpp::as<size_t >(rcpp_result_gen);
     }
 
+    inline bool has_blosc() {
+        typedef SEXP(*Ptr_has_blosc)();
+        static Ptr_has_blosc p_has_blosc = NULL;
+        if (p_has_blosc == NULL) {
+            validateSignature("bool(*has_blosc)()");
+            p_has_blosc = (Ptr_has_blosc)R_GetCCallable("EigenH5", "_EigenH5_has_blosc");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_has_blosc();
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<bool >(rcpp_result_gen);
+    }
+
+    inline bool has_lzf() {
+        typedef SEXP(*Ptr_has_lzf)();
+        static Ptr_has_lzf p_has_lzf = NULL;
+        if (p_has_lzf == NULL) {
+            validateSignature("bool(*has_lzf)()");
+            p_has_lzf = (Ptr_has_lzf)R_GetCCallable("EigenH5", "_EigenH5_has_lzf");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_has_lzf();
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<bool >(rcpp_result_gen);
+    }
+
     inline void start_blosc() {
         typedef SEXP(*Ptr_start_blosc)();
         static Ptr_start_blosc p_start_blosc = NULL;

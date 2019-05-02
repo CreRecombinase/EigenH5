@@ -166,7 +166,7 @@ public:
 #else
 
     char tstr [] = "blosclz";
-    char* compname = tstr;     /* The compressor by default */
+    const char* compname = tstr;     /* The compressor by default */
     auto cds =cd_.size();
     if(cds>4){
       typesize=static_cast<int>(cd_[2]);

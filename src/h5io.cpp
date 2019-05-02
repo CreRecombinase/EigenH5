@@ -20,6 +20,28 @@ size_t closeFileHandle(const std::string fh){
 
 
 
+//[[Rcpp::export]]
+bool has_blosc(){
+  #ifdef USE_BLOSC
+  return true;
+  #else
+  return false;
+  #endif
+}
+
+//[[Rcpp::export]]
+bool has_lzf(){
+  #ifdef USE_LZF
+  return true;
+  #else
+  return false;
+  #endif
+}
+
+
+
+
+
 // [[Rcpp::interfaces(r,cpp)]]
 //[[Rcpp::export]]
 void start_blosc(){

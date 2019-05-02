@@ -27,7 +27,7 @@
 #include <errno.h>
 #include "hdf5.h"
 #include "lzf/lzf_filter.h"
-
+#include <H5Epubgen.h>
 /* Our own versions of H5Epush_sim, as it changed in 1.8 */
 #if H5_VERS_MAJOR == 1 && H5_VERS_MINOR < 7
 
@@ -97,7 +97,7 @@ int register_lzf(void){
 
     retval = H5Zregister(&filter_class);
     if(retval<0){
-        PUSH_ERR("register_lzf", H5E_CANTREGISTER, "Can't register LZF filter");
+        PUSH_ERR("register_lzf", retval, "Can't register LZF filter");
     }
     return retval;
 }

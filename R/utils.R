@@ -1,4 +1,6 @@
 .onLoad <- function(libname, pkgname){
+    pkgconfig::set_config("EigenH5::use_blosc" = has_blosc())
+    pkgconfig::set_config("EigenH5::use_lzf" = has_lzf())
     start_blosc()
     # start_singleton()
 }

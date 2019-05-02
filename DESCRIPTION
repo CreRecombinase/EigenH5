@@ -9,9 +9,8 @@ Description: Read and write R objects using zstd+HDF5. Also contains a C++ inter
 License: What license is it under?
 biocViews:
 Imports: Rcpp (>= 0.12.12), RcppEigen (>= 0.3.3.3.0),BH,dplyr,progress,tidyr,purrr,magrittr,fs,
-LinkingTo: Rcpp, RcppEigen,RcppProgress,testthat,Rhdf5lib,rzstdlib,BH,xtensor
-Remotes: github::CreRecombinase/rzstdlib
-SystemRequirements: C++17
+LinkingTo: Rcpp, RcppEigen,RcppProgress,testthat,BH,xtensor
+SystemRequirements: C++17,libhdf5,libzstd
 Suggests: testthat,
     knitr,
     rmarkdown

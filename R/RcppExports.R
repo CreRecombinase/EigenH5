@@ -61,6 +61,14 @@ closeFileHandle <- function(fh) {
     .Call(`_EigenH5_closeFileHandle`, fh)
 }
 
+has_blosc <- function() {
+    .Call(`_EigenH5_has_blosc`)
+}
+
+has_lzf <- function() {
+    .Call(`_EigenH5_has_lzf`)
+}
+
 start_blosc <- function() {
     invisible(.Call(`_EigenH5_start_blosc`))
 }
