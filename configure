@@ -62,7 +62,7 @@ if [ $(command -v h5cc) ]; then
 	exit 1;
     fi
     if [ -a "${H5ROOT}/lib/libhdf5.a" ] && [ -a "${H5ROOT}/lib/libhdf5_hl.a" ]; then
-	PKG_LIBS+="${H5ROOT}/lib/libhdf5.a ${H5ROOT}/lib/libhdf5_hl.a"
+	PKG_LIBS+=" ${H5ROOT}/lib/libhdf5.a ${H5ROOT}/lib/libhdf5_hl.a "
 	PKG_LIBS+=$(h5cc -showconfig | grep 'Extra libraries:' | sed -E "s|.+Extra libraries:||")
 	#	PKG_LIBS+=$(h5cc -showconfig | grep -w 'LDFLAGS' | sed -E "s| +LDFLAGS:||")
     else
