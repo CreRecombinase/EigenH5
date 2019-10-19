@@ -10,3 +10,7 @@ GPATH
 GTAGS
 .cquery*
 GRTAGS
+/src/Makevars
+/.lintr
+*.idx
+/compile_commands.json
