@@ -14,6 +14,18 @@ test_that("I can overwrite a vector", {
         expect_equal(read_vector_h5(tf, "test"), ntv)
 })
 
+
+
+testthat::test_that("I can write a factor", {
+        tf <- tempfile()
+        factor_d <- gl(n = 15,k = 4)
+        EigenH5::write_vector_h5(factor_d, tf, "factor")
+        ret <- EigenH5::read_vector_h5(tf,"factor")
+        expect_equal(factor_d,ret)
+})
+
+
+
 test_that("I can append a vector", {
         tf <- tempfile()
         tv <- runif(3)
@@ -39,6 +51,24 @@ test_that("can write and read long strings", {
         res_vec <- read_vector_h5(filename = tempf, "testw")
         expect_equal(res_vec, tvec)
 })
+
+
+test_that("can write short strings then long strings", {
+        tvec <- paste0(sample(letters, 25, replace = T), collapse = "")
+        tempf <- tempfile()
+        write_vector_h5(tvec, tempf, "testw",max_dims=NA_integer_,min_string_size=27L)
+        expect_equal(ArrayTypeSize(tempf,"testw"),28L)
+        tvec2 <- paste0(sample(letters, 30, replace = T), collapse = "")
+        expect_error(write_vector_h5(tvec2,tempf,"testw",append=TRUE),"string will not fit in dataset")
+        
+        write_vector_h5(tvec, tempf, "testw2",max_dims=NA_integer_,min_string_size=31)
+        expect_equal(ArrayTypeSize(tempf,"testw2"),32)
+        tvec2 <- paste0(sample(letters, 30, replace = T), collapse = "")
+        write_vector_h5(tvec2,tempf,"testw2",append=TRUE)
+        rvec <- read_vector_h5(filename = tempf, "testw2",subset=2)
+        expect_equal(rvec, tvec2)
+})
+
 
 test_that("can write string vector", {
         tvec <- c("allb", "allc", "alld")
@@ -194,6 +224,15 @@ test_that("can read string vector", {
                 datapath="grp/tdat",
                 data = tvec
         )
+        # otvec <- tvec
+        # otvec[2] <- NA_character_
+        # write_vector_h5(filename = tempf,
+        #         datapath="grp/otdat",
+        #         data = otvec
+        # )
+        # 
+        # ord <- read_vector_h5(filename = tempf, datapath="grp/otdat")
+        # expect_equal(ord,otvec,na.rm=T)
         rd <- read_vector_h5(filename = tempf, datapath="grp/tdat")
         expect_equal(rd, tvec)
 })

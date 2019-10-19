@@ -293,10 +293,6 @@ SliceTraits<Derivate>::select(const ElementSet& elements) const {
 template <typename Derivate>
 inline std::vector<size_t> SliceTraits<Derivate>::getDataDimensions() const {
   const bool doTranspose = details::get_dataset(static_cast<const Derivate *>(this)).isTransposed();
-  // if(doTranspose){
-  //   HDF5ErrMapper::ToException<DataSpaceException>(
-  // 						     "Transposed data has been deprecated");
-  // }
   std::vector<size_t> dims =static_cast<const Derivate*>(this)->getMemSpace().getDimensions();
   if (doTranspose) {
     std::reverse(dims.begin(), dims.end());
@@ -426,6 +422,14 @@ inline void SliceTraits<Derivate>::write(const T& buffer) {
             "Error during HDF5 Write: ");
     }
 }
+
+
+
+
+
+
+
+
 
 template <typename Derivate>
 template <typename T>

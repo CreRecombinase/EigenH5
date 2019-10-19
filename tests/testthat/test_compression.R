@@ -169,11 +169,24 @@ test_that("can write a matrix without compression and without chunking",{
 
 
 test_that("can compress with gzip",{
+  data(iris)
   tvec <- as.integer(1:10)
   tempf <- tempfile()
   write_vector_h5(tvec,tempf,"grp/grp2/dat",filter="gzip")
   retl <- get_datset_filter(tempf,"grp/grp2/dat")
   expect_equal(retl$name,"deflate")
+  
+})
+
+
+test_that("can compress dataframe with gzip",{
+  data(iris)
+  tvec <- as.integer(1:10)
+  tempf <- tempfile()
+  write_df_h5(iris,filename = tempf,datapath = "iris",filter="gzip")
+  retl <- get_datset_filter(tempf,"iris/Species")
+  expect_equal(retl$name,"deflate")
+  
 })
 
 test_that("can read a matrix compressed with gzip (using chunk iterator)",{

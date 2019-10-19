@@ -60,11 +60,11 @@ inline herr_t internal_high_five_iterate(hid_t id, const char* name,
 
     HighFiveIterateData<T>* data = static_cast<HighFiveIterateData<T>*>(op_data);
     try {
-      H5O_info_t tid;
+      //      H5O_info_t tid;
 #if defined(H5_USE_110_API)
-      auto ret = H5Oget_info_by_name2(id,name,&tid,H5O_INFO_ALL,H5P_DEFAULT);
+      //      auto ret = H5Oget_info_by_name2(id,name,&tid,H5O_INFO_ALL,H5P_DEFAULT);
       #else
-      auto ret = H5Oget_info_by_name(static_cast<const Derivate *>(this)->getId(), object_name.c_str(), &tid,H5P_DEFAULT);
+      //      auto ret = H5Oget_info_by_name(static_cast<const Derivate *>(this)->getId(), object_name.c_str(), &tid,H5P_DEFAULT);
 #endif
       data->names.push_back(T(std::string(name)));
         return 0;

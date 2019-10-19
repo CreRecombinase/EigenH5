@@ -58,7 +58,7 @@ class DataSet : public Object,
   std::optional<size_t> read_raw_chunk(std::vector<std::byte> &data_buff,const std::vector<size_t> &offsets)const;
 
 
-void write_raw_chunk(std::vector<std::byte> &data_buff, const std::vector<size_t> &offsets,std::optional<size_t> buff_size) const;
+  void write_raw_chunk(std::vector<std::byte> &data_buff, const std::vector<size_t> &offsets,std::optional<size_t> buff_size) const;
   //std::vector<size_t> getDataDimensions() const;
 
   ///

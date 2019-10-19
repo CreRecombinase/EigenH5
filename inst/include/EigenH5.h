@@ -8,15 +8,7 @@
 
 
 #define STRICT_R_HEADERS
-
-#include <boost/optional.hpp>
-#include <boost/optional/optional_io.hpp>
-#include <boost/variant.hpp>
-
-#define EIGEN_PERMANENTLY_DISABLE_STUPID_WARNINGS
 #include <RcppEigen.h>
-//#include "path/path.hpp"
-
 
 
 
@@ -70,7 +62,6 @@ public:
     return (ret);
   }
   operator const std::string&() const { return(nodes); }
-
 };
 
 inline std::string operator+(const std::string a, const Path &b){
@@ -87,47 +78,12 @@ inline std::ostream &operator<<(std::ostream &os, const Path &dt) {
 
 #include <H5Tpublic.h>
 
-#if __cplusplus < 201402L
-
-#include <cstddef>
-#include <memory>
-#include <type_traits>
-#include <utility>
+SEXP read_attribute(const HighFive::Group &der,const std::string attribute_name);
+SEXP read_attribute(const HighFive::DataSet &der,const std::string attribute_name);
 
 
-namespace std {
 
-template<class T> struct _Unique_if {
-  typedef unique_ptr<T> _Single_object;
-};
 
-template<class T> struct _Unique_if<T[]> {
-  typedef unique_ptr<T[]> _Unknown_bound;
-};
-
-template<class T, size_t N> struct _Unique_if<T[N]> {
-  typedef void _Known_bound;
-};
-
-template<class T, class... Args>
-typename _Unique_if<T>::_Single_object
-  make_unique(Args&&... args) {
-    return unique_ptr<T>(new T(std::forward<Args>(args)...));
-  }
-
-template<class T>
-typename _Unique_if<T>::_Unknown_bound
-  make_unique(size_t n) {
-    typedef typename remove_extent<T>::type U;
-    return unique_ptr<T>(new U[n]());
-  }
-
-template<class T, class... Args>
-typename _Unique_if<T>::_Known_bound
-  make_unique(Args&&...) = delete;
-}
-
-#endif
 
 // using Path = std::string;
 // using PathNode = std::string;
@@ -146,6 +102,10 @@ public:
   std::unordered_map<std::string,HighFive::File >::const_iterator  get_files() const;
   void print()const;
 };
+
+
+
+
 
 #include "EigenH5_RcppExports.h"
 
@@ -182,19 +142,47 @@ struct cpp2r<std::string>{
 HighFive::Filter create_filter(std::vector<size_t> data_dimensions,
 			       Rcpp::List &options);
 
-template<SEXPTYPE RTYPE> boost::optional<Rcpp::Vector<RTYPE> > get_list_element(const Rcpp::List &list, const std::string name,const bool empty_is_false = true);
-template<typename T,SEXPTYPE RTYPE = cpp2r<T>::data_t > boost::optional<T> get_list_scalar(const Rcpp::List &list, const std::string name);
-std::vector<boost::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims);
+template <SEXPTYPE RTYPE>
+std::optional<Rcpp::Vector<RTYPE>>
+get_list_element(const Rcpp::List &list, const std::string name,
+                 const bool empty_is_false = true);
+
+template<SEXPTYPE RTYPE>
+std::optional<Rcpp::Vector<RTYPE> > get_any_list_element(const Rcpp::List &list, const std::vector<std::string> name,const bool empty_is_false=true);
+
+
+template<typename T,SEXPTYPE RTYPE = cpp2r<T>::data_t > std::optional<T> get_list_scalar(const Rcpp::List &list, const std::string name);
+std::vector<std::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims);
 
 
 SEXPTYPE typeof_h5_dset(const HighFive::DataSet &dset);
 
 
-inline std::vector<boost::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix){
+inline std::vector<std::string> list_R_attr(const HighFive::DataSet &dset){
+  auto attr_n = dset.listAttributeNames();
+  attr_n.erase(std::remove_if(attr_n.begin(),attr_n.end(),[](const std::string& str){
+                                                            if(str.size()<=3)
+                                                              return true;
+                                                            if(str[0]!='R')
+                                                              return true;
+                                                            if(str[1]!=':')
+                                                              return true;
+                                                            return false;
+                                                          }));
+  return attr_n;
+}
 
-  using int_o = boost::optional<int>;
+
+inline bool has_R_attr(const HighFive::DataSet &dset){
+    return !list_R_attr(dset).empty();
+}
+
+
+inline std::vector<std::optional<int> > parse_option(const Rcpp::List &list, std::vector<size_t> datadims,std::string prefix){
+
+  using int_o = std::optional<int>;
   const size_t num_dims= datadims.size();
-  std::vector<int_o> offset_v(num_dims,boost::none);
+  std::vector<int_o> offset_v(num_dims,std::nullopt);
   if(auto offset_o =get_list_element<INTSXP>(list,prefix)){
     if(offset_o->size()!=num_dims){
       Rcpp::stop("subset argument "+prefix+" must satisfy length(offset)==length(dim(data))");
@@ -221,16 +209,16 @@ inline std::vector<boost::optional<int> > parse_option(const Rcpp::List &list, s
 }
 
 
-
-SEXPTYPE h2r_T(hid_t htype);
+SEXPTYPE h2r_T(const HighFive::DataType htype);
+Rcpp::StringVector h2s_T(const HighFive::DataType htype);
 bool isGroup(const std::string filename, std::string groupname);
 
 
 template<SEXPTYPE RTYPE>
-inline boost::optional<Rcpp::Vector<RTYPE> > get_list_element(const Rcpp::List &list, const std::string name,const bool empty_is_false){
+inline std::optional<Rcpp::Vector<RTYPE> > get_list_element(const Rcpp::List &list, const std::string name,const bool empty_is_false){
   Rcpp::RObject rnames =	list.names();
   if(rnames.isNULL()){
-    return(boost::none);
+    return(std::nullopt);
   }
   Rcpp::CharacterVector colnames(rnames);
   for(auto tc:colnames){
@@ -240,25 +228,36 @@ inline boost::optional<Rcpp::Vector<RTYPE> > get_list_element(const Rcpp::List &
 	if(mvec.size()>0){
 	  return(mvec);
 	}else{
-	  return(boost::none);
+	  return(std::nullopt);
 	}
       }else{
 	return(Rcpp::as<Rcpp::Vector<RTYPE> >(list[name]));
       }
     }
   }
-  return(boost::none);
+  return(std::nullopt);
 }
 
-inline std::vector<boost::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims){
-  using rvec_o = boost::optional<Rcpp::IntegerVector>;
+
+template<SEXPTYPE RTYPE>
+inline std::optional<Rcpp::Vector<RTYPE> > get_any_list_element(const Rcpp::List &list, const std::vector<std::string> name,const bool empty_is_false){
+  for(auto el : name){
+    if(auto ret = get_list_element<RTYPE>(list,el,empty_is_false))
+      return ret;
+  }
+  return std::nullopt;
+}
+
+
+inline std::vector<std::optional<Rcpp::IntegerVector> > parse_subset_list(const Rcpp::List &list,std::vector<size_t> datadims){
+  using rvec_o = std::optional<Rcpp::IntegerVector>;
   const size_t num_dims= datadims.size();
 
 
   if(num_dims>2){
     Rcpp::stop("Datasets with Dims>2 currently not supported");
   }
-  std::vector<rvec_o> retvec(num_dims,boost::none);
+  std::vector<rvec_o> retvec(num_dims,std::nullopt);
   if(num_dims==1){
     if(auto subset_rv =get_list_element<INTSXP>(list,"subset")){
       retvec[0] = subset_rv.value();
@@ -289,25 +288,26 @@ inline std::vector<boost::optional<Rcpp::IntegerVector> > parse_subset_list(cons
 
 
 template<typename T,SEXPTYPE RTYPE>
-inline boost::optional<T> get_list_scalar(const Rcpp::List &list, const std::string name){
+inline std::optional<T> get_list_scalar(const Rcpp::List &list, const std::string name){
   if(auto rel = get_list_element<RTYPE>(list,name)){
     T rel_b = *(Rcpp::as< std::vector<T> >(*rel).begin());
     return(rel_b);
   }else{
-    return(boost::none);
+    return(std::nullopt);
   }
 }
 
 template<typename T,SEXPTYPE RTYPE>
-  inline boost::optional<T> list_get_any(const Rcpp::List &list, const std::vector<std::string> name_opts){
+  inline std::optional<T> get_list_any(const Rcpp::List &list, std::vector<std::string> name_opts){
   for( auto &name : name_opts){
     auto trel =	get_list_scalar<T>(list,name);
     if(trel){
       return(trel);
     }
   }
-  return(boost::none);
+  return(std::nullopt);
 }
+
 
 
 

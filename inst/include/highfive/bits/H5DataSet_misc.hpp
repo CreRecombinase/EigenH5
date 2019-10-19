@@ -178,9 +178,15 @@ namespace HighFive {
   }
 
   inline void DataSet::extend(const std::vector<size_t> &new_dims) {
-    std::vector<hsize_t> real_new_dims(new_dims.size());
-    std::copy(new_dims.begin(), new_dims.end(), real_new_dims.begin());
-    if ((_hid =  H5Dset_extent(_hid,real_new_dims.data())) < 0) {
+    const size_t numDimensions = getSpace().getDimensions().size();
+    if(new_dims.size()!=numDimensions){
+       HDF5ErrMapper::ToException<DataSetException>(
+            "Invalid dataspace dimensions, got " + std::to_string(new_dims.size()) +
+            " expected " + std::to_string(numDimensions));
+    }
+    std::vector<hsize_t> real_new_dims(new_dims.begin(),new_dims.end());
+      //    std::copy(new_dims.begin(), new_dims.end(), real_new_dims.begin());
+    if ((H5Dset_extent(_hid,real_new_dims.data())) < 0) {
 	HDF5ErrMapper::ToException<DataSetException>(
             "Unable to extend DataSet");
     }

@@ -116,7 +116,6 @@ class SliceTraits {
     /// dimensional array )
     template <typename T>
     void write(const T& buffer);
-
     ///
     /// Write from a raw buffer into this dataset
     ///

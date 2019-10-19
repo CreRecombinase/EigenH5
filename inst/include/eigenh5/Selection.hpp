@@ -135,7 +135,7 @@ public:
 };
 
 inline std::vector<dim_sel> dim_sel::parse_chunk_list(const Rcpp::List &list,std::vector<size_t> datadims){
-    using int_o = boost::optional<int>;
+    using int_o = std::optional<int>;
 
 
 
@@ -195,7 +195,7 @@ public:
     isRepeated_(false){}
 
   static DimRange construct_dimrange(dim_sel chunk,
-				   boost::optional<Rcpp::IntegerVector> subset);
+				   std::optional<Rcpp::IntegerVector> subset);
   Eigen::ArrayXi permutation_order() const;
 
 
@@ -254,7 +254,7 @@ inline Eigen::ArrayXi DimRange::permutation_order() const {
 
 
 inline DimRange DimRange::construct_dimrange(dim_sel chunk,
-			    boost::optional<Rcpp::IntegerVector> subset){
+			    std::optional<Rcpp::IntegerVector> subset){
   if(subset){
     return(DimRange(subset->begin(),subset->end()));
   }

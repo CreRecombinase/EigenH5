@@ -3,6 +3,7 @@
 #include <Rinternals.h>
 // [[Rcpp::interfaces(r, cpp)]]
 //#include <boost/variant/multivisitors.hpp>
+#include "highfive/H5DataSet.hpp"
 #include "xtensor-r/rarray.hpp"
 #include "xtensor-r/rtensor.hpp"
 #include "xtensor-r/rvectorize.hpp"
@@ -275,9 +276,9 @@ public:
 class ChunkParser{
 private:
 
-  const int dimsize;
-  const int chunksize;
-  const int p;
+  int dimsize;
+  int chunksize;
+  int p;
   int chunks_used;
   std::vector<chunk_chunker> needed_chunks;
 

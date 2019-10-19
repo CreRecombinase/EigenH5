@@ -3,8 +3,8 @@ context("h5")
 test_that("Can append a dataframe",{
   
   p_a <- 3
-  tdf <- tibble::data_frame(a=runif(p_a),b=sample(1:p_a,p_a))
-  tdfb <- tibble::data_frame(a=runif(p_a),b=sample(1:p_a,p_a))
+  tdf <- tibble::tibble(a=runif(p_a),b=sample(1:p_a,p_a))
+  tdfb <- tibble::tibble(a=runif(p_a),b=sample(1:p_a,p_a))
   tf <- tempfile()
   write_df_h5(tdf,tf,"test",max_dim=c(NA_integer_))
   write_df_h5(tdfb,tf,"test",append=T)
@@ -25,7 +25,7 @@ test_that("Can append a dataframe",{
 # tsnp_mat <- matrix(sprintf("%.3f",runif(min=0,max=2,N*p)),nrow = N,byrow=T)
 # expect_true(all(nchar(tsnp_mat)==5))
 # wtsnp_mat <- cbind(cbind(sample_ids,rep("DOSE",N)),tsnp_mat)
-# readr::write_delim(tibble::as_data_frame(wtsnp_mat[sample(1:N),]),path = ntsnpf,delim = "\t",col_names = F)
+# readr::write_delim(tibble::as_tibble(wtsnp_mat[sample(1:N),]),path = ntsnpf,delim = "\t",col_names = F)
 # 
 # 
 # 
@@ -80,8 +80,8 @@ test_that("Can append a dataframe",{
 #   
 #   expect_equal(nrow(wtsnp_mat_a),N_a)
 #   expect_equal(nrow(wtsnp_mat_b),N_b)
-#   readr::write_delim(tibble::as_data_frame(wtsnp_mat_a[sample(1:N_a),]),path = ntsnpf_a,delim = "\t",col_names = F)
-#   readr::write_delim(tibble::as_data_frame(wtsnp_mat_b[sample(1:N_b),]),path = ntsnpf_b,delim = "\t",col_names = F)
+#   readr::write_delim(tibble::as_tibble(wtsnp_mat_a[sample(1:N_a),]),path = ntsnpf_a,delim = "\t",col_names = F)
+#   readr::write_delim(tibble::as_tibble(wtsnp_mat_b[sample(1:N_b),]),path = ntsnpf_b,delim = "\t",col_names = F)
 #   
 #   class(tsnp_mat) <- "numeric"
 # 
@@ -147,8 +147,8 @@ test_that("Can append a dataframe",{
 #   all_tsnp_a <- rbind(wtsnp_a,wtsnp_b)
 #   all_tsnp_b <- rbind(wtsnp_c,wtsnp_d)
 # 
-#   readr::write_delim(tibble::as_data_frame(all_tsnp_a[sample(1:(2*N)),]),path = ntsnpf_a,delim = "\t",col_names = F)
-#   readr::write_delim(tibble::as_data_frame(all_tsnp_b[sample(1:(2*N)),]),path = ntsnpf_b,delim = "\t",col_names = F)
+#   readr::write_delim(tibble::as_tibble(all_tsnp_a[sample(1:(2*N)),]),path = ntsnpf_a,delim = "\t",col_names = F)
+#   readr::write_delim(tibble::as_tibble(all_tsnp_b[sample(1:(2*N)),]),path = ntsnpf_b,delim = "\t",col_names = F)
 #   
 #   tsnp_mat <- good_tsnp[,-c(1,2)]
 #   class(tsnp_mat) <- "numeric"

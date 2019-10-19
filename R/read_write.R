@@ -22,7 +22,7 @@ read_df_h5 <- function(filename,datapath,...){
 
 
 
-write_df_h5 <- function(df, filename, datapath="/", ...){
+write_df_h5 <- function(df, filename, datapath="", ...){
     argl <- list(...)
     filename <- fs::path_expand(filename)
   purrr::iwalk(df, ~purrr::invoke(write_vector_h5,
@@ -61,16 +61,20 @@ write_vector_h5 <- function(data, filename, datapath, ...){
   app_v <- TRUE
   filename <- fs::path_expand(filename)
   if(!file.exists(filename)){
+    if(isTRUE(argl[["append"]]) && is.null(argl[["max_dims"]])){
+      argl[["max_dims"]] <- NA_integer_
+    }
     create_dataset_h5(filename, datapath, data, argl)
     app_v <- FALSE
   }
   if(!isObject(filename, datapath)){
+    if(isTRUE(argl[["append"]]) && is.null(argl[["max_dims"]])){
+      argl[["max_dims"]] <- NA_integer_
+    }
     create_dataset_h5(filename, datapath, data, argl)
   }else{
-    if(hasArg(append)){
-      if(app_v & argl[["append"]]){
-        ret <- append_vector_h5(data = data,filename = filename, datapath = datapath,  ... = argl)
-      }
+    if(app_v && isTRUE(argl[["append"]])){
+      ret <- append_vector_h5(data = data,filename = filename, datapath = datapath,  ... = argl)
     }
   }
   if(!ret){

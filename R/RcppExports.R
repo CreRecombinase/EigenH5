@@ -105,6 +105,10 @@ write_attribute_h5 <- function(data, filename, datapath) {
     .Call(`_EigenH5_write_attribute_h5`, data, filename, datapath)
 }
 
+read_R_attribute_h5 <- function(filename, datapath) {
+    .Call(`_EigenH5_read_R_attribute_h5`, filename, datapath)
+}
+
 read_attribute_h5 <- function(filename, datapath) {
     .Call(`_EigenH5_read_attribute_h5`, filename, datapath)
 }
@@ -149,6 +153,10 @@ isObject <- function(filename, dataname) {
     .Call(`_EigenH5_isObject`, filename, dataname)
 }
 
+ArrayTypeSize <- function(filename, dataname) {
+    .Call(`_EigenH5_ArrayTypeSize`, filename, dataname)
+}
+
 isDataSet <- function(filename, dataname) {
     .Call(`_EigenH5_isDataSet`, filename, dataname)
 }
@@ -163,6 +171,10 @@ ls_h5_exp <- function(filename, groupname = as.character( c("/")), full_names = 
 
 typeof_h5 <- function(filename, datapath) {
     .Call(`_EigenH5_typeof_h5`, filename, datapath)
+}
+
+info_h5 <- function(filename, datapaths) {
+    .Call(`_EigenH5_info_h5`, filename, datapaths)
 }
 
 file_acc_ct <- function(filename) {

@@ -6,10 +6,25 @@
 }
 
 
-ls_h5 <- function(filename,groupname="/",full_names=FALSE){
+ls_h5 <- function(filename,groupname="/",full_names=FALSE,details=FALSE){
+  if(!details){
     fs::path_norm(ls_h5_exp(filename = fs::path_expand(filename),
                             groupname = groupname,
                             full_names = full_names))
+  }else{
+    full_n <- ls_h5_exp(filename = fs::path_expand(filename),
+                            groupname = groupname,
+                            full_names = TRUE)
+    id_type=purrr::map_chr(full_n,~typeof_h5(filename,.x))
+    id_dim=purrr::map(full_n,~dim_h5(filename,.x))
+    if(all(lengths(id_dim)==length(id_dim[[1]]))){
+      id_dim <- purrr::flatten_int(id_dim)
+    }
+    if(!full_names){
+      full_n <- fs::path_rel(full_n,start=groupname)
+    }
+    tibble::tibble(name=full_n,dims=id_dim,type=id_type)
+  }
 }
 
 construct_data_path <- function(...){
@@ -35,20 +50,14 @@ isObject_h5 <- function(filename,datapath){
   return(ret)
 }
 
-## gen_matslice_chunk_l <- function(input_rows,chunksize=10000,...){
-##     output_l <- BBmisc::chunk(input_rows,chunk.size=chunksize)  %>% purrr::map(~tibble::data_frame(input_rows=.x)afunction(x){
-##       stopifnot(all(x==seq(x[1],x[length(x)])))
-##       return(data_frame(row_offsets=x[1]-1,row_chunksizes=length(x)))
-##       }) %>% dplyr::mutate(...)
-##     return(input_df)
-## }
+
 
 
 gen_matslice_df <- function(filename,group_prefix,dataname){
   sub_grps <- ls_h5(filename,group_prefix)
   retdf <- dplyr::data_frame(filenames=filename,
                     groupnames=paste0(group_prefix,"/",sub_grps),
-                    datanames=dataname) %>% arrange(as.integer(sub_grps))
+                    datanames=dataname) %>% dplyr::arrange(as.integer(sub_grps))
   return(retdf)
 }
 
@@ -211,5 +220,19 @@ create_mat_l <- function(dff){
       chunksizes=c(row_c_chunksizes,col_c_chunksizes))
   }))
 }
+
+
+
+
+delim2h5 <- function(input_file,output_file,h5_args=list(),...){
+  h5_args[["append"]] <- TRUE
+  wf <- function(x,pos){
+    rlang::exec(write_df_h5,df=x,filename=output_file,!!!h5_args)}
+  readr::read_delim_chunked(file = input_file,callback = readr::SideEffectChunkCallback$new(wf),...)
+}
+
+
+
+
 
 

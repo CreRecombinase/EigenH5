@@ -264,10 +264,13 @@ public:
   const T Dim;
   std::variant<int,double,std::string> data_type;
   std::variant<NoCompressor,LzfCompressor,BloscCompressor,GzipCompressor,ZstdCompressor> decompressor;
+  std::vector<std::string> R_attrs;
 
 
   DataSet_V(const HighFive::DataSet &dset):Dim(dset.getDataDimensions(),dset.getFilter().get_chunksizes()),
-					   decompressor(dset.getFilter().getDecompressor()){
+					   decompressor(dset.getFilter().getDecompressor()),
+                                           R_attrs(list_R_attr(dset))
+  {
 
     auto ret_t = typeof_h5_dset(dset);
     switch(ret_t){
@@ -331,21 +334,20 @@ class VisitVectorRead
 public:
   const HighFive::DataSet &d;
   const VecDim Dim;
-  VisitVectorRead(const HighFive::DataSet &d_, const VecDim Dim_):d(d_),Dim(Dim_){}
+  VisitVectorRead(const HighFive::DataSet &d_, const VecDim Dim_,const bool read_attributes=false):d(d_),Dim(Dim_){}
   template<typename Q,typename Z,typename T>
   SEXP operator()(Q ret,Z& decomp,T rowdat)const{
-
     using RT=typename t2chunk_t<T>::c_type;
     RT rows(Dim.dimsize[0],Dim.chunksize[0],rowdat);
     if constexpr(std::is_same_v<Q,std::string>){
-    auto elem_size = H5Tget_size(d.getDataType().getId());
-    VecShuttle<Q,RT> mover(rows,elem_size);
-    return(Rcpp::as<typename xtm_t<Q>::rrvec_type>(mover.template read_vector<Z>(decomp,d)));
+      auto elem_size = H5Tget_size(d.getDataType().getId());
+      VecShuttle<Q,RT> mover(rows,elem_size);
+      return(Rcpp::as<typename xtm_t<Q>::rrvec_type>(mover.template read_vector<Z>(decomp,d)));
     }else{
       VecShuttle<Q,RT> mover(rows,1);
-      auto out=Rcpp::as<typename xtm_t<Q>::rrvec_type>(mover.template read_vector<Z>(decomp,d));
-      out.attr("dim") =  R_NilValue;
-      return(out);
+      auto ret=Rcpp::as<typename xtm_t<Q>::rrvec_type>(mover.template read_vector<Z>(decomp,d));
+      ret.attr("dim") =  R_NilValue;
+      return(ret);
     }
   }
 };
@@ -487,9 +489,13 @@ SEXP read_vector_v(const std::string filename,  const std::string datapath, SEXP
   auto data_t =dsv.data_type;
   auto &decomp = dsv.decompressor;
 
-
-
-  return(std::visit(VisitVectorRead(dset,dsv.Dim),data_t,decomp,drow));
+  Rcpp::RObject ret(std::visit(VisitVectorRead(dset,dsv.Dim),data_t,decomp,drow));
+  if(!dsv.R_attrs.empty()){
+    for(auto &attr : dsv.R_attrs){
+      ret.attr(attr.substr(2))=read_attribute(dset,attr);
+    }
+  }
+  return(ret);
 }
 
 std::variant<xt::rtensor<int,2>,xt::rtensor<double,2>,Rcpp::StringMatrix> xtensor_mat(Rcpp::RObject data){

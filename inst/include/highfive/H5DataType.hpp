@@ -24,11 +24,17 @@ namespace HighFive {
     bool operator == (const DataType& other) const;
 
     bool operator != (const DataType& other) const;
+    H5T_class_t get_class() const{
+      return H5Tget_class(_hid);
+    }
+    bool same_class(const DataType& other) const{
+      return this->get_class()==other.get_class();
+    }
+
     size_t n_elem() const;
 
 
   protected:
-
     friend class Attribute;
     friend class File;
     friend class DataSet;

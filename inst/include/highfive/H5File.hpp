@@ -58,7 +58,7 @@ class File : public Object,
     ///
   const std::string& getName() const;
   size_t getObjCount(unsigned int types) const;
-  static boost::optional<File> openFile(const std::string& filename, int openFlags = ReadOnly,
+  static std::optional<File> openFile(const std::string& filename, int openFlags = ReadOnly,
 				      const FileDriver& driver = DefaultFileDriver());
     ///
     /// \brief flush

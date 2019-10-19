@@ -13,6 +13,8 @@
 #include <boost/optional.hpp>
 #include "../H5Filter.hpp"
 
+class Path;
+
 
 namespace HighFive {
 
@@ -81,7 +83,7 @@ class NodeTraits {
   DataSet getDataSet(const Path& dataset_name) const;
 
 
-  boost::optional<DataSet> openDataSet(const Path& dataset_name) const;
+  std::optional<DataSet> openDataSet(const Path& dataset_name) const;
 
 
 
@@ -101,7 +103,7 @@ class NodeTraits {
 
 
 
-  boost::optional<Group> openGroup(const Path& group_name) const;
+  std::optional<Group> openGroup(const Path& group_name) const;
 
 
 
@@ -131,17 +133,17 @@ class NodeTraits {
   ///
   /// \brief return either a group or dataset
   /// \return variant containing either a group or dataset
-  boost::variant<DataSet,Group> getObject(const Path & object_name) const;
+  std::variant<DataSet,Group> getObject(const Path & object_name) const;
 
 
 
-  boost::optional<boost::variant<DataSet,Group>> openObject(const Path & object_name) const;
+  std::optional<std::variant<DataSet,Group>> openObject(const Path & object_name) const;
 
 
   ///
   /// \brief return all leaf objects
-  /// \return zero or more objects (represented as boost::variants)
-  std::vector<boost::variant<DataSet,Group> > getObjects() const;
+  /// \return zero or more objects (represented as std::variants)
+  std::vector<std::variant<DataSet,Group> > getObjects() const;
 
 
   bool _exist(const std::string& node_name) const;
@@ -154,7 +156,7 @@ class NodeTraits {
   bool exist(const Path& node_name) const;
 private:
   static Group grpCreate(const hid_t root_id, const char* name);
-  boost::variant<DataSet,Group> getObj(const hid_t root_id, const char* name) const;
+  std::variant<DataSet,Group> getObj(const hid_t root_id, const char* name) const;
   typedef Derivate derivate_type;
 };
 }

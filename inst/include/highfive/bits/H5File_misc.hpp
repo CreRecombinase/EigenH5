@@ -96,14 +96,14 @@ inline File::File(const std::string& filename, int openFlags,
     }
 }
 
-  inline boost::optional<File> File::openFile(const std::string& filename, int openFlags,const FileDriver& driver){
+  inline std::optional<File> File::openFile(const std::string& filename, int openFlags,const FileDriver& driver){
     try{
       HighFive::SilenceHDF5 silence;
       File file(filename,openFlags,driver);
       return(file);
     }catch (HighFive::Exception& err) {
       // Rcpp::StringVector retvec(1);
-      return(boost::none);
+      return(std::nullopt);
     }
 
   }

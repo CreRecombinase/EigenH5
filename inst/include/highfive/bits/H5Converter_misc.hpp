@@ -588,6 +588,10 @@ struct data_converter<std::vector<char*>, void> {
     DataSpace& _space;
     };
 
+
+
+
+
     // template<>
     // struct data_converter<std::vector<char*>, void> {
     //   inline data_converter(std::vector<char*> &vec, DataSpace &space,const size_t dim=0)

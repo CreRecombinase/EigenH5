@@ -1,10 +1,10 @@
 #include "EigenH5.h"
 //[[depends(RcppEigen)]]
 //[[depends(RcppParallel)]]
-//[[Rcpp::plugins(cpp11)]]
+//[[Rcpp::plugins(cpp17)]]
 #include <array>
 // [[Rcpp::interfaces(r, cpp)]]
-
+#include "rutils/rutils.hpp"
 
 #include <set>
 #include <iostream>
@@ -83,8 +83,9 @@ Rcpp::List get_datset_filter(const std::string filename, const std::string datap
   HighFive::File file(filename,HighFive::File::ReadOnly);
   auto filt_pair = file.getDataSet(Path(datapath)).getFilter().get_filter_info();
   using namespace Rcpp;
-  return(List::create(_["name"]=wrap(filt_pair.first),
-		      _["options"]=wrap(filt_pair.second)));
+  return wrap_pair(filt_pair,"name","options");
+  // return(List::create(_["name"]=wrap(filt_pair.first),
+  //       	      _["options"]=wrap(filt_pair.second)));
 }
 
 
@@ -120,6 +121,15 @@ bool isObject(const std::string filename, std::string dataname) {
   ret = file.getGroup(Path("/")).exist(Path("/" + dataname));
   return (ret);
 }
+
+
+//[[Rcpp::export]]
+int ArrayTypeSize(const std::string filename, std::string dataname) {
+
+  auto ret = HighFive::File(filename,HighFive::File::ReadOnly).getGroup(Path("/")).getDataSet(Path("/" + dataname)).getDataType().n_elem();
+  return (ret);
+}
+
 
 //[[Rcpp::export]]
 bool isDataSet(const std::string filename, std::string dataname){
@@ -157,6 +167,8 @@ bool isGroup(const std::string filename, std::string dataname){
   return(ret);
 }
 
+
+
 //[[Rcpp::export("ls_h5_exp")]]
 Rcpp::StringVector ls_h5(const std::string filename,Rcpp::CharacterVector groupname = Rcpp::CharacterVector::create("/"),
                          bool full_names=false){
@@ -185,9 +197,14 @@ Rcpp::StringVector ls_h5(const std::string filename,Rcpp::CharacterVector groupn
 
   return (retvec);
 }
+
+
+
+
+
 //[[Rcpp::export]]
-Rcpp::StringVector typeof_h5(const std::string &filename,
-                   const std::string &datapath){
+Rcpp::StringVector typeof_h5(const std::string filename,
+                   const std::string datapath){
 
 
   using namespace HighFive;
@@ -197,24 +214,53 @@ Rcpp::StringVector typeof_h5(const std::string &filename,
   }
   HighFive::File file(filename,HighFive::File::ReadOnly);
   auto arg = file.getDataSet(Path(datapath));
-  SEXPTYPE h2t = h2r_T(arg.getDataType().getId());
-  Rcpp::StringVector ret;
-  if (h2t == REALSXP){
-    ret = Rcpp::StringVector::create("double");
-  }else{
-    if (h2t == INTSXP){
-      ret = Rcpp::StringVector::create("integer");
+  return(h2s_T(arg.getDataType()));
+}
+
+//[[Rcpp::export]]
+Rcpp::DataFrame info_h5(const Rcpp::StringVector filename, Rcpp::StringVector datapaths){
+  using namespace Rcpp;
+  const auto file = HighFive::File(as<std::string>(filename[0]),HighFive::File::ReadOnly);
+
+  const size_t num_datasets = datapaths.size();
+  std::vector<HighFive::DataSet> dsets;
+
+  List dim_l(num_datasets);
+  StringVector types(num_datasets);
+  IntegerVector disk_size(num_datasets);
+  List filter_l(num_datasets);
+
+  //  std::unordered_set<size_t> ds_sizes;
+  for(int i=0; i<num_datasets;i++){
+    auto obj_v = file.getObject(as<std::string>(datapaths(i)));
+    if(auto dset = std::get_if<HighFive::DataSet>(&obj_v)){
+      auto dsd = dset->getSpace().getDimensions();
+      Rcpp::IntegerVector tr(dsd.begin(),dsd.end());
+      dim_l[i]=tr;
+      types[i]=h2s_T(dset->getDataType())[0];
+      disk_size[i] = static_cast<int>(dset->getStorageSize());
+      filter_l[i]=wrap_pair(dset->getFilter().get_filter_info(),"name","options");
     }else{
-      if(h2t == STRSXP){
-	ret = Rcpp::StringVector::create("character");
-      }else{
-	ret = Rcpp::StringVector::create("NULL");
-      }
+      dim_l[i]=Rcpp::IntegerVector::create(NA_INTEGER);
+      types[i]="group";
+      disk_size[i]=NA_INTEGER;
+      filter_l[i]=NA_INTEGER;
     }
   }
-
-  return(ret);
+ return DataFrame::create(_["name"]=datapaths,
+                          _["type"]=types,
+                          _["storage_size"]=disk_size,
+                          _["dims"]=dim_l,
+                          _["filter"]=filter_l);
 }
+
+
+
+
+
+
+
+
 
 
 // 
@@ -364,6 +410,3 @@ void concat_mats(const std::string newfile, const std::string newpath, Rcpp::Lis
   H5Dclose(dset);
 
 }
-
-
-

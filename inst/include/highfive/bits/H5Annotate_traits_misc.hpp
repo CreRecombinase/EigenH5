@@ -49,10 +49,10 @@ AnnotateTraits<Derivate>::createAttribute(const std::string& attribute_name,
 
 
 template <typename Derivate>
-inline boost::optional<Attribute> AnnotateTraits<Derivate>::openAttribute(
+inline std::optional<Attribute> AnnotateTraits<Derivate>::openAttribute(
     const std::string& attribute_name) const {
   if(!this->hasAttribute(attribute_name)){
-    return(boost::none);
+    return(std::nullopt);
   }else{
     return(this->getAttribute(attribute_name));
   }
