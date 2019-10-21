@@ -7,6 +7,16 @@ m4_include([inst/m4/ax_compare_version.m4])
 
 RHDF5LIB_INSTALLED=$(echo 'cat(suppressWarnings(require(Rhdf5lib, quietly=TRUE, character.only=FALSE, warn.conflicts=FALSE)))' | "${R_HOME}/bin/R" --vanilla --slave)
 
+  AC_CHECK_PROG(GREP,ggrep,`which ggrep`, `which grep`)
+AC_CHECK_PROG(AWK,gawk,`which gawk`, `which awk`)
+
+if test -n "$AWK"; then
+    echo "found awk and it's $AWK"
+else
+    echo "no awk!"
+    exit 1
+fi
+
 
 if test "$RHDF5LIB_INSTALLED" == "TRUE"; then
 
