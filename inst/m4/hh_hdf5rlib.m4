@@ -22,30 +22,20 @@ AC_REQUIRE([AC_PROG_SED])
 AC_REQUIRE([AC_PROG_AWK])
 AC_REQUIRE([AC_PROG_GREP])
 
-HDF5RLIB_INSTALLED=$(echo 'cat(suppressWarnings(require(hdf5rLib, quietly=TRUE, character.only=FALSE, warn.conflicts=FALSE)))' |\
-"${R_HOME}/bin/R" --vanilla --slave)
 
 
-if test "$HDF5RLIB_INSTALLED" != "TRUE"; then
-   with_hdf5rLib="no"
-else
-   with_hdf5rLib="yes"
-   ## get the relevant variables so that headers can be found and static library can be linked
-   HDF5RLIB_LIBPATH=$(echo 'cat(hdf5rLib:::.pkgLibPath())' | "${R_HOME}/bin/R" --vanilla --slave)
-   HDF5RLIB_INCLUDEPATH=$(echo 'cat(hdf5rLib:::.pkgIncludePath())' | "${R_HOME}/bin/R" --vanilla --slave)
-
-   HDF5_MAJOR_VERSION=$(echo 'cat(hdf5rLib:::.pkgMajorVersion())' | "${R_HOME}/bin/R" --vanilla --slave)
-   HDF5_MINOR_VERSION=$(echo 'cat(hdf5rLib:::.pkgMinorVersion())' | "${R_HOME}/bin/R" --vanilla --slave)
-
-   HDF5_LIBS='-L"'${HDF5RLIB_LIBPATH}'" -lhdf5_hl-static -lhdf5-static -lz -lm'
- #  HDF5_CPPFLAGS='-I'"${HDF5RLIB_INCLUDEPATH}"' -DWINDOWS'
-
-   AC_SUBST([HDF5_LIBS])
-#   AC_SUBST([HDF5_CPPFLAGS])
-   AC_SUBST([HDF5_MAJOR_VERSION])
-   AC_SUBST([HDF5_MINOR_VERSION])
-fi
-
+with_rhdf5lib="yes"
+HDF5R_LIBS=$(echo 'cat(Rhdf5lib::pkgconfig("PKG_C_HL_LIBS"))' | "${R_HOME}/bin/R" --vanilla --slave)
+HDF5R_CPPFLAGS=$(echo 'cat("-I",system.file("include/",package = "Rhdf5lib"))' | "${R_HOME}/bin/R" --vanilla --slave)
+HDF5_VERSION=$(echo 'cat(Rhdf5lib::getHdf5Version())' | "${R_HOME}/bin/R" --vanilla --slave)
+HDF5_MAJOR_VERSION=$(echo $HDF5_VERSION | $AWK -F \. '{print $[]1}')
+HDF5_MINOR_VERSION=$(echo $HDF5_VERSION | $AWK -F \. {'print $[]2'})
+HDF5_REVISION_VERSION=$(echo $HDF5_VERSION | $AWK -F \. {'print $[]3'})
+AC_MSG_RESULT([Found Rhdf5lib with version: $HDF5_MAJOR_VERSION.$HDF5_MINOR_VERSION])
+AC_SUBST([HDF5R_LIBS])
+AC_SUBST([HDF5R_CPPFLAGS])
+AC_SUBST([HDF5_MAJOR_VERSION])
+AC_SUBST([HDF5_MINOR_VERSION])
 
 
 ])

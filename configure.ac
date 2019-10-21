@@ -1,19 +1,36 @@
 AC_INIT([EigenH5], 0.1.0, [nwknoblauch@gmail.com])
-
 dnl Grab that macro that checks for HDF5 availability
+
 m4_include([inst/m4/ax_lib_hdf5.m4])
-m4_include([inst/m4/ax_compare_version.m4])
 m4_include([inst/m4/hh_hdf5rlib.m4])
+m4_include([inst/m4/ax_compare_version.m4])
 
-AX_LIB_HDF5()
+RHDF5LIB_INSTALLED=$(echo 'cat(suppressWarnings(require(Rhdf5lib, quietly=TRUE, character.only=FALSE, warn.conflicts=FALSE)))' | "${R_HOME}/bin/R" --vanilla --slave)
 
-if test "$with_hdf5" = "yes"; then 
+
+if test "$RHDF5LIB_INSTALLED" == "TRUE"; then
+
+  AC_MSG_RESULT([Found RHDF5LIB: $RHDF5LIB_INSTALLED])
+  HH_HDF5RLIB()
+
+else
+   AC_MSG_RESULT([Did not find Rhdf5lib: $RHDF5LIB_INSTALLED])
+   AX_LIB_HDF5()
+
+fi
+
+
+
+
+
+if test "$with_hdf5" = "yes" || test "$with_rhdf5lib" = "yes"; then
 AC_MSG_RESULT([Found hdf5 with version: $HDF5_VERSION])
 AX_COMPARE_VERSION([$HDF5_VERSION], [ge], [1.8.13], [hdf5_version_sufficient="yes"], AC_MSG_ERROR([The version of hdf5 installed on your system is not sufficient. Please ensure that at least version 1.8.13 is installed]))
 else 
   AC_MSG_ERROR([hdf5 does not seem to be installed on your platform.
   Please install the hdf5 library.
   The required HDF5 library files can be installed as follows:
+      -
       - Debian-based (e.g. Debian >= 8.0, Ubuntu >= 15.04): 'sudo apt-get install libhdf5-dev'
         - Old Debian-based (e.g Debian < 8.0, Ubuntu < 15.04): Install from source (see INSTALL)
         - OS X using Homebrew: 'brew install hdf5'
@@ -77,6 +94,8 @@ AC_SUBST(DEFINE_H5FREE_MEMORY)
 
 
 
+
+
 dnl Now find the compiler and compiler flags to use
 : ${R_HOME=`R RHOME`}
 if test -z "${R_HOME}"; then
@@ -84,6 +103,7 @@ if test -z "${R_HOME}"; then
   exit 1
 fi
 
+ if test "$with_hdf5" = "yes"; then
 if test -z "${LIBS}"; then
   dnl prefer ggrep if installed
   AC_CHECK_PROG(GREP,ggrep,`which ggrep`, `which grep`)
@@ -129,6 +149,7 @@ if test -z "${CPPFLAGS}"; then
   rm -f myconftest.c
 fi
 
+fi
 dnl dummy substitute HDF5R_CFLAGS
 HDF5R_CFLAGS=""
 AC_SUBST(HDF5R_CFLAGS)
@@ -139,6 +160,3 @@ AC_SUBST(HDF5R_LIBS)
 dnl and do subsitution in the src/Makevars.in 
 AC_CONFIG_FILES([src/Makevars])
 AC_OUTPUT
-
-
-
