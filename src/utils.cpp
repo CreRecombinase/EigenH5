@@ -77,7 +77,7 @@ Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input,const int offset=0){
                                        if(offset>=strl){
                                          Rcpp::Rcerr<<"For string"<<CHAR(x)<<std::endl;
                                          Rcpp::Rcerr<<"LEN(x): "<<LENGTH(x)<<std::endl;
-                                         Rcpp::Rcerr("string offset greater than string length");
+                                         Rcpp::Rcerr<<"string offset greater than string length"<<std::endl;
                                          return NA_INTEGER;
                                        }
 
