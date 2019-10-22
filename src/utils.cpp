@@ -83,7 +83,7 @@ Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input,const int offset=0){
                                           ec == std::errc())
                                          return tresult;
 #else
-                                       if(sscanf (sentence,"%d",beg,&tresult)>0)
+                                       if(sscanf (beg,"%d",&tresult)>0)
                                          return(tresult);
 #endif
                                        return (NA_INTEGER);
