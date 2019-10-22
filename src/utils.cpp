@@ -8,7 +8,7 @@
 #if __has_include(<charconv>)
 #include <charconv>
 #else
- #include < stdio.h>
+#include <cstdio>
 #endif
 #include <set>
 #include <iostream>
