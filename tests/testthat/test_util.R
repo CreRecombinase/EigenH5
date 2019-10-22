@@ -40,6 +40,26 @@ test_that("I can create an extendable dataset and extend it", {
 })
 
 
+
+
+test_that("fast conversion works", {
+        letter_d <- sample(letters,100,replace=T)
+        int_d <- sample(as.character(1:100),100,replace=TRUE)
+        ascii_i <- purrr::map_int(letter_d,utf8ToInt)
+        int_i <- as.integer(int_d)
+        
+        testthat::expect_equal(fast_str2ascii(letter_d),ascii_i)
+        testthat::expect_equal(fast_str2int(int_d),int_i)
+        
+        for(i in 1:10){
+                testthat::expect_equal(fast_str2ascii(paste0(paste0(rep("p",i),collapse=""),letter_d),offset = i),ascii_i)
+                testthat::expect_equal(fast_str2int(paste0(paste0(rep("p",i),collapse=""),int_d),offset = i),int_i)
+        }
+        
+        
+        
+})
+
 test_that("We can write a vector", {
         expect_true(EigenH5::write_vector_h5(numeric(3), tempfile(), "test"))
 })
