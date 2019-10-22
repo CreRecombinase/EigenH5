@@ -68,6 +68,8 @@ Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input,const int offset=0){
   auto pp = get_string_ptr(str_sxp);
   int tresult;
   std::transform(pp,pp+p,ret.begin(),[&](SEXP x){
+                                       if(x==R_NaString)
+                                         return NA_INTEGER;
                                        const size_t strl=LENGTH(x);
                                        const char* chp = CHAR(x);
                                        const char* beg=chp+offset;
@@ -75,7 +77,8 @@ Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input,const int offset=0){
                                        if(offset>=strl){
                                          Rcpp::Rcerr<<"For string"<<CHAR(x)<<std::endl;
                                          Rcpp::Rcerr<<"LEN(x): "<<LENGTH(x)<<std::endl;
-                                         Rcpp::stop("string offset greater than string length");
+                                         Rcpp::Rcerr("string offset greater than string length");
+                                         return NA_INTEGER;
                                        }
 
 #if __has_include(<charconv>)
