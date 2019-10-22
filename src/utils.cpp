@@ -75,9 +75,9 @@ Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input,const int offset=0){
                                        const char* beg=chp+offset;
                                        const char* end=chp+LENGTH( x );
                                        if(offset>=strl){
-                                         Rcpp::Rcerr<<"For string"<<CHAR(x)<<std::endl;
-                                         Rcpp::Rcerr<<"LEN(x): "<<LENGTH(x)<<std::endl;
-                                         Rcpp::Rcerr<<"string offset greater than string length"<<std::endl;
+                                         // Rcpp::Rcerr<<"For string"<<CHAR(x)<<std::endl;
+                                         // Rcpp::Rcerr<<"LEN(x): "<<LENGTH(x)<<std::endl;
+                                         // Rcpp::Rcerr<<"string offset greater than string length"<<std::endl;
                                          return NA_INTEGER;
                                        }
 
@@ -112,9 +112,9 @@ Rcpp::IntegerVector fast_str2ascii(Rcpp::StringVector input,int offset=0){
                                        const char* beg=chp+offset;
                                        const char* end=chp+LENGTH( x );
                                        if(offset>=strl){
-                                         Rcpp::Rcerr<<"For string"<<CHAR(x)<<std::endl;
-                                         Rcpp::Rcerr<<"LEN(x): "<<LENGTH(x)<<std::endl;
-                                         Rcpp::Rcerr<<"string offset greater than string length";
+                                         // Rcpp::Rcerr<<"For string"<<CHAR(x)<<"\n";
+                                         // Rcpp::Rcerr<<"LEN(x): "<<LENGTH(x)<<std::endl;
+                                         // Rcpp::Rcerr<<"string offset greater than string length";
                                          return(NA_INTEGER);
                                        }
 
