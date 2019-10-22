@@ -5,7 +5,11 @@
 #include <array>
 // [[Rcpp::interfaces(r, cpp)]]
 #include "rutils/rutils.hpp"
+#if __has_include(<charconv>)
 #include <charconv>
+#else
+ #include < stdio.h>
+#endif
 #include <set>
 #include <iostream>
 #include <algorithm>
@@ -74,10 +78,17 @@ Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input,const int offset=0){
                                          Rcpp::stop("string offset greater than string length");
                                        }
 
+#if __has_include(<charconv>)
                                        if(auto [p, ec] = std::from_chars(beg, end, tresult);
                                           ec == std::errc())
                                          return tresult;
-                                       return(NA_INTEGER);
+#else
+                                       if(sscanf (sentence,"%d",beg,&tresult)>0)
+                                         return(tresult);
+#endif
+                                       return (NA_INTEGER);
+
+
                                      });
   return(ret);
 }
