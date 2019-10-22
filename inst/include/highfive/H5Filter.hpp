@@ -10,6 +10,7 @@
 #include "H5DataSpace.hpp"
 #include <functional>
 #include <numeric>
+#include <optional>
 #include <variant>
 #include <Eigen/Core>
 

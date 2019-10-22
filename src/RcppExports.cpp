@@ -722,6 +722,111 @@ RcppExport SEXP _EigenH5_create_dataset_h5(SEXP filenameSEXP, SEXP datapathSEXP,
     UNPROTECT(1);
     return rcpp_result_gen;
 }
+// join_ids
+Rcpp::List join_ids(Rcpp::IntegerVector index_a, Rcpp::IntegerVector index_b);
+static SEXP _EigenH5_join_ids_try(SEXP index_aSEXP, SEXP index_bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type index_a(index_aSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type index_b(index_bSEXP);
+    rcpp_result_gen = Rcpp::wrap(join_ids(index_a, index_b));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _EigenH5_join_ids(SEXP index_aSEXP, SEXP index_bSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_EigenH5_join_ids_try(index_aSEXP, index_bSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
+// fast_str2int
+Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input, const int offset);
+static SEXP _EigenH5_fast_str2int_try(SEXP inputSEXP, SEXP offsetSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::StringVector >::type input(inputSEXP);
+    Rcpp::traits::input_parameter< const int >::type offset(offsetSEXP);
+    rcpp_result_gen = Rcpp::wrap(fast_str2int(input, offset));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _EigenH5_fast_str2int(SEXP inputSEXP, SEXP offsetSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_EigenH5_fast_str2int_try(inputSEXP, offsetSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
+// fast_str2ascii
+Rcpp::IntegerVector fast_str2ascii(Rcpp::StringVector input, int offset);
+static SEXP _EigenH5_fast_str2ascii_try(SEXP inputSEXP, SEXP offsetSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::StringVector >::type input(inputSEXP);
+    Rcpp::traits::input_parameter< int >::type offset(offsetSEXP);
+    rcpp_result_gen = Rcpp::wrap(fast_str2ascii(input, offset));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _EigenH5_fast_str2ascii(SEXP inputSEXP, SEXP offsetSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_EigenH5_fast_str2ascii_try(inputSEXP, offsetSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
 // link_objects_h5
 void link_objects_h5(Rcpp::StringVector filename_from, const std::string filename_to, Rcpp::StringVector datapath_from, Rcpp::StringVector datapath_to);
 static SEXP _EigenH5_link_objects_h5_try(SEXP filename_fromSEXP, SEXP filename_toSEXP, SEXP datapath_fromSEXP, SEXP datapath_toSEXP) {
@@ -1213,7 +1318,7 @@ RcppExport SEXP _EigenH5_typeof_h5(SEXP filenameSEXP, SEXP datapathSEXP) {
     return rcpp_result_gen;
 }
 // info_h5
-Rcpp::DataFrame info_h5(const Rcpp::StringVector filename, Rcpp::StringVector datapaths);
+Rcpp::List info_h5(const Rcpp::StringVector filename, Rcpp::StringVector datapaths);
 static SEXP _EigenH5_info_h5_try(SEXP filenameSEXP, SEXP datapathsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -1373,6 +1478,9 @@ static int _EigenH5_RcppExport_validate(const char* sig) {
         signatures.insert("SEXP(*read_R_attribute_h5)(const std::string&,std::string)");
         signatures.insert("SEXP(*read_attribute_h5)(const std::string&,std::string)");
         signatures.insert("bool(*create_dataset_h5)(const std::string&,std::string,const RObject&,Rcpp::List)");
+        signatures.insert("Rcpp::List(*join_ids)(Rcpp::IntegerVector,Rcpp::IntegerVector)");
+        signatures.insert("Rcpp::IntegerVector(*fast_str2int)(Rcpp::StringVector,const int)");
+        signatures.insert("Rcpp::IntegerVector(*fast_str2ascii)(Rcpp::StringVector,int)");
         signatures.insert("void(*link_objects_h5)(Rcpp::StringVector,const std::string,Rcpp::StringVector,Rcpp::StringVector)");
         signatures.insert("void(*create_file_h5)(const std::string)");
         signatures.insert("Rcpp::IntegerVector(*dataset_chunks)(const std::string,const std::string)");
@@ -1387,7 +1495,7 @@ static int _EigenH5_RcppExport_validate(const char* sig) {
         signatures.insert("bool(*isGroup)(const std::string,std::string)");
         signatures.insert("Rcpp::StringVector(*ls_h5_exp)(const std::string,Rcpp::CharacterVector,bool)");
         signatures.insert("Rcpp::StringVector(*typeof_h5)(const std::string,const std::string)");
-        signatures.insert("Rcpp::DataFrame(*info_h5)(const Rcpp::StringVector,Rcpp::StringVector)");
+        signatures.insert("Rcpp::List(*info_h5)(const Rcpp::StringVector,Rcpp::StringVector)");
         signatures.insert("Rcpp::DataFrame(*file_acc_ct)(const std::string)");
         signatures.insert("Rcpp::IntegerVector(*dim_h5)(const std::string&,const std::string)");
         signatures.insert("void(*concat_mats)(const std::string,const std::string,Rcpp::List,int)");
@@ -1413,6 +1521,9 @@ RcppExport SEXP _EigenH5_RcppExport_registerCCallable() {
     R_RegisterCCallable("EigenH5", "_EigenH5_read_R_attribute_h5", (DL_FUNC)_EigenH5_read_R_attribute_h5_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_read_attribute_h5", (DL_FUNC)_EigenH5_read_attribute_h5_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_create_dataset_h5", (DL_FUNC)_EigenH5_create_dataset_h5_try);
+    R_RegisterCCallable("EigenH5", "_EigenH5_join_ids", (DL_FUNC)_EigenH5_join_ids_try);
+    R_RegisterCCallable("EigenH5", "_EigenH5_fast_str2int", (DL_FUNC)_EigenH5_fast_str2int_try);
+    R_RegisterCCallable("EigenH5", "_EigenH5_fast_str2ascii", (DL_FUNC)_EigenH5_fast_str2ascii_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_link_objects_h5", (DL_FUNC)_EigenH5_link_objects_h5_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_create_file_h5", (DL_FUNC)_EigenH5_create_file_h5_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_dataset_chunks", (DL_FUNC)_EigenH5_dataset_chunks_try);
@@ -1467,6 +1578,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_EigenH5_read_R_attribute_h5", (DL_FUNC) &_EigenH5_read_R_attribute_h5, 2},
     {"_EigenH5_read_attribute_h5", (DL_FUNC) &_EigenH5_read_attribute_h5, 2},
     {"_EigenH5_create_dataset_h5", (DL_FUNC) &_EigenH5_create_dataset_h5, 4},
+    {"_EigenH5_join_ids", (DL_FUNC) &_EigenH5_join_ids, 2},
+    {"_EigenH5_fast_str2int", (DL_FUNC) &_EigenH5_fast_str2int, 2},
+    {"_EigenH5_fast_str2ascii", (DL_FUNC) &_EigenH5_fast_str2ascii, 2},
     {"_EigenH5_link_objects_h5", (DL_FUNC) &_EigenH5_link_objects_h5, 4},
     {"_EigenH5_create_file_h5", (DL_FUNC) &_EigenH5_create_file_h5, 1},
     {"_EigenH5_dataset_chunks", (DL_FUNC) &_EigenH5_dataset_chunks, 2},

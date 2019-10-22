@@ -5,12 +5,106 @@
 #include <array>
 // [[Rcpp::interfaces(r, cpp)]]
 #include "rutils/rutils.hpp"
-
+#include <charconv>
 #include <set>
 #include <iostream>
 #include <algorithm>
 
 
+
+
+std::unordered_map<int,int> reverse_index(Rcpp::IntegerVector index_a){
+    const size_t p_a=index_a.size();
+    std::unordered_map<int,int> ind_a(p_a);
+    auto iap = ind_a.begin();
+    for(int i=0; i<p_a; i++){
+      iap = ind_a.emplace_hint(iap,index_a(i),i);
+    }
+    return ind_a;
+}
+
+//[[Rcpp::export]]
+Rcpp::List join_ids(Rcpp::IntegerVector index_a,Rcpp::IntegerVector index_b){
+  const size_t p_a=index_a.size();
+  const size_t p_b=index_b.size();
+
+  const auto map_index_a=reverse_index(index_a);
+  std::vector<int> sub_ia;
+  sub_ia.reserve(std::min(p_a,p_b));
+  std::vector<int> sub_ib;
+  sub_ib.reserve(std::min(p_a,p_b));
+
+  for(int i=0; i<p_b; i++){
+    auto ipm = map_index_a.find(index_b(i));
+    if(ipm != map_index_a.end()){
+      sub_ia.push_back(ipm->second);
+      sub_ib.push_back(i);
+    }
+  }
+  using namespace Rcpp;
+
+  const auto ns = sub_ia.size();
+  auto m_ret_l = List::create(_["idx_a"]=Rcpp::wrap(sub_ia),
+                              _["idx_b"]=Rcpp::wrap(sub_ib));
+  m_ret_l.attr("class") = StringVector::create("tbl_df","tbl","data.frame");
+  m_ret_l.attr("row.names") = seq(1,ns);
+
+  return(m_ret_l);
+
+
+}
+
+
+//[[Rcpp::export]]
+Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input,const int offset=0){
+
+  SEXP str_sxp(input);
+  const size_t p =input.size();
+  Rcpp::IntegerVector ret(p);
+  auto pp = get_string_ptr(str_sxp);
+  int tresult;
+  std::transform(pp,pp+p,ret.begin(),[&](SEXP x){
+                                       const size_t strl=LENGTH(x);
+                                       const char* chp = CHAR(x);
+                                       const char* beg=chp+offset;
+                                       const char* end=chp+LENGTH( x );
+                                       if(offset>=strl){
+                                         Rcpp::Rcerr<<"For string"<<CHAR(x)<<std::endl;
+                                         Rcpp::Rcerr<<"LEN(x): "<<LENGTH(x)<<std::endl;
+                                         Rcpp::stop("string offset greater than string length");
+                                       }
+
+                                       if(auto [p, ec] = std::from_chars(beg, end, tresult);
+                                          ec == std::errc())
+                                         return tresult;
+                                       return(NA_INTEGER);
+                                     });
+  return(ret);
+}
+
+
+//[[Rcpp::export]]
+Rcpp::IntegerVector fast_str2ascii(Rcpp::StringVector input,int offset=0){
+
+  SEXP str_sxp(input);
+  const size_t p =input.size();
+  Rcpp::IntegerVector ret(p);
+  auto pp = get_string_ptr(str_sxp);
+  std::transform(pp,pp+p,ret.begin(),[&](SEXP x){
+                                       const size_t strl=LENGTH(x);
+                                       const char* chp = CHAR(x);
+                                       const char* beg=chp+offset;
+                                       const char* end=chp+LENGTH( x );
+                                       if(offset>=strl){
+                                         Rcpp::Rcerr<<"For string"<<CHAR(x)<<std::endl;
+                                         Rcpp::Rcerr<<"LEN(x): "<<LENGTH(x)<<std::endl;
+                                         Rcpp::stop("string offset greater than string length");
+                                       }
+
+                                       return static_cast<int>(*beg);
+                                     });
+  return(ret);
+}
 
 
 //[[Rcpp::export]]
@@ -218,7 +312,7 @@ Rcpp::StringVector typeof_h5(const std::string filename,
 }
 
 //[[Rcpp::export]]
-Rcpp::DataFrame info_h5(const Rcpp::StringVector filename, Rcpp::StringVector datapaths){
+Rcpp::List info_h5(const Rcpp::StringVector filename, Rcpp::StringVector datapaths){
   using namespace Rcpp;
   const auto file = HighFive::File(as<std::string>(filename[0]),HighFive::File::ReadOnly);
 
@@ -235,23 +329,26 @@ Rcpp::DataFrame info_h5(const Rcpp::StringVector filename, Rcpp::StringVector da
     auto obj_v = file.getObject(as<std::string>(datapaths(i)));
     if(auto dset = std::get_if<HighFive::DataSet>(&obj_v)){
       auto dsd = dset->getSpace().getDimensions();
-      Rcpp::IntegerVector tr(dsd.begin(),dsd.end());
+      IntegerVector tr(dsd.begin(),dsd.end());
       dim_l[i]=tr;
       types[i]=h2s_T(dset->getDataType())[0];
       disk_size[i] = static_cast<int>(dset->getStorageSize());
       filter_l[i]=wrap_pair(dset->getFilter().get_filter_info(),"name","options");
     }else{
-      dim_l[i]=Rcpp::IntegerVector::create(NA_INTEGER);
+      dim_l[i]=IntegerVector::create(NA_INTEGER);
       types[i]="group";
       disk_size[i]=NA_INTEGER;
       filter_l[i]=NA_INTEGER;
     }
   }
- return DataFrame::create(_["name"]=datapaths,
+  auto m_ret_l = List::create(_["name"]=datapaths,
                           _["type"]=types,
                           _["storage_size"]=disk_size,
                           _["dims"]=dim_l,
                           _["filter"]=filter_l);
+  m_ret_l.attr("class") = StringVector::create("tbl_df","tbl","data.frame");
+  m_ret_l.attr("row.names") = seq(1, num_datasets);
+  return m_ret_l;
 }
 
 

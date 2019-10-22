@@ -1,11 +1,11 @@
 #pragma once
 #define ZSTD_STATIC_LINKING_ONLY
+
 #include <cmath>
 #include <complex>
 #include <iostream>
 #include <iostream>
 #include <numeric>
-
 
 #define STRICT_R_HEADERS
 #include <RcppEigen.h>

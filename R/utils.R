@@ -1,9 +1,18 @@
-.onLoad <- function(libname, pkgname){
+.onLoad <- function(libname, pkgname) {
     pkgconfig::set_config("EigenH5::use_blosc" = has_blosc())
     pkgconfig::set_config("EigenH5::use_lzf" = has_lzf())
     start_blosc()
     # start_singleton()
 }
+
+fix_paths <- function(...) {
+    ret <- stringr::str_replace(normalizePath(paste(..., sep = "/"), mustWork = FALSE), "//", "/")
+    if (length(ret) == 0) {
+        ret <- "/"
+    }
+    return(ret)
+}
+
 
 
 ls_h5 <- function(filename,groupname="/",full_names=FALSE,details=FALSE){
@@ -117,7 +126,7 @@ write_l_h5 <- function(data,filename,datapath,...){
   if(datapath=="/"){
     datapath <- ""
   }
-  purrr::iwalk(datal,~write_h5(filename,normalizePath(paste(datapath,.y,sep="/"),mustWork = F),data = .x))
+  purrr::iwalk(datal,~write_h5(filename,fix_paths(datapath,.y),data = .x))
 }
 
 
@@ -224,15 +233,57 @@ create_mat_l <- function(dff){
 
 
 
-delim2h5 <- function(input_file,output_file,h5_args=list(),...){
-  h5_args[["append"]] <- TRUE
-  wf <- function(x,pos){
-    rlang::exec(write_df_h5,df=x,filename=output_file,!!!h5_args)}
-  readr::read_delim_chunked(file = input_file,callback = readr::SideEffectChunkCallback$new(wf),...)
+#' Convert to HDF5 with a custom callback
+#'
+#' @param input_file
+#' @param output_file
+#' @param h5_args ... args for write_df_h5 unpacked and passed to `callback_fun`
+#' @param callback_fun function with signature matching function(df,filename,datapath,...) (defaults to `write_df_h5`)
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#'
+#' temp_h5 <- fs::file_temp(ext="h5")
+#' delim2h5(readr::readr_example("mtcars.csv"),temp_h5,delim="/")
+#' new_data  <- read_df_h5(temp_h5)
+
+delim2h5 <- function(input_file, output_file, h5_args = list(datapath = "/"), callback_fun = write_df_h5, id_col = NULL, ...){
+    h5_args[["append"]] <- TRUE
+    callback_args <- formalArgs(callback_fun)
+    stopifnot(all.equal(callback_args, formalArgs(write_df_h5)))
+
+    h5_args[["append"]] <- TRUE
+    if (is.null(id_col) ||  isFALSE(id_col)) {
+
+        wf <- function(x, pos)
+            rlang::exec(callback_fun, df = x, filename = output_file, !!!h5_args)
+
+    }else {
+        if (is.character(id_col)) {
+
+            stopifnot(length(id_col) == 1)
+            wf <- function(x, pos) {
+                pos_seq <- seq(from = pos, length.out = nrow(x))
+                rlang::exec(callback_fun,
+                            df = dplyr::mutate(x, {{id_col}} := pos_seq),
+                            filename = output_file, !!!h5_args)
+                }
+
+        }else {
+            stopifnot(isTRUE(id_col))
+            wf <- function(x, pos) {
+                pos_seq <- seq(from = pos, length.out = nrow(x))
+                rlang::exec(callback_fun,
+                            df = dplyr::mutate(x, id_col = pos_seq),
+                            filename = output_file, !!!h5_args)
+                }
+
+        }
+    }
+
+
+  readr::read_delim_chunked(file = input_file, callback = readr::SideEffectChunkCallback$new(wf), ...)
 }
-
-
-
-
-
-

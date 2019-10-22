@@ -117,6 +117,18 @@ create_dataset_h5 <- function(filename, datapath, data, options) {
     .Call(`_EigenH5_create_dataset_h5`, filename, datapath, data, options)
 }
 
+join_ids <- function(index_a, index_b) {
+    .Call(`_EigenH5_join_ids`, index_a, index_b)
+}
+
+fast_str2int <- function(input, offset = 0L) {
+    .Call(`_EigenH5_fast_str2int`, input, offset)
+}
+
+fast_str2ascii <- function(input, offset = 0L) {
+    .Call(`_EigenH5_fast_str2ascii`, input, offset)
+}
+
 link_objects_h5 <- function(filename_from, filename_to, datapath_from, datapath_to) {
     invisible(.Call(`_EigenH5_link_objects_h5`, filename_from, filename_to, datapath_from, datapath_to))
 }

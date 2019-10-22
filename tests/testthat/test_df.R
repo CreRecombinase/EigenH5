@@ -88,6 +88,12 @@ test_that("We can convert mtcars to hdf5",{
   x <- delim2h5(input_file =mtcf ,output_file = tf,delim=",",h5_args=list(datapath="mtcars"))
   check_df <- readr::read_delim(mtcf,delim=",")
   tdf <- read_df_h5(tf,datapath = "mtcars")
-  expect_equal(check_df,tdf)
+  testthat::expect_equal(check_df,tdf)
+  delim2h5(input_file =mtcf ,output_file = tf,delim=",",h5_args=list(datapath="mtcars_id"),id_col = TRUE,chunk_size=5)
+  tdf_id <- read_df_h5(tf,datapath = "mtcars_id")
+  testthat::expect_equal(tdf_id$id_col,1:nrow(check_df))
+  delim2h5(input_file =mtcf ,output_file = tf,delim=",",h5_args=list(datapath="mtcars_idn"),id_col = "IdenT",chunk_size=2)
+  tdf_id2 <- read_df_h5(tf,datapath = "mtcars_idn")
+  testthat::expect_equal(tdf_id2$IdenT,1:nrow(check_df))
 })
 

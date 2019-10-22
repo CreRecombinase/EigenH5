@@ -15,70 +15,54 @@
 #define RANGES_V3_VIEW_UNIQUE_HPP
 
 #include <utility>
+
 #include <meta/meta.hpp>
+
 #include <range/v3/range_fwd.hpp>
-#include <range/v3/utility/functional.hpp>
+
+#include <range/v3/functional/bind_back.hpp>
+#include <range/v3/functional/not_fn.hpp>
 #include <range/v3/utility/static_const.hpp>
 #include <range/v3/view/adjacent_filter.hpp>
-#include <range/v3/view/view.hpp>
 #include <range/v3/view/all.hpp>
+#include <range/v3/view/view.hpp>
 
 namespace ranges
 {
-    inline namespace v3
+    /// \addtogroup group-views
+    /// @{
+    namespace views
     {
-        /// \addtogroup group-views
-        /// @{
-        namespace view
+        struct unique_base_fn
         {
-            struct unique_fn
+            template<typename Rng, typename C = equal_to>
+            constexpr auto operator()(Rng && rng, C pred = {}) const
+                -> CPP_ret(adjacent_filter_view<all_t<Rng>, logical_negate<C>>)( //
+                    requires viewable_range<Rng> && forward_range<Rng> &&
+                        indirect_relation<C, iterator_t<Rng>>)
             {
-            private:
-                friend view_access;
-                template<typename C,
-                         CONCEPT_REQUIRES_(!Range<C>())>
-                static auto bind(unique_fn unique, C pred)
-                RANGES_DECLTYPE_AUTO_RETURN
-                (
-                    std::bind(unique, std::placeholders::_1, protect(std::move(pred)))
-                )
+                return {all(static_cast<Rng &&>(rng)), not_fn(pred)};
+            }
+        };
 
-            public:
-                template<typename Rng, typename C = equal_to>
-                using Concept = meta::and_<
-                    ForwardRange<Rng>,
-                    IndirectRelation<C, iterator_t<Rng>>>;
+        struct unique_fn : unique_base_fn
+        {
+            using unique_base_fn::operator();
 
-                template<typename Rng, typename C = equal_to,
-                         CONCEPT_REQUIRES_(Concept<Rng, C>())>
-                auto operator()(Rng && rng, C pred = {}) const ->
-                adjacent_filter_view<all_t<Rng>, logical_negate<C>>
-                {
-                    return {all(static_cast<Rng &&>(rng)), not_fn(pred)};
-                }
-            #ifndef RANGES_DOXYGEN_INVOKED
-                template<typename Rng, typename C = equal_to,
-                         CONCEPT_REQUIRES_(!Concept<Rng, C>())>
-                void operator()(Rng &&, C = {}) const
-                {
-                    CONCEPT_ASSERT_MSG(ForwardRange<Rng>(),
-                        "The object on which view::unique operates must be a model the "
-                        "ForwardRange concept.");
-                    CONCEPT_ASSERT_MSG(IndirectRelation<C, iterator_t<Rng>>(),
-                        "The value type of the range passed to view::unique must be "
-                        "EqualityComparable or provide a function that can be callable with two arguments "
-                        "of the range's common reference type, and the return type must be "
-                        "convertible to bool.");
-                }
-            #endif
-            };
+            template<typename C>
+            constexpr auto CPP_fun(operator())(C && pred)(const //
+                                                          requires(!range<C>))
+            {
+                return make_view_closure(
+                    bind_back(unique_base_fn{}, static_cast<C &&>(pred)));
+            }
+        };
 
-            /// \relates unique_fn
-            /// \ingroup group-views
-            RANGES_INLINE_VARIABLE(view<unique_fn>, unique)
-        }
-        /// @}
-    }
-}
+        /// \relates unique_fn
+        /// \ingroup group-views
+        RANGES_INLINE_VARIABLE(view_closure<unique_fn>, unique)
+    } // namespace views
+    /// @}
+} // namespace ranges
 
 #endif
