@@ -13,6 +13,7 @@
 #include <set>
 #include <iostream>
 #include <algorithm>
+#include <cstdint>
 
 
 
@@ -54,9 +55,77 @@ Rcpp::List join_ids(Rcpp::IntegerVector index_a,Rcpp::IntegerVector index_b){
   m_ret_l.attr("row.names") = seq(1,ns);
 
   return(m_ret_l);
-
-
 }
+
+
+// template<typename T1, typename... T>
+//  old_sum(int off,T1 s, T... ts){
+//     return s + old_sum(ts...);
+// }
+
+struct snp_p{
+  uint64_t chrom : 5;
+  uint64_t pos :43;
+  uint64_t ref : 8;
+  uint64_t alt : 8;
+} __attribute__((packed));
+
+
+//[[Rcpp::export]]
+Rcpp::NumericVector fast_snp_pos_struct(Rcpp::IntegerVector chrom,Rcpp::NumericVector pos, Rcpp::IntegerVector ascii_ref,Rcpp::IntegerVector ascii_alt){
+
+  const size_t p=chrom.size();
+  Rcpp::NumericVector ret(p);
+  // inline uint32_t PACK(uint8_t c0, uint8_t c1, uint8_t c2, uint8_t c3) {
+//     return (c0 << 24) | (c1 << 16) | (c2 << 8) | c3;
+// }
+
+  static_assert(sizeof(snp_p)==sizeof(double),"packed structure is the size of a double");
+
+  snp_p mp;
+  double *bs = reinterpret_cast<double*>(&mp);
+  for(int i=0; i<p; i++){
+    uint64_t tchrom=chrom(i);
+    uint64_t tpos=static_cast<uint64_t>(pos(i));
+    uint64_t tref=ascii_ref(i)-64;
+    uint64_t talt=ascii_alt(i)-64;
+    mp  = {tchrom,tpos,tref,talt};
+    ret(i)=*bs;
+  }
+  return ret;
+}
+
+
+//[[Rcpp::export]]
+Rcpp::DataFrame snp_struct2df(Rcpp::NumericVector struct_vec){
+
+  using namespace Rcpp;
+  const size_t p=struct_vec.size();
+  IntegerVector chrom(p);
+  NumericVector pos(p);
+  IntegerVector ascii_ref(p);
+  IntegerVector ascii_alt(p);
+
+  snp_p *mp;
+  //  double *bs = reinterpret_cast<double*>(&mp);
+  for(int i=0; i<p; i++){
+    double bs=struct_vec(i);
+    mp=reinterpret_cast<snp_p*>(&bs);
+    chrom(i)=mp->chrom;
+    pos(i)=static_cast<double>(mp->pos);
+    ascii_ref(i)=mp->ref+64 > 255 ? NA_INTEGER : mp->ref+64;
+    ascii_alt(i)=mp->alt+64> 255 ? NA_INTEGER : mp->alt+64;;
+  }
+
+  return DataFrame::create(_["chrom"]=chrom,
+                           _["pos"]=pos,
+                           _["ascii_ref"]=ascii_ref,
+                           _["ascii_alt"]=ascii_alt);
+}
+
+
+
+
 
 
 //[[Rcpp::export]]

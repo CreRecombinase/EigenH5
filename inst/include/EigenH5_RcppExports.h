@@ -381,6 +381,48 @@ namespace EigenH5 {
         return Rcpp::as<Rcpp::List >(rcpp_result_gen);
     }
 
+    inline Rcpp::NumericVector fast_snp_pos_struct(Rcpp::IntegerVector chrom, Rcpp::NumericVector pos, Rcpp::IntegerVector ascii_ref, Rcpp::IntegerVector ascii_alt) {
+        typedef SEXP(*Ptr_fast_snp_pos_struct)(SEXP,SEXP,SEXP,SEXP);
+        static Ptr_fast_snp_pos_struct p_fast_snp_pos_struct = NULL;
+        if (p_fast_snp_pos_struct == NULL) {
+            validateSignature("Rcpp::NumericVector(*fast_snp_pos_struct)(Rcpp::IntegerVector,Rcpp::NumericVector,Rcpp::IntegerVector,Rcpp::IntegerVector)");
+            p_fast_snp_pos_struct = (Ptr_fast_snp_pos_struct)R_GetCCallable("EigenH5", "_EigenH5_fast_snp_pos_struct");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_fast_snp_pos_struct(Shield<SEXP>(Rcpp::wrap(chrom)), Shield<SEXP>(Rcpp::wrap(pos)), Shield<SEXP>(Rcpp::wrap(ascii_ref)), Shield<SEXP>(Rcpp::wrap(ascii_alt)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::NumericVector >(rcpp_result_gen);
+    }
+
+    inline Rcpp::DataFrame snp_struct2df(Rcpp::NumericVector struct_vec) {
+        typedef SEXP(*Ptr_snp_struct2df)(SEXP);
+        static Ptr_snp_struct2df p_snp_struct2df = NULL;
+        if (p_snp_struct2df == NULL) {
+            validateSignature("Rcpp::DataFrame(*snp_struct2df)(Rcpp::NumericVector)");
+            p_snp_struct2df = (Ptr_snp_struct2df)R_GetCCallable("EigenH5", "_EigenH5_snp_struct2df");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_snp_struct2df(Shield<SEXP>(Rcpp::wrap(struct_vec)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::DataFrame >(rcpp_result_gen);
+    }
+
     inline Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input, const int offset = 0) {
         typedef SEXP(*Ptr_fast_str2int)(SEXP,SEXP);
         static Ptr_fast_str2int p_fast_str2int = NULL;

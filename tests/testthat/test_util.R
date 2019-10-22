@@ -154,3 +154,19 @@ test_that("we can reorder stuff using link_objects", {
         expect_equal(retv, tv)
 })
 
+
+
+test_that("crazy bit packing works",{
+        p <- 1e5
+        chrom <- sample(1:23,p,replace=TRUE)
+        pos <- sample(2^43,p,replace=T)
+        ref <- purrr::map_int(sample(c("A","C","T","G",NA_character_),p,replace=T),utf8ToInt)
+        alt <- purrr::map_int(sample(c("A","C","T","G",NA_character_),p,replace=T),utf8ToInt)
+        ret <- fast_snp_pos_struct(chrom,pos,ref,alt)        
+        cdf <- snp_struct2df(ret)
+        expect_equal(cdf$chrom,chrom)
+        expect_equal(cdf$pos,pos)
+        expect_equal(cdf$ascii_ref,ref)
+        expect_equal(cdf$ascii_alt,alt)
+})
+

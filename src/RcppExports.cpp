@@ -757,6 +757,77 @@ RcppExport SEXP _EigenH5_join_ids(SEXP index_aSEXP, SEXP index_bSEXP) {
     UNPROTECT(1);
     return rcpp_result_gen;
 }
+// fast_snp_pos_struct
+Rcpp::NumericVector fast_snp_pos_struct(Rcpp::IntegerVector chrom, Rcpp::NumericVector pos, Rcpp::IntegerVector ascii_ref, Rcpp::IntegerVector ascii_alt);
+static SEXP _EigenH5_fast_snp_pos_struct_try(SEXP chromSEXP, SEXP posSEXP, SEXP ascii_refSEXP, SEXP ascii_altSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type chrom(chromSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type pos(posSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type ascii_ref(ascii_refSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type ascii_alt(ascii_altSEXP);
+    rcpp_result_gen = Rcpp::wrap(fast_snp_pos_struct(chrom, pos, ascii_ref, ascii_alt));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _EigenH5_fast_snp_pos_struct(SEXP chromSEXP, SEXP posSEXP, SEXP ascii_refSEXP, SEXP ascii_altSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_EigenH5_fast_snp_pos_struct_try(chromSEXP, posSEXP, ascii_refSEXP, ascii_altSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
+// snp_struct2df
+Rcpp::DataFrame snp_struct2df(Rcpp::NumericVector struct_vec);
+static SEXP _EigenH5_snp_struct2df_try(SEXP struct_vecSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type struct_vec(struct_vecSEXP);
+    rcpp_result_gen = Rcpp::wrap(snp_struct2df(struct_vec));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _EigenH5_snp_struct2df(SEXP struct_vecSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_EigenH5_snp_struct2df_try(struct_vecSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
 // fast_str2int
 Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input, const int offset);
 static SEXP _EigenH5_fast_str2int_try(SEXP inputSEXP, SEXP offsetSEXP) {
@@ -1479,6 +1550,8 @@ static int _EigenH5_RcppExport_validate(const char* sig) {
         signatures.insert("SEXP(*read_attribute_h5)(const std::string&,std::string)");
         signatures.insert("bool(*create_dataset_h5)(const std::string&,std::string,const RObject&,Rcpp::List)");
         signatures.insert("Rcpp::List(*join_ids)(Rcpp::IntegerVector,Rcpp::IntegerVector)");
+        signatures.insert("Rcpp::NumericVector(*fast_snp_pos_struct)(Rcpp::IntegerVector,Rcpp::NumericVector,Rcpp::IntegerVector,Rcpp::IntegerVector)");
+        signatures.insert("Rcpp::DataFrame(*snp_struct2df)(Rcpp::NumericVector)");
         signatures.insert("Rcpp::IntegerVector(*fast_str2int)(Rcpp::StringVector,const int)");
         signatures.insert("Rcpp::IntegerVector(*fast_str2ascii)(Rcpp::StringVector,int)");
         signatures.insert("void(*link_objects_h5)(Rcpp::StringVector,const std::string,Rcpp::StringVector,Rcpp::StringVector)");
@@ -1522,6 +1595,8 @@ RcppExport SEXP _EigenH5_RcppExport_registerCCallable() {
     R_RegisterCCallable("EigenH5", "_EigenH5_read_attribute_h5", (DL_FUNC)_EigenH5_read_attribute_h5_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_create_dataset_h5", (DL_FUNC)_EigenH5_create_dataset_h5_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_join_ids", (DL_FUNC)_EigenH5_join_ids_try);
+    R_RegisterCCallable("EigenH5", "_EigenH5_fast_snp_pos_struct", (DL_FUNC)_EigenH5_fast_snp_pos_struct_try);
+    R_RegisterCCallable("EigenH5", "_EigenH5_snp_struct2df", (DL_FUNC)_EigenH5_snp_struct2df_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_fast_str2int", (DL_FUNC)_EigenH5_fast_str2int_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_fast_str2ascii", (DL_FUNC)_EigenH5_fast_str2ascii_try);
     R_RegisterCCallable("EigenH5", "_EigenH5_link_objects_h5", (DL_FUNC)_EigenH5_link_objects_h5_try);
@@ -1579,6 +1654,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_EigenH5_read_attribute_h5", (DL_FUNC) &_EigenH5_read_attribute_h5, 2},
     {"_EigenH5_create_dataset_h5", (DL_FUNC) &_EigenH5_create_dataset_h5, 4},
     {"_EigenH5_join_ids", (DL_FUNC) &_EigenH5_join_ids, 2},
+    {"_EigenH5_fast_snp_pos_struct", (DL_FUNC) &_EigenH5_fast_snp_pos_struct, 4},
+    {"_EigenH5_snp_struct2df", (DL_FUNC) &_EigenH5_snp_struct2df, 1},
     {"_EigenH5_fast_str2int", (DL_FUNC) &_EigenH5_fast_str2int, 2},
     {"_EigenH5_fast_str2ascii", (DL_FUNC) &_EigenH5_fast_str2ascii, 2},
     {"_EigenH5_link_objects_h5", (DL_FUNC) &_EigenH5_link_objects_h5, 4},
