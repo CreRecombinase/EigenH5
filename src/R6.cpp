@@ -36,7 +36,7 @@ void  release_group( Rcpp::XPtr<HighFive::Group> p){
 
 //[[Rcpp::export]]
 SEXP get_file_object(Rcpp::XPtr<HighFive::File> f, const std::string object_name){
-  using obj_var=boost::variant<HighFive::DataSet,HighFive::Group>;
+  using obj_var=std::variant<HighFive::DataSet,HighFive::Group>;
   return(Rcpp::XPtr<obj_var>(new obj_var(f->getObject(Path(object_name)))));
 }
 //[[Rcpp::export]]
@@ -48,20 +48,3 @@ SEXP get_group(Rcpp::XPtr<HighFive::File> f, const std::string object_name){
   return(Rcpp::XPtr<HighFive::Group>(new HighFive::Group(f->getGroup(Path(object_name)))));
 }
 
-
-
-
-  
-  
-
-
-
-
-
-
-
-
-// bool xptr_release( XPtr< std::vector<int> > p) {
-//     p.release();
-//     return !p;
-// }

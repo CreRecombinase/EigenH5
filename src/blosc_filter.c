@@ -13,6 +13,8 @@
 #ifdef USE_BLOSC
 #include "blosc_filter.h"
 #include "hdf5.h"
+
+#include <H5Epubgen.h>
 #include <string.h>
 
 
@@ -55,7 +57,7 @@ int register_blosc(char **version, char **date){
 
     retval = H5Zregister(&filter_class);
     if(retval<0){
-        PUSH_ERR("register_blosc", H5E_CANTREGISTER, "Can't register Blosc filter");
+        PUSH_ERR("register_blosc", retval, "Can't register Blosc filter");
     }
     if (version != NULL && date != NULL) {
         *version = strdup(BLOSC_VERSION_STRING);
@@ -216,7 +218,7 @@ size_t blosc_filter(unsigned flags, size_t cd_nelmts,
       goto failed;
     }
 
-    blosc_set_compressor(compname);
+
     status = blosc_compress(clevel, doshuffle, typesize, nbytes,
                             *buf, outbuf, nbytes);
     if (status < 0) {

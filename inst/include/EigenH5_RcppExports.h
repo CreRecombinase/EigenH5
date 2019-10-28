@@ -67,6 +67,48 @@ namespace EigenH5 {
         return Rcpp::as<size_t >(rcpp_result_gen);
     }
 
+    inline bool has_blosc() {
+        typedef SEXP(*Ptr_has_blosc)();
+        static Ptr_has_blosc p_has_blosc = NULL;
+        if (p_has_blosc == NULL) {
+            validateSignature("bool(*has_blosc)()");
+            p_has_blosc = (Ptr_has_blosc)R_GetCCallable("EigenH5", "_EigenH5_has_blosc");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_has_blosc();
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<bool >(rcpp_result_gen);
+    }
+
+    inline bool has_lzf() {
+        typedef SEXP(*Ptr_has_lzf)();
+        static Ptr_has_lzf p_has_lzf = NULL;
+        if (p_has_lzf == NULL) {
+            validateSignature("bool(*has_lzf)()");
+            p_has_lzf = (Ptr_has_lzf)R_GetCCallable("EigenH5", "_EigenH5_has_lzf");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_has_lzf();
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<bool >(rcpp_result_gen);
+    }
+
     inline void start_blosc() {
         typedef SEXP(*Ptr_start_blosc)();
         static Ptr_start_blosc p_start_blosc = NULL;
@@ -255,6 +297,27 @@ namespace EigenH5 {
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
+    inline SEXP read_R_attribute_h5(const std::string& filename, std::string datapath) {
+        typedef SEXP(*Ptr_read_R_attribute_h5)(SEXP,SEXP);
+        static Ptr_read_R_attribute_h5 p_read_R_attribute_h5 = NULL;
+        if (p_read_R_attribute_h5 == NULL) {
+            validateSignature("SEXP(*read_R_attribute_h5)(const std::string&,std::string)");
+            p_read_R_attribute_h5 = (Ptr_read_R_attribute_h5)R_GetCCallable("EigenH5", "_EigenH5_read_R_attribute_h5");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_read_R_attribute_h5(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<SEXP >(rcpp_result_gen);
+    }
+
     inline SEXP read_attribute_h5(const std::string& filename, std::string datapath) {
         typedef SEXP(*Ptr_read_attribute_h5)(SEXP,SEXP);
         static Ptr_read_attribute_h5 p_read_attribute_h5 = NULL;
@@ -295,6 +358,48 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("try-error"))
             throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<bool >(rcpp_result_gen);
+    }
+
+    inline Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input, const int offset = 0, const int na_val = NA_INTEGER) {
+        typedef SEXP(*Ptr_fast_str2int)(SEXP,SEXP,SEXP);
+        static Ptr_fast_str2int p_fast_str2int = NULL;
+        if (p_fast_str2int == NULL) {
+            validateSignature("Rcpp::IntegerVector(*fast_str2int)(Rcpp::StringVector,const int,const int)");
+            p_fast_str2int = (Ptr_fast_str2int)R_GetCCallable("EigenH5", "_EigenH5_fast_str2int");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_fast_str2int(Shield<SEXP>(Rcpp::wrap(input)), Shield<SEXP>(Rcpp::wrap(offset)), Shield<SEXP>(Rcpp::wrap(na_val)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::IntegerVector >(rcpp_result_gen);
+    }
+
+    inline Rcpp::IntegerVector fast_str2ascii(Rcpp::StringVector input, int offset = 0) {
+        typedef SEXP(*Ptr_fast_str2ascii)(SEXP,SEXP);
+        static Ptr_fast_str2ascii p_fast_str2ascii = NULL;
+        if (p_fast_str2ascii == NULL) {
+            validateSignature("Rcpp::IntegerVector(*fast_str2ascii)(Rcpp::StringVector,int)");
+            p_fast_str2ascii = (Ptr_fast_str2ascii)R_GetCCallable("EigenH5", "_EigenH5_fast_str2ascii");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_fast_str2ascii(Shield<SEXP>(Rcpp::wrap(input)), Shield<SEXP>(Rcpp::wrap(offset)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::IntegerVector >(rcpp_result_gen);
     }
 
     inline void link_objects_h5(Rcpp::StringVector filename_from, const std::string filename_to, Rcpp::StringVector datapath_from, Rcpp::StringVector datapath_to) {
@@ -482,6 +587,27 @@ namespace EigenH5 {
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
+    inline int ArrayTypeSize(const std::string filename, std::string dataname) {
+        typedef SEXP(*Ptr_ArrayTypeSize)(SEXP,SEXP);
+        static Ptr_ArrayTypeSize p_ArrayTypeSize = NULL;
+        if (p_ArrayTypeSize == NULL) {
+            validateSignature("int(*ArrayTypeSize)(const std::string,std::string)");
+            p_ArrayTypeSize = (Ptr_ArrayTypeSize)R_GetCCallable("EigenH5", "_EigenH5_ArrayTypeSize");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_ArrayTypeSize(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(dataname)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<int >(rcpp_result_gen);
+    }
+
     inline bool isDataSet(const std::string filename, std::string dataname) {
         typedef SEXP(*Ptr_isDataSet)(SEXP,SEXP);
         static Ptr_isDataSet p_isDataSet = NULL;
@@ -545,11 +671,11 @@ namespace EigenH5 {
         return Rcpp::as<Rcpp::StringVector >(rcpp_result_gen);
     }
 
-    inline Rcpp::StringVector typeof_h5(const std::string& filename, const std::string& datapath) {
+    inline Rcpp::StringVector typeof_h5(const std::string filename, const std::string datapath) {
         typedef SEXP(*Ptr_typeof_h5)(SEXP,SEXP);
         static Ptr_typeof_h5 p_typeof_h5 = NULL;
         if (p_typeof_h5 == NULL) {
-            validateSignature("Rcpp::StringVector(*typeof_h5)(const std::string&,const std::string&)");
+            validateSignature("Rcpp::StringVector(*typeof_h5)(const std::string,const std::string)");
             p_typeof_h5 = (Ptr_typeof_h5)R_GetCCallable("EigenH5", "_EigenH5_typeof_h5");
         }
         RObject rcpp_result_gen;
@@ -564,6 +690,27 @@ namespace EigenH5 {
         if (rcpp_result_gen.inherits("try-error"))
             throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
         return Rcpp::as<Rcpp::StringVector >(rcpp_result_gen);
+    }
+
+    inline Rcpp::List info_h5(const Rcpp::StringVector filename, Rcpp::StringVector datapaths) {
+        typedef SEXP(*Ptr_info_h5)(SEXP,SEXP);
+        static Ptr_info_h5 p_info_h5 = NULL;
+        if (p_info_h5 == NULL) {
+            validateSignature("Rcpp::List(*info_h5)(const Rcpp::StringVector,Rcpp::StringVector)");
+            p_info_h5 = (Ptr_info_h5)R_GetCCallable("EigenH5", "_EigenH5_info_h5");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_info_h5(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapaths)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<Rcpp::List >(rcpp_result_gen);
     }
 
     inline Rcpp::DataFrame file_acc_ct(const std::string filename) {

@@ -1,18 +1,18 @@
 Package: EigenH5
 Type: Package
 Title: Read and write R objects using HDF5
-Version: 1.2
+Version: 1.3
 Date: 2017-08-03
 Author: Nicholas Knoblauch
 Maintainer: Nicholas Knoblauch <nwknoblauch@gmail.com>
 Description: Read and write R objects using zstd+HDF5. Also contains a C++ interface for using with other packages. The C++ interface can handle the reading/writing/converting between column-major matrices (as in R/fortran) and row-major matrices (as in HDF5) 
 License: What license is it under?
 biocViews:
-Imports: Rcpp (>= 0.12.12), RcppEigen (>= 0.3.3.3.0),BH,dplyr,progress,tidyr,purrr,magrittr,zstdr,R6,fs,zstdr
-LinkingTo: Rcpp, RcppEigen,RcppProgress,testthat,Rhdf5lib,rzstdlib,BH
-SystemRequirements: C++11, HDF5 (>= 1.8.13), blosc
+Imports: Rcpp (>= 0.12.12), RcppEigen (>= 0.3.3.3.0),BH,dplyr,progress,tidyr,stringr,purrr,magrittr,fs,readr,rlang
+LinkingTo: Rcpp, RcppEigen,RcppProgress,testthat,BH,xtensor
+SystemRequirements: C++17,libhdf5,libzstd
 Suggests: testthat,
     knitr,
     rmarkdown
 VignetteBuilder: knitr
-RoxygenNote: 6.1.1
+RoxygenNote: 6.1.99.9001

@@ -1,9 +1,91 @@
 #include "EigenH5.h"
 //[[depends(RcppEigen)]]
-//[[Rcpp::plugins(cpp11)]]
+//[[depends(RcppParallel)]]
+//[[Rcpp::plugins(cpp17)]]
 #include <array>
-
 // [[Rcpp::interfaces(r, cpp)]]
+#include "rutils/rutils.hpp"
+#if __has_include(<charconv>)
+#include <charconv>
+#else
+#include <cstdio>
+#endif
+#include <set>
+#include <iostream>
+#include <algorithm>
+#include <cstdint>
+
+
+
+
+//[[Rcpp::export]]
+Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input,const int offset=0,const int na_val=NA_INTEGER){
+
+  SEXP str_sxp(input);
+  const size_t p =input.size();
+  Rcpp::IntegerVector ret(p);
+  auto pp = get_string_ptr(str_sxp);
+  int tresult;
+  std::transform(pp,pp+p,ret.begin(),[&](SEXP x){
+                                       if(x==R_NaString)
+                                         return na_val;
+                                       const size_t strl=LENGTH(x);
+                                       const char* chp = CHAR(x);
+                                       const char* beg=chp+offset;
+                                       const char* end=chp+LENGTH( x );
+                                       if(offset>=strl){
+                                         // Rcpp::Rcerr<<"For string"<<CHAR(x)<<std::endl;
+                                         // Rcpp::Rcerr<<"LEN(x): "<<LENGTH(x)<<std::endl;
+                                         // Rcpp::Rcerr<<"string offset greater than string length"<<std::endl;
+                                         return na_val;
+                                       }
+
+#if __has_include(<charconv>)
+                                       if(auto [p, ec] = std::from_chars(beg, end, tresult);
+                                          ec == std::errc())
+                                         return tresult;
+#else
+                                       if(sscanf (beg,"%d",&tresult)>0)
+                                         return(tresult);
+#endif
+                                       return (na_val);
+
+
+                                     });
+  return(ret);
+}
+
+
+
+//[[Rcpp::export]]
+Rcpp::IntegerVector fast_str2ascii(Rcpp::StringVector input,int offset=0){
+
+  SEXP str_sxp(input);
+  const size_t p =input.size();
+  Rcpp::IntegerVector ret(p);
+  auto pp = get_string_ptr(str_sxp);
+  std::transform(pp,pp+p,ret.begin(),[&](SEXP x){
+                                       if(x==R_NaString)
+                                         return NA_INTEGER;
+                                       const size_t strl=LENGTH(x);
+                                       const char* chp = CHAR(x);
+                                       const char* beg=chp+offset;
+                                       const char* end=chp+LENGTH( x );
+                                       if(offset>=strl){
+                                         // Rcpp::Rcerr<<"For string"<<CHAR(x)<<"\n";
+                                         // Rcpp::Rcerr<<"LEN(x): "<<LENGTH(x)<<std::endl;
+                                         // Rcpp::Rcerr<<"string offset greater than string length";
+                                         return(NA_INTEGER);
+                                       }
+
+                                       return static_cast<int>(*beg);
+                                     });
+  return(ret);
+}
+
+
+
+
 
 
 
@@ -43,7 +125,6 @@ void create_file_h5(const std::string filename){
 Rcpp::IntegerVector dataset_chunks(const std::string filename,
 				   const std::string datapath){
   using namespace HighFive;
-  bool ret = false;
   HighFive::File file(filename,HighFive::File::ReadOnly);
   return(Rcpp::wrap(file.getDataSet(Path(datapath)).getFilter().get_chunksizes()));
 }
@@ -78,8 +159,9 @@ Rcpp::List get_datset_filter(const std::string filename, const std::string datap
   HighFive::File file(filename,HighFive::File::ReadOnly);
   auto filt_pair = file.getDataSet(Path(datapath)).getFilter().get_filter_info();
   using namespace Rcpp;
-  return(List::create(_["name"]=wrap(filt_pair.first),
-		      _["options"]=wrap(filt_pair.second)));
+  return wrap_pair(filt_pair,"name","options");
+  // return(List::create(_["name"]=wrap(filt_pair.first),
+  //       	      _["options"]=wrap(filt_pair.second)));
 }
 
 
@@ -115,6 +197,15 @@ bool isObject(const std::string filename, std::string dataname) {
   ret = file.getGroup(Path("/")).exist(Path("/" + dataname));
   return (ret);
 }
+
+
+//[[Rcpp::export]]
+int ArrayTypeSize(const std::string filename, std::string dataname) {
+
+  auto ret = HighFive::File(filename,HighFive::File::ReadOnly).getGroup(Path("/")).getDataSet(Path("/" + dataname)).getDataType().n_elem();
+  return (ret);
+}
+
 
 //[[Rcpp::export]]
 bool isDataSet(const std::string filename, std::string dataname){
@@ -152,6 +243,8 @@ bool isGroup(const std::string filename, std::string dataname){
   return(ret);
 }
 
+
+
 //[[Rcpp::export("ls_h5_exp")]]
 Rcpp::StringVector ls_h5(const std::string filename,Rcpp::CharacterVector groupname = Rcpp::CharacterVector::create("/"),
                          bool full_names=false){
@@ -180,9 +273,14 @@ Rcpp::StringVector ls_h5(const std::string filename,Rcpp::CharacterVector groupn
 
   return (retvec);
 }
+
+
+
+
+
 //[[Rcpp::export]]
-Rcpp::StringVector typeof_h5(const std::string &filename,
-                   const std::string &datapath){
+Rcpp::StringVector typeof_h5(const std::string filename,
+                   const std::string datapath){
 
 
   using namespace HighFive;
@@ -192,66 +290,50 @@ Rcpp::StringVector typeof_h5(const std::string &filename,
   }
   HighFive::File file(filename,HighFive::File::ReadOnly);
   auto arg = file.getDataSet(Path(datapath));
-  SEXPTYPE h2t = h2r_T(arg.getDataType().getId());
-  Rcpp::StringVector ret;
-  if (h2t == REALSXP){
-    ret = Rcpp::StringVector::create("double");
-  }else{
-    if (h2t == INTSXP){
-      ret = Rcpp::StringVector::create("integer");
-    }else{
-      if(h2t == STRSXP){
-	ret = Rcpp::StringVector::create("character");
-      }else{
-	ret = Rcpp::StringVector::create("NULL");
-      }
-    }
-  }
-
-  return(ret);
+  return(h2s_T(arg.getDataType()));
 }
 
 
-// 
-// Rcpp::IntegerVector subset_h5(const std::string	filename, Rcpp::DataFrame check,const std::string path_prefix="/",const int chunksize=5000){
-// 
-//   using namespace HighFive;
-// 
-// 
-//   HighFive::File file(filename,HighFive::File::ReadOnly);
-// 
-//   auto group=file.getGroup(path_prefix);
-//   auto test_names = df.attr("names");
-//   std::map<std::string,DataSet> ds;
-//   size_t op=0;
-//   for(auto it : test_names){
-//     if( auto dsn = group.openDataSet(it)){
-//       auto p_d = dsn->getDataDimensions();
-//       if(p_d.size()!=1){
-// 	if(p_d.[1]!=1){
-// 	  Rcpp::Rcerr<<"In datapath"<<path_prefix<<"/"<<it<<std::endl;
-// 	  Rcpp::Rcerr<<"dataset is of dimensions:";
-// 	  for( auto ip : p_d){
-// 	    Rcpp::Rcerr<<ip<<"\n";
-// 	  }
-// 
-// 	  Rcpp::stop("Dataset must be vector or one column matrix");
-// 	}
-//       }
-//       if(op=0){
-// 	op=p_d[0];
-//       }
-//       if(p_d[0]!=op){
-// 	Rcpp::Rcerr<<"In datapath"<<path_prefix<<"/"<<it<<std::endl;
-// 	Rcpp::Rcerr<<"data is of length "<<p_d[0]<<std::endl;
-// 	Rcpp::stop("datasets must all be of the same dimension!");
-//       }
-//       ds.insert(it,*dsn);
-//     }
-//   }
-// 
-// 
-// }
+
+//[[Rcpp::export]]
+Rcpp::List info_h5(const Rcpp::StringVector filename, Rcpp::StringVector datapaths){
+  using namespace Rcpp;
+  const auto file = HighFive::File(as<std::string>(filename[0]),HighFive::File::ReadOnly);
+
+  const size_t num_datasets = datapaths.size();
+  std::vector<HighFive::DataSet> dsets;
+
+  List dim_l(num_datasets);
+  StringVector types(num_datasets);
+  IntegerVector disk_size(num_datasets);
+  List filter_l(num_datasets);
+
+  //  std::unordered_set<size_t> ds_sizes;
+  for(int i=0; i<num_datasets;i++){
+    auto obj_v = file.getObject(as<std::string>(datapaths(i)));
+    if(auto dset = std::get_if<HighFive::DataSet>(&obj_v)){
+      auto dsd = dset->getSpace().getDimensions();
+      IntegerVector tr(dsd.begin(),dsd.end());
+      dim_l[i]=tr;
+      types[i]=h2s_T(dset->getDataType())[0];
+      disk_size[i] = static_cast<int>(dset->getStorageSize());
+      filter_l[i]=wrap_pair(dset->getFilter().get_filter_info(),"name","options");
+    }else{
+      dim_l[i]=IntegerVector::create(NA_INTEGER);
+      types[i]="group";
+      disk_size[i]=NA_INTEGER;
+      filter_l[i]=NA_INTEGER;
+    }
+  }
+  auto m_ret_l = List::create(_["name"]=datapaths,
+                          _["type"]=types,
+                          _["storage_size"]=disk_size,
+                          _["dims"]=dim_l,
+                          _["filter"]=filter_l);
+  m_ret_l.attr("class") = StringVector::create("tbl_df","tbl","data.frame");
+  m_ret_l.attr("row.names") = seq(1, num_datasets);
+  return m_ret_l;
+}
 
 
 inline bool exists_file (const std::string& name) {
@@ -297,7 +379,6 @@ Rcpp::DataFrame file_acc_ct(const std::string filename){
 
   }
 }
-
 
 
 //[[Rcpp::export]]
@@ -359,6 +440,3 @@ void concat_mats(const std::string newfile, const std::string newpath, Rcpp::Lis
   H5Dclose(dset);
 
 }
-
-
-

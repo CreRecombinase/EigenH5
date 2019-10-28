@@ -7,7 +7,7 @@
 #include <memory>
 
 
-
+#define EIGEN_RUNTIME_NO_MALLOC
 
 // template<typename T>
 // class DataHandle{
@@ -26,6 +26,8 @@ class DataQueue{
 public:
   std::vector< DatasetSelection<Dims> >	selections;
 private:
+
+  // Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> data_buffer;
   FileManager<isReadOnly> &f_map;
   std::unordered_map<std::string,std::shared_ptr<HighFive::DataSet> > dataset_map;
   std::vector<std::string> file_selections;
@@ -47,6 +49,7 @@ public:
 								f_map(f_map_){
     selections.reserve(num_selections);
     file_selections.reserve(num_selections);
+    // size_t max_dims=0;
     for(int i=0; i<num_selections;i++){
       auto fn =	get_list_scalar<std::string>(options(i),"filename");
       auto dn =	get_list_scalar<std::string>(options(i),"datapath");
@@ -55,11 +58,17 @@ public:
       }
       auto td = get_dataset(*fn,*dn);
       std::vector<size_t> tdims	= td->getDataDimensions();
-      std::array<size_t,Dims> a_dims;
-      std::copy_n(tdims.begin(),Dims,a_dims.begin());
-      selections.push_back(DatasetSelection<Dims>::ProcessList(options(i),a_dims));
-      file_selections.push_back(*fn+*dn);
+      std::array<size_t, Dims> a_dims;
+      std::copy_n(tdims.begin(), Dims, a_dims.begin());
+       selections.push_back(
+          DatasetSelection<Dims>::ProcessList(options(i), a_dims));
+      // size_t tsize_dim = std::accumulate(dsl.dataset_dimensions.begin(),dsl.dataset_dimensions.end(),1,std::multiplies<size_t>());
+      // if (tsize_dim > max_dims) {
+      //   max_dims = tsize_dim;
+      // }
+      file_selections.push_back(*fn + *dn);
     }
+    // data_buffer.resize(max_dims);
   }
   std::vector<std::array<size_t,Dims> > get_selection_dims() const{
     std::vector<std::array<size_t,Dims> > retvec(num_selections);
@@ -91,12 +100,32 @@ public:
     auto n_elem = file_sel.getDataDimensions();
     const size_t elem_total= std::accumulate(n_elem.begin(),n_elem.end(),1,std::multiplies<size_t>());
     datamat.resize(n_elem[0],n_elem[1]);
+  
     Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,Options> > retd(datamat.data(),n_elem[0],n_elem[1]);
     data_sel.readEigen(file_sel,retd);
     if(doTranspose){
       datamat.transposeInPlace();
     }
   }
+  // template<int Options = Eigen::ColMajor>
+  // Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> >readMat(const size_t i,bool doTranspose=false){
+  // 
+  //   auto data_r = get_index(i);
+  //   auto &dataset = data_r.first;
+  //   auto &data_sel = data_r.second;
+  // 
+  //   auto file_sel = data_sel.makeSelection(*dataset);
+  //   auto n_elem = file_sel.getDataDimensions();
+  //   const size_t elem_total= std::accumulate(n_elem.begin(),n_elem.end(),1,std::multiplies<size_t>());
+  // 
+  //   Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,Options> > retd(data_buffer.data(),n_elem[0],n_elem[1]);
+  //   data_sel.readEigen(file_sel,retd);
+  //   if (doTranspose) {
+  //     retd.transposeInPlace();
+  //   }
+  //   return (retd);
+  // }
+
   void readVector(const size_t i,Eigen::Matrix<T,Eigen::Dynamic,1> &datamat){
 
     auto data_r = get_index(i);
@@ -110,7 +139,23 @@ public:
     Eigen::Map<Eigen::Matrix<T,Eigen::Dynamic,1> > retd(datamat.data(),n_elem[0]);
     data_sel.readEigen(file_sel,retd);
   }
-  
+
+  // Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, 1>>  readVector(const size_t i) {
+  // 
+  //   auto data_r = get_index(i);
+  //   auto &dataset = data_r.first;
+  //   auto &data_sel = data_r.second;
+  // 
+  //   auto file_sel = data_sel.makeSelection(*dataset);
+  //   auto n_elem = file_sel.getDataDimensions();
+  //   const size_t elem_total = std::accumulate(n_elem.begin(), n_elem.end(), 1,
+  //                                             std::multiplies<size_t>());
+  //   Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, 1>> retd(data_buffer.data(),
+  //                                                        n_elem[0]);
+  //   data_sel.readEigen(file_sel, retd);
+  //   return (retd);
+  // }
+
   template<int Options = Eigen::ColMajor>
   void writeMat(const size_t i,Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic,Options>  &retmat){
     static_assert(isReadOnly ==false,"cannot write to a readOnly DataQueue!");

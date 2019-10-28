@@ -2,6 +2,7 @@
 #include "zstd/zstd_h5plugin.h"
 #include "zstd/zstd.h"
 #include <stddef.h>
+#include <H5Epubgen.h>
 #define ZSTD_FILTER 32015
 #define PUSH_ERR(func, minor, str, ...) H5Epush(H5E_DEFAULT, __FILE__, func, __LINE__, H5E_ERR_CLS, H5E_PLINE, minor, str, ##__VA_ARGS__)
 
@@ -29,7 +30,7 @@ int register_zstd(void){
 
     retval = H5Zregister(&filter_class);
     if(retval<0){
-        PUSH_ERR("register_zstd", H5E_CANTREGISTER, "Can't register zstd filter");
+        PUSH_ERR("register_zstd", retval, "Can't register zstd filter");
     }
     return retval;
 }

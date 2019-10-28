@@ -1,5 +1,7 @@
 context("metadata/utilities")
 
+
+
 test_that("Can get back chunksize", {
         tv <- sample(1:100, 10)
         tm <- matrix(1:9, 3, 3)
@@ -11,7 +13,7 @@ test_that("Can get back chunksize", {
         write_matrix_h5(filename = tf, datapath = "ltestm", data = ltm)
         dataset_chunks(tf, "ltestm")
 
-        # ltv <- rep(42,
+
 
         expect_equal(dataset_chunks(tf, "testm"), c(3, 3))
         # Verified using h5ls -rv
@@ -37,6 +39,26 @@ test_that("I can create an extendable dataset and extend it", {
         expect_equal(get_dims_h5(tf, "/test"), c(5L, 6L))
 })
 
+
+
+
+test_that("fast conversion works", {
+        letter_d <- sample(letters,100,replace=T)
+        int_d <- sample(as.character(1:100),100,replace=TRUE)
+        ascii_i <- purrr::map_int(letter_d,utf8ToInt)
+        int_i <- as.integer(int_d)
+        
+        testthat::expect_equal(fast_str2ascii(letter_d),ascii_i)
+        testthat::expect_equal(fast_str2int(int_d),int_i)
+        
+        for(i in 1:10){
+                testthat::expect_equal(fast_str2ascii(paste0(paste0(rep("p",i),collapse=""),letter_d),offset = i),ascii_i)
+                testthat::expect_equal(fast_str2int(paste0(paste0(rep("p",i),collapse=""),int_d),offset = i),int_i)
+        }
+        
+        
+        
+})
 
 test_that("We can write a vector", {
         expect_true(EigenH5::write_vector_h5(numeric(3), tempfile(), "test"))
@@ -131,3 +153,7 @@ test_that("we can reorder stuff using link_objects", {
         retv <- read_vector_h5(ntf, "/testg/test")
         expect_equal(retv, tv)
 })
+
+
+        
+

@@ -1,4 +1,5 @@
 #include "EigenH5.h"
+#include "highfive/H5DataSet.hpp"
 //[[depends(RcppEigen)]]
 //[[Rcpp::plugins(cpp11)]]
 // [[Rcpp::depends(RcppProgress)]]
@@ -29,30 +30,39 @@ template<> struct r2cpp_t<STRSXP>{
 };
 
 
-SEXPTYPE h2r_T(hid_t htype){
+SEXPTYPE h2r_T(const HighFive::DataType htype){
 
-  Eigen::Triplet<double,typename Eigen::SparseMatrix<double>::StorageIndex > Trip;
-  auto ht = H5Tget_class(htype);
-  if(ht==H5T_INTEGER){
-    //Rcpp::Rcout<<"int"<<std::endl;
+  using namespace HighFive;
+  if(htype.same_class(AtomicType<int>()))
     return(INTSXP);
-  }
-  if(ht==H5T_FLOAT){
-    //Rcpp::Rcout<<"double"<<std::endl;
+  if(htype.same_class(AtomicType<float>()))
     return(REALSXP);
-  }
-  if(ht==H5T_NATIVE_HBOOL){
-    //Rcpp::Rcout<<"BOOL"<<std::endl;
+  if(htype.same_class(AtomicType<bool>()))
     return(LGLSXP);
-  }
-  if(ht==H5T_STRING){
-    //Rcpp::Rcout<<"string"<<std::endl;
+  if(htype.same_class(AtomicType<std::string>()))
     return(STRSXP);
-  }
-  // Rcpp::Rcout<<"NIL"<<std::endl;
 
+  Rcpp::Rcerr<<"Couldn't find matching datatype"<<std::endl;
   return(NILSXP);
 }
+
+
+Rcpp::StringVector h2s_T(const HighFive::DataType htype){
+
+  using namespace HighFive;
+  if(htype.same_class(AtomicType<int>()))
+    return("integer");
+  if(htype.same_class(AtomicType<float>()))
+    return("double");
+  if(htype.same_class(AtomicType<bool>()))
+    return("logical");
+  if(htype.same_class(AtomicType<std::string>()))
+    return("character");
+
+  return(NA_STRING);
+}
+
+
 
 using namespace Rcpp;
 
@@ -151,16 +161,18 @@ void write_elem_m_h5(HighFive::Selection &file_sel,
 
 
 
-template <typename Derivate>
-SEXP read_attribute(const Derivate der,const std::string attribute_name){
+
+
+
+SEXP read_attribute(const HighFive::DataSet &der,const std::string attribute_name){
 
   auto attr = der.getAttribute(attribute_name);
-  attr.getDataType().getId();
+
   std::vector<size_t> attr_dims = attr.getSpace().getDimensions();
   if(attr_dims.size()>1){
     Rcpp::stop("Can currently only read	vector and scalar attributes");
   }
-  auto my_t = h2r_T(attr.getDataType().getId());
+  auto my_t = h2r_T(attr.getDataType());
   switch(my_t){
   case INTSXP:{
     std::vector<int> retv(attr_dims.front());
@@ -191,6 +203,52 @@ SEXP read_attribute(const Derivate der,const std::string attribute_name){
   }
   }
 }
+
+SEXP read_attribute(const HighFive::Group &der,const std::string attribute_name){
+
+  auto attr = der.getAttribute(attribute_name);
+
+  std::vector<size_t> attr_dims = attr.getSpace().getDimensions();
+  if(attr_dims.size()>1){
+    Rcpp::stop("Can currently only read	vector and scalar attributes");
+  }
+  auto my_t = h2r_T(attr.getDataType());
+  switch(my_t){
+  case INTSXP:{
+    std::vector<int> retv(attr_dims.front());
+    attr.read(retv);
+    return(Rcpp::wrap(retv));
+    break;
+  }
+  case REALSXP: {
+    std::vector<double> retv(attr_dims.front());
+    attr.read(retv);
+    return(Rcpp::wrap(retv));
+    break;
+  }
+  case STRSXP: {
+    std::vector<std::string> retv(attr_dims.front());
+    attr.read(retv);
+    return(Rcpp::wrap(retv));
+    break;
+  }
+  default: {
+    warning(
+	    "Invalid SEXPTYPE %d.\n",
+	    my_t
+	    );
+    Rcpp::Rcerr<<attribute_name<<" has type that can't be read"<<std::endl;
+    Rcpp::stop("Can't read type");
+    return R_NilValue;
+  }
+  }
+}
+
+
+
+
+
+
 
 template <typename Derivate>
 void write_attribute(Derivate &der,const std::string attribute_name,const Rcpp::RObject data){
@@ -267,7 +325,12 @@ void write_elem_v_h5(HighFive::Selection &file_sel,
 }
 
 
-int longest_string_size(Rcpp::StringVector input,const int min_size=255){
+int longest_string_size(Rcpp::StringVector input,int min_size=255){
+
+  #ifdef DEBUG
+  min_size=0;
+  #endif
+
 
   using input_elem = decltype(input.begin());
   int ret_size=0;
@@ -281,11 +344,33 @@ int longest_string_size(Rcpp::StringVector input,const int min_size=255){
   return (std::max(ret_size, min_size)+1);
 }
 
+
+
+int longest_string_size(std::vector<std::string> input,int min_size=255){
+
+  #ifdef DEBUG
+  min_size=0;
+  #endif
+
+
+  int ret_size=0;
+  if(input.begin()!=input.end()){
+    ret_size = std::max_element(input.begin(), input.end(),
+                                [](std::string& a, std::string& b) {
+                                  return a.size() < b.size();
+                                })->size();
+  }
+  return (std::max(ret_size, min_size)+1);
+}
+
+
+
+
 HighFive::DataSet create_dataset(HighFive::Group &group,
 				 const Path &dataname,
 				 const Rcpp::RObject &data,
 				 HighFive::DataSpace &space,
-				 HighFive::Filter &filter){
+				 HighFive::Filter &filter,int min_string_size=255){
   using namespace HighFive;
   auto my_t = data.sexp_type();
   switch (my_t){
@@ -296,7 +381,7 @@ HighFive::DataSet create_dataset(HighFive::Group &group,
     return(group.createDataSet(dataname, space, HighFive::AtomicType<double>(), filter));
   }
   case STRSXP: {
-    int data_size = longest_string_size(Rcpp::as<Rcpp::StringVector>(data));
+    int data_size = longest_string_size(Rcpp::as<Rcpp::StringVector>(data),min_string_size);
     return (group.createDataSet(
         dataname, space, HighFive::AtomicType<std::string>(data_size), filter));
   }
@@ -310,14 +395,18 @@ HighFive::DataSet create_dataset(HighFive::Group &group,
   }
 }
 
-SEXPTYPE typeof_h5_dset(HighFive::DataSet &dset){
+
+
+
+
+SEXPTYPE typeof_h5_dset(const HighFive::DataSet &dset){
   using namespace HighFive;
-  return(h2r_T(dset.getDataType().getId()));
+  return(h2r_T(dset.getDataType()));
 }
 
 SEXPTYPE typeof_h5_attr(HighFive::Attribute &attr){
   using namespace HighFive;
-  return(h2r_T(attr.getDataType().getId()));
+  return(h2r_T(attr.getDataType()));
 }
 
 std::vector<size_t> dataset_dims(std::string filename,
@@ -326,6 +415,28 @@ std::vector<size_t> dataset_dims(std::string filename,
 
   return(HighFive::File(filename,HighFive::File::ReadOnly).getDataSet(root_path(datapath)).getDataDimensions());
 }
+
+
+// Rcpp::RawVector	read_raw_chunk(std::string filename,
+// 			       std::string datapath,
+// 			       Rcpp::IntegerVector chunk_idx){
+
+//   auto dp=root_path(datapath);
+
+//   HighFive::File file(filename,HighFive::File::ReadOnly);
+//   auto ds=  file.getDataSet(dp);
+//   auto chunk_dims = ds.getFilter().get_chunksizes();
+//   std::vector<hsize_t> mchunk_idx(chunk_dims.size());
+//   for(int i=0; i<chunk_idx.size();i++){
+//     mchunk_idx[i]=chunk_idx*chunk_dims[i];
+//   }
+//   Rcpp::RawVector(
+//   void*	td=
+//   return(.read_raw_chunkmchunk_idx));
+// }
+
+
+
 
 
 
@@ -348,24 +459,19 @@ SEXP read_vector(std::string filename,
 
   auto file_sel=datasel.makeSelection(dset);
   auto my_t = typeof_h5_dset(dset);
-
+  Rcpp::RObject ret;
   switch (my_t){
   case INTSXP: {
-    auto ret = read_elem_v_h5<INTSXP>(file_sel,datasel);
-
-    return(ret);
+    ret = read_elem_v_h5<INTSXP>(file_sel,datasel);
     break;
   }
   case REALSXP: {
-    auto ret = read_elem_v_h5<REALSXP>(file_sel,datasel);
-
-    return(ret);
+    ret = read_elem_v_h5<REALSXP>(file_sel,datasel);
     break;
   }
   case STRSXP: {
-    auto ret = read_elem_v_h5<STRSXP>(file_sel,datasel);
+    ret = read_elem_v_h5<STRSXP>(file_sel,datasel);
 
-    return(ret);
     break;
   }
   default: {
@@ -379,6 +485,11 @@ SEXP read_vector(std::string filename,
     return R_NilValue;
   }
   }
+  auto attr_v=list_R_attr(dset);
+  for(auto &attr :attr_v){
+    ret.attr(attr.substr(2))=read_attribute(dset,attr);
+  }
+  return ret;
 }
 
 
@@ -482,7 +593,26 @@ bool update_matrix(RObject data,
 
 
 
-
+bool check_string_fits(Rcpp::StringVector input,const HighFive::DataSet dset){
+  auto dt_size = dset.getDataType().n_elem();
+  using input_elem = decltype(input.begin());
+  int ret_size=0;
+  if(input.begin()!=input.end()){
+    auto ret_el = std::max_element(input.begin(), input.end(),
+                                [](input_elem a, input_elem b) {
+                                  return a->size() < b->size();
+                                });
+    auto lss=ret_el->size()+1;
+  if(lss > dt_size){
+    Rcpp::Rcerr<<"longest string in dataset is of size:"<<
+      lss<<"dataset can only fit up to string size: "<<dt_size<<std::endl;
+    auto d_dist = ret_el-input.begin();
+    Rcpp::Rcerr<<"longest string in dataset is at position:"<<d_dist<<" first "<<dt_size<<" chars:"<<Rcpp::as<std::string>(*ret_el).substr(0,dt_size)<<std::endl;
+    return false;
+  }
+  }
+  return true;
+}
 
 
 
@@ -523,6 +653,12 @@ bool update_vector(RObject data,
     }
     case STRSXP: {
       Rcpp::Vector<STRSXP> wvec(data);
+      if(!check_string_fits(wvec,*dset)){
+        Rcpp::Rcerr<<"In file"<<filename<<std::endl;
+        Rcpp::Rcerr<<"In dataset"<<datapath<<std::endl;
+        Rcpp::stop("string will not fit in dataset");
+        
+      };
       write_elem_v_h5<STRSXP>(file_sel,datasel,wvec);
       write_success=true;
       break;
@@ -586,15 +722,6 @@ HighFive::Filter create_filter(std::vector<size_t> data_dimensions,
 
 
 
-
-// void write_S4_h5(const std::string filename, std::string datapath,const RObject data){
-//   auto attribs = data.attributeNames();
-
-//   for(auto &n :attribs){
-//     write_vector_h5(
-
-// }
-
 //[[Rcpp::export]]
 bool write_attribute_h5(const RObject &data,
 			const std::string &filename,
@@ -624,26 +751,50 @@ bool write_attribute_h5(const RObject &data,
   return(true);
 }
 
+//[[Rcpp::export]]
+SEXP read_R_attribute_h5(const std::string &filename,
+		      std::string datapath){
+  using namespace HighFive;
+
+  auto dp= root_path(datapath);
+
+  HighFive::File file(filename,HighFive::File::Create | HighFive::File::ReadWrite);
+
+  if(file.isGroup(dp.parent_path())){
+    auto p_obj = file.getGroup(dp.parent_path());
+    return(read_attribute(p_obj,"R:"+dp.filename()));
+  }else{
+    if(file.isDataSet(dp.parent_path())){
+      auto p_obj = file.getDataSet(dp.parent_path());
+      return(read_attribute(p_obj,"R:"+dp.filename()));
+    }
+    else{
+      Rcpp::Rcerr<<dp.parent_path()<<" Is not a dataset or group"<<std::endl;
+      Rcpp::stop("Attributes can only be read from DataSets or Groups");
+    }
+  }
+}
+
+
+
+
 
 //[[Rcpp::export]]
 SEXP read_attribute_h5(const std::string &filename,
 		      std::string datapath){
   using namespace HighFive;
 
-  // if(datapath[0]!='/'){
-  //   datapath="/"+datapath;
-  // }
   auto dp= root_path(datapath);
-  bool create_success=false;
+
   HighFive::File file(filename,HighFive::File::Create | HighFive::File::ReadWrite);
-  
+
   if(file.isGroup(dp.parent_path())){
     auto p_obj = file.getGroup(dp.parent_path());
-    return(read_attribute<Group>(p_obj,dp.filename()));
+    return(read_attribute(p_obj,dp.filename()));
   }else{
     if(file.isDataSet(dp.parent_path())){
       auto p_obj = file.getDataSet(dp.parent_path());
-      return(read_attribute<DataSet>(p_obj,dp.filename()));
+      return(read_attribute(p_obj,dp.filename()));
     }
     else{
       Rcpp::Rcerr<<dp.parent_path()<<" Is not a dataset or group"<<std::endl;
@@ -668,7 +819,8 @@ bool create_dataset_h5(const std::string &filename,
    auto dp=root_path(datapath);
    bool create_success=false;
    HighFive::File file(filename,HighFive::File::Create | HighFive::File::ReadWrite);
-   const bool store_float= get_list_scalar<bool>(options,"float").value_or(false);
+
+
    
 #ifdef DEBUG
    Rcpp::Rcerr<<"opening/creating group: "<<dp.parent_path()<<std::endl;
@@ -682,19 +834,11 @@ bool create_dataset_h5(const std::string &filename,
    Rcpp::Rcerr<<"opening group: "<<dp.parent_path()<<std::endl;
 #endif
 
+   const bool store_float= get_list_scalar<bool>(options,"float").value_or(false);
 
-   auto data_d = get_list_element<INTSXP>(options,"dim");
-   if(!data_d){
-     data_d =get_list_element<INTSXP>(options,"dims");
-   }
-
-   auto	max_d =	get_list_element<INTSXP>(options,"max_dim");
-   if(!max_d){
-     max_d =get_list_element<INTSXP>(options,"max_dims");
-     //     Rcpp::Rcerr<<"max_dims: "<<*max_d<<std::endl;
-   }else{
-     //     Rcerr<<"no max_dims"<<std::endl;
-   }
+   auto min_string_size = get_list_scalar<int>(options,"min_string_size").value_or(255);
+   auto data_d = get_any_list_element<INTSXP>(options,{"dim","dims"});
+   auto	max_d =	get_any_list_element<INTSXP>(options,{"max_dim","max_dims"});
    std::vector<size_t> max_dvec = Rcpp::as<std::vector<size_t> >(max_d.value_or(Rcpp::IntegerVector::create()));
    if(!max_dvec.empty()){
      for(size_t i=0; i<max_dvec.size();i++){
@@ -708,14 +852,24 @@ bool create_dataset_h5(const std::string &filename,
    auto	filt = create_filter(dimvec,options);
    DataSpace space = DataSpace(dimvec,max_dvec);
    if((data.sexp_type()!=STRSXP) && store_float){
-     
-     group->createDataSet(dp.filename(), space, HighFive::AtomicType<float>(), filt);
+     auto dsr = group->createDataSet(dp.filename(), space, HighFive::AtomicType<float>(), filt);
+     auto attrn = data.attributeNames();
+     for( auto &attr : attrn){
+       if(attr != "dim"){
+         write_attribute(dsr,attr,data);
+       }
+     }
      create_success=true;
    }else{
-   create_dataset(group.value(),dp.filename(),data,space,filt);
+     auto dsr = create_dataset(group.value(),dp.filename(),data,space,filt,min_string_size);
+     auto attrn = data.attributeNames();
+     for( auto &attr : attrn){
+       if(attr != "dim"){
+         write_attribute(dsr,"R:"+attr,data.attr(attr));
+       }
+     }
    }
    create_success=true; 
    file.flush();  
   return(create_success);
- }  
-
+}

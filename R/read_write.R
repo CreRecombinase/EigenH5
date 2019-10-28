@@ -1,29 +1,32 @@
-read_df_h5 <- function(filename,datapath,...){
+read_df_h5 <- function(filename, datapath = "/", ...){
     filename <- fs::path_expand(filename)
-  stopifnot(file.exists(filename))
-  dsets <- ls_h5(filename,groupname = datapath)
-  argl <- list(...)
-  if(!hasArg(subcols)){
-    argl[["subcols"]] <- dsets
-    # subcols <- dsets
-  }
-  dsets <- dsets[dsets %in% argl[["subcols"]]]
-  if(datapath=="/"){
-    groupname <- ""
-  }
-  dsp <- normalizePath(paste(datapath,dsets,sep="/"), mustWork = F)
-  names(dsp) <- basename(dsp)
-  return(purrr::map_dfc(dsp,~read_vector_h5(filename, datapath = .x, ...), ...=...))
+    stopifnot(file.exists(filename))
+    dsets <- ls_h5(filename, groupname = datapath)
+    argl <- list(...)
+    if(!hasArg(subcols)){
+        argl[["subcols"]] <- dsets
+                                        # subcols <- dsets
+    }
+    dsets <- dsets[dsets %in% argl[["subcols"]]]
+    dsp <- fix_paths(datapath, dsets)
+    names(dsp) <- basename(dsp)
+    if(!hasArg(subset)){
+        return(purrr::map_dfc(dsp,~read_vector_h5v(filename = filename,datapath =  .x)))
+    }else{
+        return(purrr::map_dfc(dsp,~read_vector_h5v(filename = filename,datapath = .x,i=as.integer(argl[["subset"]]))))
+    }
 }
 
 
 
 write_df_h5 <- function(df, filename, datapath="/", ...){
     argl <- list(...)
-    filename <- fs::path_expand(filename)
+ if(datapath=="/"){
+        datapath <- ""
+    }
   purrr::iwalk(df, ~purrr::invoke(write_vector_h5,
                                   filename = filename,
-                                  datapath = normalizePath(paste(datapath, .y, sep="/"),mustWork = F),
+                                  datapath = fix_paths(datapath, .y),
                                   data=.x,
                                   argl))
 }
@@ -57,16 +60,20 @@ write_vector_h5 <- function(data, filename, datapath, ...){
   app_v <- TRUE
   filename <- fs::path_expand(filename)
   if(!file.exists(filename)){
+    if(isTRUE(argl[["append"]]) && is.null(argl[["max_dims"]])){
+      argl[["max_dims"]] <- NA_integer_
+    }
     create_dataset_h5(filename, datapath, data, argl)
     app_v <- FALSE
   }
   if(!isObject(filename, datapath)){
+    if(isTRUE(argl[["append"]]) && is.null(argl[["max_dims"]])){
+      argl[["max_dims"]] <- NA_integer_
+    }
     create_dataset_h5(filename, datapath, data, argl)
   }else{
-    if(hasArg(append)){
-      if(app_v & argl[["append"]]){
-        ret <- append_vector_h5(data = data,filename = filename, datapath = datapath,  ... = argl)
-      }
+    if(app_v && isTRUE(argl[["append"]])){
+      ret <- append_vector_h5(data = data,filename = filename, datapath = datapath,  ... = argl)
     }
   }
   if(!ret){

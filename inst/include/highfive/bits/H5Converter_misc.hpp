@@ -101,7 +101,7 @@ namespace HighFive {
       inline data_converter(std::vector<T> &vec, DataSpace &space,const DataType dt)
 	: _space(
 		 &space), _dim(0) {
-	assert(_space->getDimensions().size() > dim);
+	assert(_space->getDimensions().size() > _dim);
 	(void)vec;
       }
 
@@ -587,6 +587,10 @@ struct data_converter<std::vector<char*>, void> {
     std::vector<char*> _c_vec;
     DataSpace& _space;
     };
+
+
+
+
 
     // template<>
     // struct data_converter<std::vector<char*>, void> {

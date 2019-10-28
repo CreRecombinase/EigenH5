@@ -135,11 +135,6 @@ inline ElementSet::ElementSet(const std::vector<std::size_t>& element_ids)
         std::copy(offset[i].begin(), offset[i].end(), offset_local.begin());
         std::copy(count[i].begin(), count[i].end(), count_local.begin());
 
-	// for(size_t j=0; j<Dims;j++){
-	//   count_total[j]=count_total[j]+count_local[j];
-	// }
-
-
         if (H5Sselect_hyperslab(space.getId(),H5S_SELECT_OR, offset_local.data(),
                                 nullptr,
                                 count_local.data(), NULL) < 0) {
@@ -298,10 +293,6 @@ SliceTraits<Derivate>::select(const ElementSet& elements) const {
 template <typename Derivate>
 inline std::vector<size_t> SliceTraits<Derivate>::getDataDimensions() const {
   const bool doTranspose = details::get_dataset(static_cast<const Derivate *>(this)).isTransposed();
-  // if(doTranspose){
-  //   HDF5ErrMapper::ToException<DataSpaceException>(
-  // 						     "Transposed data has been deprecated");
-  // }
   std::vector<size_t> dims =static_cast<const Derivate*>(this)->getMemSpace().getDimensions();
   if (doTranspose) {
     std::reverse(dims.begin(), dims.end());
@@ -343,9 +334,10 @@ inline void SliceTraits<Derivate>::read(T &array) {
 
   auto mem_datatype = array_datatype.getId();
   auto u_id=mem_datatype;
-  if(H5Tget_size(dt.getId())>255){
-    u_id=dt.getId();
-  }
+  // if(H5Tget_size(dt.getId())>255){
+  //   u_id=dt.getId();
+  // }
+  u_id = dt.getId();
 
   if (H5Dread(
 	      details::get_dataset(static_cast<const Derivate *>(this)).getId(),
@@ -401,8 +393,8 @@ inline void SliceTraits<Derivate>::write(const T& buffer) {
         throw DataSpaceException(ss.str());
     }
 
-    const AtomicType<typename details::type_of_array<type_no_const>::type>
-        array_datatype;
+    // const AtomicType<typename details::type_of_array<type_no_const>::type>
+    //     array_datatype;
     auto dt = ds.getDataType();
     // Apply pre write convertions
     bool isTranspose = details::get_dataset(static_cast<const Derivate *>(this)).isTransposed();
@@ -412,21 +404,32 @@ inline void SliceTraits<Derivate>::write(const T& buffer) {
     }
     details::data_converter<type_no_const> converter(nocv_buffer, mem_space,dt);
 
-    auto u_id=array_datatype.getId();;
-    if(H5Tget_size(dt.getId())>255){
-      u_id=dt.getId();
-    }
+    auto u_id=dt.getId();
+    //array_datatype.getId();
+
+    // if(H5Tget_size(dt.getId())>255){
+    //   u_id=
+    // }
+
+    auto tw = static_cast<const void*>(converter.transform_write(nocv_buffer));
 
     if (H5Dwrite(details::get_dataset(static_cast<Derivate*>(this)).getId(),
                  u_id,
                  details::get_memspace_id((static_cast<Derivate*>(this))),
                  space.getId(), H5P_DEFAULT,
-                 static_cast<const void*>(
-                     converter.transform_write(nocv_buffer))) < 0) {
+		 tw) < 0) {
         HDF5ErrMapper::ToException<DataSetException>(
             "Error during HDF5 Write: ");
     }
 }
+
+
+
+
+
+
+
+
 
 template <typename Derivate>
 template <typename T>

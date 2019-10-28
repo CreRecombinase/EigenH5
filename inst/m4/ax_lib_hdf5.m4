@@ -95,8 +95,11 @@
 
 AC_DEFUN([AX_LIB_HDF5], [
 
-AC_REQUIRE([AC_PROG_SED])
+
 AC_REQUIRE([AC_PROG_AWK])
+
+AC_REQUIRE([AC_PROG_SED])
+
 AC_REQUIRE([AC_PROG_GREP])
 
 dnl Check first argument is one of the recognized values.
@@ -194,8 +197,7 @@ HDF5 support is being disabled (equivalent to --with-hdf5=no).
         dnl these are empty. Lets roll them both into one.
 
         dnl Look for "HDF5 Version: X.Y.Z"
-        HDF5_VERSION=$(eval $H5CC -showconfig | $GREP 'HDF5 Version:' \
-            | $AWK '{print $[]3}')
+        HDF5_VERSION=$(eval $H5CC -showconfig | $GREP 'HDF5 Version:' | $AWK '{print $[]3}')
         HDF5_MAJOR_VERSION=$(echo $HDF5_VERSION | $AWK -F \. '{print $[]1}')
         HDF5_MINOR_VERSION=$(echo $HDF5_VERSION | $AWK -F \. {'print $[]2'})
         HDF5_REVISION_VERSION=$(echo $HDF5_VERSION | $AWK -F \. {'print $[]3'})

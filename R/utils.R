@@ -1,13 +1,68 @@
-.onLoad <- function(libname, pkgname){
+.onLoad <- function(libname, pkgname) {
+    pkgconfig::set_config("EigenH5::use_blosc" = has_blosc())
+    pkgconfig::set_config("EigenH5::use_lzf" = has_lzf())
     start_blosc()
-    # start_singleton()
+
+}
+
+fix_paths <- function(...) {
+    ret <- stringr::str_replace(normalizePath(paste(..., sep = "/"), mustWork = FALSE), "//", "/")
+    if (length(ret) == 0) {
+        ret <- "/"
+    }
+    return(ret)
 }
 
 
-ls_h5 <- function(filename,groupname="/",full_names=FALSE){
+
+
+#' Convert RLE-encoded vector to offset+size dataframe
+#'
+#' @param x either a vector of class `rle`, or a vector that can be converte to one via (`rle(x)`)
+#' @param na_replace value to replace NA (rle doesn't play well with NA)
+#'
+#' @return tibble with columns `value`,`offset` and `datasize`
+#' @export
+#'
+#' @examples
+#' x <- rev(rep(6:10, 1:5))
+#' x_na <- c(NA,NA,NA,rev(rep(6:10, 1:5)))
+#' x_n3 <- c(-3,-3,-3,rev(rep(6:10, 1:5)))
+#' print(rle2offset(rle(x)))
+#' stopifnot(
+#'   identical(rle2offset(rle(x)),rle2offset(x)),
+#'   identical(rle2offset(x_na,na_replace=-3),rle2offset(x_n3)))
+rle2offset <- function(x,na_replace = -1L){
+  if (!inherits(x,"rle")){
+    x[is.na(x)] <- na_replace
+    x <- rle(x)
+  }
+  x$values[x$values==na_replace] <- NA_integer_
+  tibble::tibble(value=x$values,
+                 offset=c(0,cumsum(x$lengths)[-length(x$lengths)]),
+                 datasize=x$lengths)
+}
+
+
+ls_h5 <- function(filename,groupname="/",full_names=FALSE,details=FALSE){
+  if(!details){
     fs::path_norm(ls_h5_exp(filename = fs::path_expand(filename),
                             groupname = groupname,
                             full_names = full_names))
+  }else{
+    full_n <- ls_h5_exp(filename = fs::path_expand(filename),
+                            groupname = groupname,
+                            full_names = TRUE)
+    id_type=purrr::map_chr(full_n,~typeof_h5(filename,.x))
+    id_dim=purrr::map(full_n,~dim_h5(filename,.x))
+    if(all(lengths(id_dim)==length(id_dim[[1]]))){
+      id_dim <- purrr::flatten_int(id_dim)
+    }
+    if(!full_names){
+      full_n <- fs::path_rel(full_n,start=groupname)
+    }
+    tibble::tibble(name=full_n,dims=id_dim,type=id_type)
+  }
 }
 
 construct_data_path <- function(...){
@@ -33,20 +88,14 @@ isObject_h5 <- function(filename,datapath){
   return(ret)
 }
 
-## gen_matslice_chunk_l <- function(input_rows,chunksize=10000,...){
-##     output_l <- BBmisc::chunk(input_rows,chunk.size=chunksize)  %>% purrr::map(~tibble::data_frame(input_rows=.x)afunction(x){
-##       stopifnot(all(x==seq(x[1],x[length(x)])))
-##       return(data_frame(row_offsets=x[1]-1,row_chunksizes=length(x)))
-##       }) %>% dplyr::mutate(...)
-##     return(input_df)
-## }
+
 
 
 gen_matslice_df <- function(filename,group_prefix,dataname){
   sub_grps <- ls_h5(filename,group_prefix)
   retdf <- dplyr::data_frame(filenames=filename,
                     groupnames=paste0(group_prefix,"/",sub_grps),
-                    datanames=dataname) %>% arrange(as.integer(sub_grps))
+                    datanames=dataname) %>% dplyr::arrange(as.integer(sub_grps))
   return(retdf)
 }
 
@@ -106,7 +155,7 @@ write_l_h5 <- function(data,filename,datapath,...){
   if(datapath=="/"){
     datapath <- ""
   }
-  purrr::iwalk(datal,~write_h5(filename,normalizePath(paste(datapath,.y,sep="/"),mustWork = F),data = .x))
+  purrr::iwalk(datal,~write_h5(filename,fix_paths(datapath,.y),data = .x))
 }
 
 
@@ -211,3 +260,59 @@ create_mat_l <- function(dff){
 }
 
 
+
+
+#' Convert to HDF5 with a custom callback
+#'
+#' @param input_file
+#' @param output_file
+#' @param h5_args ... args for write_df_h5 unpacked and passed to `callback_fun`
+#' @param callback_fun function with signature matching function(df,filename,datapath,...) (defaults to `write_df_h5`)
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#'
+#' temp_h5 <- fs::file_temp(ext="h5")
+#' delim2h5(readr::readr_example("mtcars.csv"),temp_h5,delim="/")
+#' new_data  <- read_df_h5(temp_h5)
+
+delim2h5 <- function(input_file, output_file, h5_args = list(datapath = "/"), callback_fun = write_df_h5, id_col = NULL, ...){
+    h5_args[["append"]] <- TRUE
+    callback_args <- formalArgs(callback_fun)
+    stopifnot(all.equal(callback_args, formalArgs(write_df_h5)))
+
+    h5_args[["append"]] <- TRUE
+    if (is.null(id_col) ||  isFALSE(id_col)) {
+
+        wf <- function(x, pos)
+            rlang::exec(callback_fun, df = x, filename = output_file, !!!h5_args)
+
+    }else {
+        if (is.character(id_col)) {
+
+            stopifnot(length(id_col) == 1)
+            wf <- function(x, pos) {
+                pos_seq <- seq(from = pos, length.out = nrow(x))
+                rlang::exec(callback_fun,
+                            df = dplyr::mutate(x, {{id_col}} := pos_seq),
+                            filename = output_file, !!!h5_args)
+                }
+
+        }else {
+            stopifnot(isTRUE(id_col))
+            wf <- function(x, pos) {
+                pos_seq <- seq(from = pos, length.out = nrow(x))
+                rlang::exec(callback_fun,
+                            df = dplyr::mutate(x, id_col = pos_seq),
+                            filename = output_file, !!!h5_args)
+                }
+
+        }
+    }
+
+
+  readr::read_delim_chunked(file = input_file, callback = readr::SideEffectChunkCallback$new(wf), ...)
+}

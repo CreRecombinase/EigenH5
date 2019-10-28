@@ -19,6 +19,17 @@ namespace HighFive {
 
   inline DataType::DataType(){}
 
+  inline size_t	DataType::n_elem() const{
+    auto sup =H5Tget_class(_hid);
+    bool is_str = sup==H5T_STRING;
+    //    H5Tclose(sup);
+    if(is_str){
+
+      return(H5Tget_size(_hid));
+    }
+    return 1;
+  }
+
 inline bool DataType::operator==(const DataType& other) const {
     return (H5Tequal(_hid, other._hid) > 0);
 }
@@ -135,9 +146,9 @@ inline AtomicType<std::string>::AtomicType() {
 template <>
 inline AtomicType<std::string>::AtomicType(int size) {
   _hid = H5Tcopy(H5T_C_S1);
-  size = (size < 0) ? H5T_VARIABLE : size;
+  size_t rsize = (size < 0) ? H5T_VARIABLE : static_cast<size_t>(size);
 
-  if (H5Tset_size(_hid, size) < 0) {
+  if (H5Tset_size(_hid, rsize) < 0) {
     HDF5ErrMapper::ToException<DataTypeException>(
 						  "Unable to define datatype size to variable");
   }

@@ -33,12 +33,40 @@ get_group <- function(f, object_name) {
     .Call(`_EigenH5_get_group`, f, object_name)
 }
 
+read_matrix_rl <- function(filename, datapath, rows, cols) {
+    .Call(`_EigenH5_read_matrix_rl`, filename, datapath, rows, cols)
+}
+
+read_matrix_v <- function(filename, datapath, rows, cols) {
+    .Call(`_EigenH5_read_matrix_v`, filename, datapath, rows, cols)
+}
+
+read_vector_v <- function(filename, datapath, rows) {
+    .Call(`_EigenH5_read_vector_v`, filename, datapath, rows)
+}
+
+update_matrix_v <- function(data, filename, datapath, rows, cols) {
+    invisible(.Call(`_EigenH5_update_matrix_v`, data, filename, datapath, rows, cols))
+}
+
+update_vector_v <- function(data, filename, datapath, rows) {
+    invisible(.Call(`_EigenH5_update_vector_v`, data, filename, datapath, rows))
+}
+
 openFileHandleRead <- function(filepath) {
     .Call(`_EigenH5_openFileHandleRead`, filepath)
 }
 
 closeFileHandle <- function(fh) {
     .Call(`_EigenH5_closeFileHandle`, fh)
+}
+
+has_blosc <- function() {
+    .Call(`_EigenH5_has_blosc`)
+}
+
+has_lzf <- function() {
+    .Call(`_EigenH5_has_lzf`)
 }
 
 start_blosc <- function() {
@@ -77,12 +105,24 @@ write_attribute_h5 <- function(data, filename, datapath) {
     .Call(`_EigenH5_write_attribute_h5`, data, filename, datapath)
 }
 
+read_R_attribute_h5 <- function(filename, datapath) {
+    .Call(`_EigenH5_read_R_attribute_h5`, filename, datapath)
+}
+
 read_attribute_h5 <- function(filename, datapath) {
     .Call(`_EigenH5_read_attribute_h5`, filename, datapath)
 }
 
 create_dataset_h5 <- function(filename, datapath, data, options) {
     .Call(`_EigenH5_create_dataset_h5`, filename, datapath, data, options)
+}
+
+fast_str2int <- function(input, offset = 0L, na_val = NA_integer_) {
+    .Call(`_EigenH5_fast_str2int`, input, offset, na_val)
+}
+
+fast_str2ascii <- function(input, offset = 0L) {
+    .Call(`_EigenH5_fast_str2ascii`, input, offset)
 }
 
 link_objects_h5 <- function(filename_from, filename_to, datapath_from, datapath_to) {
@@ -121,6 +161,10 @@ isObject <- function(filename, dataname) {
     .Call(`_EigenH5_isObject`, filename, dataname)
 }
 
+ArrayTypeSize <- function(filename, dataname) {
+    .Call(`_EigenH5_ArrayTypeSize`, filename, dataname)
+}
+
 isDataSet <- function(filename, dataname) {
     .Call(`_EigenH5_isDataSet`, filename, dataname)
 }
@@ -135,6 +179,10 @@ ls_h5_exp <- function(filename, groupname = as.character( c("/")), full_names = 
 
 typeof_h5 <- function(filename, datapath) {
     .Call(`_EigenH5_typeof_h5`, filename, datapath)
+}
+
+info_h5 <- function(filename, datapaths) {
+    .Call(`_EigenH5_info_h5`, filename, datapaths)
 }
 
 file_acc_ct <- function(filename) {

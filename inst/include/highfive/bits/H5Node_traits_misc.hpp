@@ -85,11 +85,11 @@ namespace HighFive {
   }
 
   template <typename Derivate>
-  inline boost::optional<DataSet>
+  inline std::optional<DataSet>
   NodeTraits<Derivate>::openDataSet(const Path & dataset_name) const {
 
     if(!this->exist(dataset_name)){
-      return(boost::none);
+      return(std::nullopt);
     } else {
       return (this->getDataSet(dataset_name));
     }
@@ -100,7 +100,7 @@ namespace HighFive {
 
 
     auto gcpl = H5Pcreate (H5P_LINK_CREATE);
-    auto status = H5Pset_create_intermediate_group (gcpl, 1);
+    H5Pset_create_intermediate_group (gcpl, 1);
     Group group;
     if ((group._hid = H5Gcreate2(static_cast<const Derivate *>(this)->getId(),
 				 group_name.c_str(), gcpl, H5P_DEFAULT,
@@ -127,10 +127,10 @@ namespace HighFive {
   }
 
   template <typename Derivate>
-  inline boost::optional<Group>
+  inline std::optional<Group>
   NodeTraits<Derivate>::openGroup(const Path  &group_name) const {
     if(!this->exist(group_name)){
-      return(boost::none);
+      return(std::nullopt);
     } else {
       return (this->getGroup(group_name));
     }
@@ -209,31 +209,31 @@ namespace HighFive {
 
 
   template<typename Derivate>
-  inline boost::variant<DataSet,Group> NodeTraits<Derivate>::getObject(const Path  & object_name) const{
+  inline std::variant<DataSet,Group> NodeTraits<Derivate>::getObject(const Path  & object_name) const{
 
     if(isGroup(object_name)){
       return (getGroup(object_name));
     }
-    if (isDataSet(object_name)) {
-      return (getDataSet(object_name));
+    if (!isDataSet(object_name)) {
+      HDF5ErrMapper::ToException<ObjectException>(std::string("Object is not a Group or DataSet: ") + object_name);
     }
-    HDF5ErrMapper::ToException<ObjectException>(std::string("Object is not a Group or DataSet: ") + object_name);
+    return (getDataSet(object_name));
   }
 
   template<typename Derivate>
-  inline boost::optional<boost::variant<DataSet,Group> > NodeTraits<Derivate>::openObject(const Path & object_name) const{
+  inline std::optional<std::variant<DataSet,Group> > NodeTraits<Derivate>::openObject(const Path & object_name) const{
     if(this->exist(object_name)){
       return(this->getObject(object_name));
     }else{
-      return(boost::none);
+      return(std::nullopt);
     }
   }
 
   template <typename Derivate>
-  inline std::vector<boost::variant<DataSet,Group> > NodeTraits<Derivate>::getObjects() const {
+  inline std::vector<std::variant<DataSet,Group> > NodeTraits<Derivate>::getObjects() const {
     auto names = this->listObjectNames();
     const int num_objs=names.size();
-    std::vector<boost::variant<DataSet,Group> > retvec(num_objs);
+    std::vector<std::variant<DataSet,Group> > retvec(num_objs);
     for (int i = 0; i < num_objs; i++) {
       retvec[i] = this->getObject(names[i]);
     }
@@ -273,14 +273,14 @@ namespace HighFive {
 
     
     std::vector<Path> names;
-    details::HighFiveIterateData iterateData(names);
+    details::HighFiveIterateData<Path> iterateData(names);
 
     size_t num_objs = getNumberObjects();
     names.reserve(num_objs);
 
     if (H5Literate(static_cast<const Derivate *>(this)->getId(), H5_INDEX_NAME,
                    H5_ITER_NATIVE, NULL,
-                   &details::internal_high_five_iterate<H5L_info_t>,
+                   &details::internal_high_five_iterate<H5L_info_t,Path>,
                    static_cast<void *>(&iterateData)) < 0) {
       HDF5ErrMapper::ToException<GroupException>(
           std::string("Unable to list objects in group"));

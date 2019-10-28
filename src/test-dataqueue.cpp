@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include "EigenH5.h"
+#include "eigenh5/indexers.hpp"
 #include <stdio.h>
 #include <testthat.h>
 #include <R.h>
@@ -171,7 +172,38 @@ context("We can read and write matrices using the DataQueue"){
 
 
     }
+}
+
+context("Subsetting works"){
+
+  constexpr SubInterval inter(0,100);
+  static_assert(inter.get_offset()==0,"offset works");
+  static_assert(inter.get_size()==100,"size works");
+  static_assert(inter.num_chunks(10)==10,"chunking works");
+  static_assert(inter.num_chunks(11)==10,"ceiling division works");
+  static_assert(inter.chunk_i(0,10)==SubInterval(0,10),"first chunk is first chunk");
+  static_assert(inter.chunk_i(1,10)==SubInterval(10,10),"second chunk is second chunk");
+  static_assert(inter.chunk_i(3,10)==SubInterval(30,10),"third chunk is third chunk");
+  static_assert(inter.chunk_i(1,10).sub_chunk(SubInterval(0,20))==SubInterval(0,10));
+  static_assert(inter.chunk_i(3,10).sub_chunk(SubInterval(0,35))==SubInterval(0,5));
+  static_assert(inter.chunk_selection(SubInterval(3,10),10).get_offset()==0);
+  static_assert(inter.chunk_selection(SubInterval(3,10),10).get_size()==20);
+  static_assert(inter.chunk_selection(SubInterval(0,10),10).get_size()==10);
+  static_assert(inter.chunk_selection(SubInterval(11,10),10).get_size()==20);
+  static_assert(inter.chunk_selection(SubInterval(11,10),10).get_offset()==10);
 
 
+  const ChunkParser cp(100,11,{3,10},false);
+  int i=0;
+  auto ip = cp.begin();
+  expect_true(ip->chunk_size()==8);
+  expect_true(ip->chunk_offset()==3);
+  expect_true(ip->disk_offset()==0);
+  expect_true(ip->disk_size()==11);
+  ip++;
+  expect_true(ip->chunk_size()==2);
+  expect_true(ip->chunk_offset()==0);
+  expect_true(ip->disk_offset()==11);
+  expect_true(ip->disk_size()==11);
 
 }
