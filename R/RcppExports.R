@@ -117,20 +117,8 @@ create_dataset_h5 <- function(filename, datapath, data, options) {
     .Call(`_EigenH5_create_dataset_h5`, filename, datapath, data, options)
 }
 
-join_ids <- function(index_a, index_b) {
-    .Call(`_EigenH5_join_ids`, index_a, index_b)
-}
-
-fast_snp_pos_struct <- function(chrom, pos, ascii_ref, ascii_alt) {
-    .Call(`_EigenH5_fast_snp_pos_struct`, chrom, pos, ascii_ref, ascii_alt)
-}
-
-snp_struct2df <- function(struct_vec) {
-    .Call(`_EigenH5_snp_struct2df`, struct_vec)
-}
-
-fast_str2int <- function(input, offset = 0L) {
-    .Call(`_EigenH5_fast_str2int`, input, offset)
+fast_str2int <- function(input, offset = 0L, na_val = NA_integer_) {
+    .Call(`_EigenH5_fast_str2int`, input, offset, na_val)
 }
 
 fast_str2ascii <- function(input, offset = 0L) {

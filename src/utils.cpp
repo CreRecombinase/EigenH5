@@ -18,118 +18,8 @@
 
 
 
-std::unordered_map<int,int> reverse_index(Rcpp::IntegerVector index_a){
-    const size_t p_a=index_a.size();
-    std::unordered_map<int,int> ind_a(p_a);
-    auto iap = ind_a.begin();
-    for(int i=0; i<p_a; i++){
-      iap = ind_a.emplace_hint(iap,index_a(i),i);
-    }
-    return ind_a;
-}
-
 //[[Rcpp::export]]
-Rcpp::List join_ids(Rcpp::IntegerVector index_a,Rcpp::IntegerVector index_b){
-  const size_t p_a=index_a.size();
-  const size_t p_b=index_b.size();
-
-  const auto map_index_a=reverse_index(index_a);
-  std::vector<int> sub_ia;
-  sub_ia.reserve(std::min(p_a,p_b));
-  std::vector<int> sub_ib;
-  sub_ib.reserve(std::min(p_a,p_b));
-
-  for(int i=0; i<p_b; i++){
-    auto ipm = map_index_a.find(index_b(i));
-    if(ipm != map_index_a.end()){
-      sub_ia.push_back(ipm->second);
-      sub_ib.push_back(i);
-    }
-  }
-  using namespace Rcpp;
-
-  const auto ns = sub_ia.size();
-  auto m_ret_l = List::create(_["idx_a"]=Rcpp::wrap(sub_ia),
-                              _["idx_b"]=Rcpp::wrap(sub_ib));
-  m_ret_l.attr("class") = StringVector::create("tbl_df","tbl","data.frame");
-  m_ret_l.attr("row.names") = seq(1,ns);
-
-  return(m_ret_l);
-}
-
-
-// template<typename T1, typename... T>
-//  old_sum(int off,T1 s, T... ts){
-//     return s + old_sum(ts...);
-// }
-
-struct snp_p{
-  uint64_t chrom : 5;
-  uint64_t pos :43;
-  uint64_t ref : 8;
-  uint64_t alt : 8;
-} __attribute__((packed));
-
-
-//[[Rcpp::export]]
-Rcpp::NumericVector fast_snp_pos_struct(Rcpp::IntegerVector chrom,Rcpp::NumericVector pos, Rcpp::IntegerVector ascii_ref,Rcpp::IntegerVector ascii_alt){
-
-  const size_t p=chrom.size();
-  Rcpp::NumericVector ret(p);
-  // inline uint32_t PACK(uint8_t c0, uint8_t c1, uint8_t c2, uint8_t c3) {
-//     return (c0 << 24) | (c1 << 16) | (c2 << 8) | c3;
-// }
-
-  static_assert(sizeof(snp_p)==sizeof(double),"packed structure is the size of a double");
-
-  snp_p mp;
-  double *bs = reinterpret_cast<double*>(&mp);
-  for(int i=0; i<p; i++){
-    uint64_t tchrom=chrom(i);
-    uint64_t tpos=static_cast<uint64_t>(pos(i));
-    uint64_t tref=ascii_ref(i)-64;
-    uint64_t talt=ascii_alt(i)-64;
-    mp  = {tchrom,tpos,tref,talt};
-    ret(i)=*bs;
-  }
-  return ret;
-}
-
-
-//[[Rcpp::export]]
-Rcpp::DataFrame snp_struct2df(Rcpp::NumericVector struct_vec){
-
-  using namespace Rcpp;
-  const size_t p=struct_vec.size();
-  IntegerVector chrom(p);
-  NumericVector pos(p);
-  IntegerVector ascii_ref(p);
-  IntegerVector ascii_alt(p);
-
-  snp_p *mp;
-  //  double *bs = reinterpret_cast<double*>(&mp);
-  for(int i=0; i<p; i++){
-    double bs=struct_vec(i);
-    mp=reinterpret_cast<snp_p*>(&bs);
-    chrom(i)=mp->chrom;
-    pos(i)=static_cast<double>(mp->pos);
-    ascii_ref(i)=mp->ref+64 > 255 ? NA_INTEGER : mp->ref+64;
-    ascii_alt(i)=mp->alt+64> 255 ? NA_INTEGER : mp->alt+64;;
-  }
-
-  return DataFrame::create(_["chrom"]=chrom,
-                           _["pos"]=pos,
-                           _["ascii_ref"]=ascii_ref,
-                           _["ascii_alt"]=ascii_alt);
-}
-
-
-
-
-
-
-//[[Rcpp::export]]
-Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input,const int offset=0){
+Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input,const int offset=0,const int na_val=NA_INTEGER){
 
   SEXP str_sxp(input);
   const size_t p =input.size();
@@ -138,7 +28,7 @@ Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input,const int offset=0){
   int tresult;
   std::transform(pp,pp+p,ret.begin(),[&](SEXP x){
                                        if(x==R_NaString)
-                                         return NA_INTEGER;
+                                         return na_val;
                                        const size_t strl=LENGTH(x);
                                        const char* chp = CHAR(x);
                                        const char* beg=chp+offset;
@@ -147,7 +37,7 @@ Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input,const int offset=0){
                                          // Rcpp::Rcerr<<"For string"<<CHAR(x)<<std::endl;
                                          // Rcpp::Rcerr<<"LEN(x): "<<LENGTH(x)<<std::endl;
                                          // Rcpp::Rcerr<<"string offset greater than string length"<<std::endl;
-                                         return NA_INTEGER;
+                                         return na_val;
                                        }
 
 #if __has_include(<charconv>)
@@ -158,12 +48,13 @@ Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input,const int offset=0){
                                        if(sscanf (beg,"%d",&tresult)>0)
                                          return(tresult);
 #endif
-                                       return (NA_INTEGER);
+                                       return (na_val);
 
 
                                      });
   return(ret);
 }
+
 
 
 //[[Rcpp::export]]
@@ -191,6 +82,11 @@ Rcpp::IntegerVector fast_str2ascii(Rcpp::StringVector input,int offset=0){
                                      });
   return(ret);
 }
+
+
+
+
+
 
 
 //[[Rcpp::export]]
@@ -397,6 +293,8 @@ Rcpp::StringVector typeof_h5(const std::string filename,
   return(h2s_T(arg.getDataType()));
 }
 
+
+
 //[[Rcpp::export]]
 Rcpp::List info_h5(const Rcpp::StringVector filename, Rcpp::StringVector datapaths){
   using namespace Rcpp;
@@ -436,56 +334,6 @@ Rcpp::List info_h5(const Rcpp::StringVector filename, Rcpp::StringVector datapat
   m_ret_l.attr("row.names") = seq(1, num_datasets);
   return m_ret_l;
 }
-
-
-
-
-
-
-
-
-
-
-// 
-// Rcpp::IntegerVector subset_h5(const std::string	filename, Rcpp::DataFrame check,const std::string path_prefix="/",const int chunksize=5000){
-// 
-//   using namespace HighFive;
-// 
-// 
-//   HighFive::File file(filename,HighFive::File::ReadOnly);
-// 
-//   auto group=file.getGroup(path_prefix);
-//   auto test_names = df.attr("names");
-//   std::map<std::string,DataSet> ds;
-//   size_t op=0;
-//   for(auto it : test_names){
-//     if( auto dsn = group.openDataSet(it)){
-//       auto p_d = dsn->getDataDimensions();
-//       if(p_d.size()!=1){
-// 	if(p_d.[1]!=1){
-// 	  Rcpp::Rcerr<<"In datapath"<<path_prefix<<"/"<<it<<std::endl;
-// 	  Rcpp::Rcerr<<"dataset is of dimensions:";
-// 	  for( auto ip : p_d){
-// 	    Rcpp::Rcerr<<ip<<"\n";
-// 	  }
-// 
-// 	  Rcpp::stop("Dataset must be vector or one column matrix");
-// 	}
-//       }
-//       if(op=0){
-// 	op=p_d[0];
-//       }
-//       if(p_d[0]!=op){
-// 	Rcpp::Rcerr<<"In datapath"<<path_prefix<<"/"<<it<<std::endl;
-// 	Rcpp::Rcerr<<"data is of length "<<p_d[0]<<std::endl;
-// 	Rcpp::stop("datasets must all be of the same dimension!");
-//       }
-//       ds.insert(it,*dsn);
-//     }
-//   }
-// 
-// 
-// }
 
 
 inline bool exists_file (const std::string& name) {
@@ -531,7 +379,6 @@ Rcpp::DataFrame file_acc_ct(const std::string filename){
 
   }
 }
-
 
 
 //[[Rcpp::export]]

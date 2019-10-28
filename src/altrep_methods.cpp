@@ -1,4 +1,5 @@
 // [[Rcpp::depends(BH)]]
+#include <cstdbool>
 #include <variant>
 #include <R.h>
 #include <Rcpp.h>
@@ -64,7 +65,7 @@ bool is_compact_forward(SEXP x){
   return true;
 }
 
-std::pair<int,int> altrep_pair(SEXP x){
+std::pair<int,std::optional<int>> altrep_pair(SEXP x){
   if(!is_compact_seq(x)){
     Rcpp::stop("x is not a compact sequence!");
   }
@@ -77,7 +78,7 @@ std::pair<int,int> altrep_pair(SEXP x){
 }
 
 
-std::variant<std::pair<int,int>,Rcpp::IntegerVector> dispatch_subset(SEXP x){
+std::variant<std::pair<int,std::optional<int>> ,Rcpp::IntegerVector> dispatch_subset(SEXP x){
 
   auto my_t = TYPEOF(x);
   if(my_t!=INTSXP){
@@ -85,10 +86,10 @@ std::variant<std::pair<int,int>,Rcpp::IntegerVector> dispatch_subset(SEXP x){
   }
   R_xlen_t info_l=::Rf_xlength(x);
   if(info_l==0){
-    return(std::make_pair(0,-1));
+    return(std::make_pair(0,std::nullopt));
   }
   if(is_compact_forward(x)){
-    std::pair<int,int> ap= altrep_pair(x);
+    auto ap= altrep_pair(x);
     return(ap);
   }
   Rcpp::IntegerVector av=Rcpp::as<Rcpp::IntegerVector>(x);

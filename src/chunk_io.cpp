@@ -366,7 +366,6 @@ public:
   SEXP operator()(Q ret,Z& decomp,RT rowdat,CT coldat)const{
     using RRT=typename t2chunk_t<RT>::c_type;
     using CCT=typename t2chunk_t<CT>::c_type;
-
     const RRT rows(Dim.dimsize[0],Dim.chunksize[0],rowdat);
     const CCT cols(Dim.dimsize[1],Dim.chunksize[1],coldat);
     if constexpr(std::is_same_v<Q,std::string>){
@@ -423,7 +422,7 @@ public:
 								       });
 	return rl;
 
-      }
+    }
   }
 };
 

@@ -2,22 +2,146 @@
 #include <Rcpp.h>
 #include <Rinternals.h>
 // [[Rcpp::interfaces(r, cpp)]]
+//[[Rcpp::plugins(cpp17)]]
 //#include <boost/variant/multivisitors.hpp>
 #include "highfive/H5DataSet.hpp"
 #include "xtensor-r/rarray.hpp"
 #include "xtensor-r/rtensor.hpp"
 #include "xtensor-r/rvectorize.hpp"
 #include "xtensor-r/rcontainer.hpp"
+#include <cstddef>
+#include <iterator>
 #include <xtensor/xarray.hpp>
 #include <xtensor/xdynamic_view.hpp>
 #include <xtensor/xview.hpp>
 #include <range/v3/all.hpp>
+#include <optional>
+
+class Interval{
+  size_t offset;
+  size_t size;
+public:
+  Interval(int offset_,int size_):offset(offset_),size(size_){}
+  const size_t get_offset() const{return offset;}
+  const size_t get_size() const{return size;}
+};
+
+
+class SubInterval{
+  size_t offset;
+  size_t size;
+public:
+  constexpr SubInterval(size_t offset_,int chunksize_):
+    offset(offset_),
+    size(std::max(chunksize_,0)){
+    if(chunksize_<0){
+      Rcpp::Rcerr<<offset<<"-"<<chunksize_<<std::endl;
+      Rcpp::stop("Cannot specify negative offset in SubInterval constructor without specifying total_size_");
+    }
+  }
+  constexpr SubInterval(std::pair<int,int> offset_chunksize):
+    offset(offset_chunksize.first),
+    size(std::max(offset_chunksize.second,0)){
+    if(offset_chunksize.second<0){
+      Rcpp::Rcerr<<offset<<"-"<<offset_chunksize.second<<std::endl;
+      Rcpp::stop("Cannot specify negative offset in SubInterval constructor without specifying total_size_");
+    }
+  }
+
+  constexpr SubInterval(std::pair<int,std::optional<int> > offset_chunksize,size_t total_size_):
+    offset(offset_chunksize.first),
+    size(size=offset_chunksize.second.value_or(total_size_-offset))
+  {
+    if(offset_chunksize.second.has_value()  && offset_chunksize.second<0){
+      Rcpp::stop("negative chunksize has been deprecated in SubInterval");
+    }
+    if(offset+size > total_size_){
+      Rcpp::Rcerr<<"offset_chunksize is: "<<offset_chunksize.first<<","<<*offset_chunksize.second<<std::endl;
+      Rcpp::Rcerr<<"total_size_ is: "<<total_size_<<std::endl;
+      Rcpp::Rcerr<<"SubInterval is: "<<offset<<"-"<<offset+size<<std::endl;
+      Rcpp::Rcerr<<"Interval is: (0)-"<<total_size_<<std::endl;
+      Rcpp::stop("SubInterval is out of bounds");
+    }
+  }
+  constexpr SubInterval(int offset_,int chunksize_,size_t total_size_):
+    offset(offset_),
+    size(chunksize_){
+    if(chunksize_<0){
+      Rcpp::stop("negative chunksize has been deprecated in SubInterval");
+    }
+    if(offset+size >= total_size_){
+      Rcpp::Rcerr<<"SubInterval is: "<<offset<<"-"<<offset+size<<std::endl;
+      Rcpp::Rcerr<<"Interval is: (0)-"<<total_size_<<std::endl;
+      Rcpp::stop("SubInterval is out of bounds");
+    }
+
+  }
+  constexpr SubInterval chunk_selection(const SubInterval selection,const size_t chunksize) const noexcept {
+    const auto chunk_sel_start = selection.offset-selection.offset%chunksize;
+    const auto new_sel_size = std::min(SubInterval(chunk_sel_start,selection.size+(selection.offset-chunk_sel_start)).num_chunks(chunksize)*chunksize,size-chunk_sel_start);
+    return SubInterval(chunk_sel_start,new_sel_size);
+  }
+  constexpr SubInterval chunk_i(const size_t i, const size_t chunksize) const noexcept{
+    return(SubInterval(i*chunksize,std::min(size-(i*chunksize),chunksize)));
+  }
+  constexpr bool operator==(const SubInterval &y) const noexcept {
+    return(y.size==size && y.offset==offset);
+  }
+  constexpr bool operator!=(const SubInterval &y) const noexcept {
+    return(y.size!=size or y.offset !=offset);
+  }
+
+
+  // x.sub_chunk(y) returns the SubInterval of x that corresponds to it's overlap with y
+  constexpr SubInterval sub_chunk(const SubInterval &y) const noexcept{
+
+    // const auto sub_offset = y.offset;
+    // const auto chunk_offset = size;
+
+    const auto y_end = y.offset+y.size-1;
+    const auto end = offset+size-1;
+    if(y.offset<offset){
+      return SubInterval(0,y_end>=end ? size : y_end-offset+1);
+    }
+    if(y_end>end){
+      return SubInterval(y.offset-offset,end-(y.offset-offset)+1);
+    }
+    return SubInterval(y.offset-offset, y.size);
+  }
+
+  constexpr size_t get_offset() const noexcept{
+    return offset;
+  }
+  constexpr size_t get_size() const noexcept{
+    return size;
+  }
+  constexpr size_t get_back() const noexcept{
+    return offset+size-1;
+  }
+  constexpr size_t num_chunks(const size_t chunksize)const noexcept{
+    return 1 + ((size - 1) / chunksize);
+  }
+  friend class chunk_chunker;
+
+
+  // static std::vector<SubInterval> make_chunked_selection( const SubInterval parent, const SubInterval selection,const size_t chunksize){
+
+
+
+
+
+  //   //    const size_t
+
+
+  // }
+
+};
 
 
 
 
 class rep_chunk_indexer{
-  const std::array<size_t,2> offset_size; //Logical offset/size of chunk on disk
+  std::array<size_t,2> offset_size; //Logical offset/size of chunk on disk
   std::vector<int> chunk_indexes; //indexes within chunk
   std::vector<int> out_indexes; //indexes in source/dest memory
   using	i_it= std::vector<int>::const_iterator;
@@ -67,48 +191,15 @@ public:
 };
 
 
-inline constexpr size_t find_sub_offset(const size_t chunk_offset,const size_t sub_offset){
-  // auto sub_end =sub_offset+sub_size-1;
-  // const auto chunk_end=chunk_offset+chunk_size-1;
-
-  if(sub_offset<=chunk_offset){ //If the overall selection starts before (or at the start of ) this chunk, it has to start at 0 for this chunk( we assume that this chunk overlaps with the selection)
-    return 0;
-  }
-
-  return(sub_offset-chunk_offset); //If the overall selection starts after the start of this chunk, the start is simply the difference
-}
-
-inline constexpr size_t find_sub_size(const size_t chunk_offset,const size_t chunk_size, const size_t sub_offset, const size_t sub_size){
-  auto sub_end =sub_offset+sub_size-1;
-  const auto chunk_end=chunk_offset+chunk_size-1;
-
-  if(sub_offset<=chunk_offset){ //If the overall selection starts before the beginning of this chunk
-    if(sub_end>=chunk_end){//and ends after the end
-      return chunk_size; //, then we return the whole chunk
-    }
-    //If the selection starts before the beginning but ends before the end, then the chunksize is simply the difference between the start of this chunk and the end of the selection
-    return sub_end-chunk_offset+1;
-  }
-
-  if(sub_end>= chunk_end){//If the selection starts after the beginning of the selection and ends after the end
-    return(chunk_end-sub_offset+1);
-  }
-  //If the selection starts after the beginning and ends before the end, then the sub_size is correct
-  return sub_size;
-}
-
 
 
 class IndexParser{
 public:
 private:
-  const int p;
-
-  //  const int index_dimension;
-
-  const int dimsize;
-  const int chunksize;
-  const int num_chunks;
+  int p;
+  int dimsize;
+  int chunksize;
+  int num_chunks;
   std::vector<rep_chunk_indexer> needed_chunks;
   std::vector<std::unique_ptr<rep_chunk_indexer>> tneeded_chunks;
 
@@ -129,8 +220,6 @@ public:
 												   chunks_used(0),
 												   is_unsorted(false),
 												   max_chunksize(0)
-
-
   {
 
     if(whole_only){
@@ -218,27 +307,25 @@ public:
 
 
 class chunk_chunker{
-  const std::array<size_t,2> offset_size;// Logical offset/size of chunk on disk
-  const size_t sub_offset;
-  const size_t sub_size;
-
+  SubInterval global_interval;
+  SubInterval relative_interval;
+  //offset in source/dest memory
   //  const std::array<size_t,2> sub_offset_size; // offset/size within chunk
-  const size_t  dest_d_offset; //offset in source/dest memory
+  size_t  dest_d_offset;
 public:
-  chunk_chunker(const std::array<size_t, 2> offset_size_,
-                const std::array<int, 2> sub_offset_size_,
+  chunk_chunker(const SubInterval interval_,
+                const SubInterval &chunk_,
 		const size_t dest_offset_)
-    : offset_size(offset_size_),
-      sub_offset(find_sub_offset(offset_size[0],static_cast<size_t>(sub_offset_size_[0]))),
-      sub_size(find_sub_size(offset_size_[0],offset_size_[1],static_cast<size_t>(sub_offset_size_[0]),static_cast<size_t>(sub_offset_size_[1]))),
+    : global_interval(interval_),
+      relative_interval(global_interval.sub_chunk(chunk_)),
       dest_d_offset(dest_offset_){
   }
 
   size_t chunk_size() const noexcept{
-    return(sub_size);
+    return(relative_interval.size);
   }
   size_t chunk_offset() const noexcept{
-    return(sub_offset);
+    return(relative_interval.offset);
   }
   auto chunk_slice() const{
     return(xt::range(chunk_offset(),chunk_offset()+chunk_size()));
@@ -248,11 +335,11 @@ public:
   }
 
   size_t disk_offset() const noexcept{
-    return offset_size[0];
+    return global_interval.offset;
   }
 
   size_t disk_size() const noexcept{
-    return offset_size[1];
+    return global_interval.size;
   }
 
   size_t dest_offset() const noexcept{
@@ -264,86 +351,63 @@ public:
   }
 
   int chunk_i(size_t i)const noexcept{
-    return sub_offset+i;
+    return relative_interval.offset+i;
   }
 
   int mem_i(size_t i)const noexcept{
     return dest_d_offset+i;
   }
-
 };
+
+
 
 class ChunkParser{
 private:
-
   int dimsize;
+  SubInterval selection;
   int chunksize;
   int p;
   int chunks_used;
-  std::vector<chunk_chunker> needed_chunks;
 
+  std::vector<chunk_chunker> needed_chunks;
 public:
   using	chunk_it =std::vector<chunk_chunker>::const_iterator;
   using	chunk_type=chunk_chunker;
-  //  ChunkParser(
-  ChunkParser(const size_t  dimsize_,const size_t chunksize_,const std::pair<int,int> offset_chunksize,bool whole_only=false):
+  ChunkParser(const size_t  dimsize_,const size_t chunksize_,const std::pair<int,std::optional<int>> selection_p,const bool whole_only=false):
     dimsize(dimsize_),
+    selection(selection_p,dimsize),
     chunksize(chunksize_),
-    p((offset_chunksize.second<0) ? (dimsize-offset_chunksize.first) : offset_chunksize.second),
-    chunks_used(ceilf(static_cast<float>(p)/static_cast<float>(chunksize)))
-
+    p(selection.get_size())
   {
-    needed_chunks.reserve(chunks_used);
-    int chunk_chunksize=offset_chunksize.second;
-    int chunk_offset=offset_chunksize.first;
-
-    if(chunk_chunksize<0){
-      chunk_chunksize=dimsize-chunk_offset;
-    }
-    if(chunk_offset+chunk_chunksize>dimsize){
-      //      Rcpp::Rcerr<<"in index_dimension"<<index_dimension_<<std::endl;
-      Rcpp::Rcerr<<"indexing beyond the end of the dataset! ("<<chunk_offset<<"+"<<chunk_chunksize<<">"<<dimsize<<")"<<std::endl;
-      Rcpp::stop("indexing error!");
-    }
-    int i=0;
-    int	out_o=0;
-    std::array<int, 2> sub_oa = {
-				 chunk_offset,
-				 chunk_chunksize
-    };
-
-    int chunk_start = chunk_offset-chunk_offset%chunksize;
+    const auto chunk_selection = SubInterval(0,dimsize).chunk_selection(selection,chunksize);
     if(whole_only){
-      if(chunk_offset%chunksize!=0){
-	Rcpp::stop("chunk offset must be on a chunk boundary when whole_only set to true");
+      if(chunk_selection.get_offset()!=selection.get_offset()){
+        Rcpp::stop("chunk offset must be on a chunk boundary when whole_only set to true");
       }
-      if(chunk_chunksize%chunksize!=0){
-	Rcpp::stop("chunk_chunksize must be a multiple of chunksize when whole_only set to true");
+      if(selection.get_size()%chunksize!=0){
+	Rcpp::stop("size of selection must be a multiple of chunksize when whole_only set to true");
       }
     }
 
-    for(int tpo=chunk_start; tpo<(chunk_offset+chunk_chunksize); tpo+=chunksize){
-      int chunk_no = tpo/chunksize;
-      const size_t t_chunk_offset = static_cast<size_t>(chunk_no * chunksize);
-      const size_t t_chunk_end = static_cast<size_t>(std::min<size_t>(static_cast<size_t>(dimsize),static_cast<size_t>(t_chunk_offset+chunksize-1)));
-      needed_chunks.emplace_back(chunk_chunker({t_chunk_offset,t_chunk_end-t_chunk_offset+1},
-									  sub_oa,
-					       out_o));
-      out_o+=needed_chunks[i].chunk_size();
-#ifdef DEBUG
-      if(whole_only){
-	if(needed_chunks[i]->chunk_size()!=needed_chunks[i]->disk_size()){
-	  Rcpp::Rcerr<<"chunk_size: "<<needed_chunks[i]->chunk_size()<<"\ndisk_size: "<<needed_chunks[i]->disk_size()<<"\n";
-	  Rcpp::stop("chunksize must be equal to disk size");
-	}
-      }
-#endif
-      i++;
+    chunks_used = chunk_selection.num_chunks(chunksize);
+    needed_chunks.reserve(chunks_used);
+    int	out_o=0;
+    for(int i=0; i<chunks_used; i++){
+      auto &new_chunker = needed_chunks.emplace_back(chunk_selection.chunk_i(i,chunksize),
+                                                    selection,
+                                                    out_o);
+      out_o+=new_chunker.chunk_size();
     }
-    if(i!=chunks_used){
+
+    if(needed_chunks.size()!=chunks_used){
+      // back_chunk.
+      Rcpp::Rcerr<<"needed_chunks.size() is: "<<needed_chunks.size()<<" while chunks_used is :"<<chunks_used<<std::endl;
+      Rcpp::Rcerr<<"needed_chunks is of size: "<<needed_chunks.size();
       Rcpp::stop("something has gone wrong with the chunk iteration");
     }
   }
+  //  std::vector<
+
   chunk_it begin() const{
     return(needed_chunks.cbegin());
   }
@@ -368,19 +432,16 @@ public:
   auto n_c() const{
     return(ranges::view::all(needed_chunks));
   }
-  ChunkParser ( ChunkParser && ) = default;
-  ChunkParser &  operator= ( ChunkParser && ) = default;
-  ChunkParser ( const ChunkParser & ) = delete;
-  ChunkParser & operator= ( const ChunkParser & ) = delete;
 };
 
 
 template<typename T>
 struct t2chunk_t;
 
-template<> struct t2chunk_t<std::pair<int,int> >{
+template<> struct t2chunk_t<std::pair<int,std::optional<int>> >{
   typedef ChunkParser c_type;
 };
+
 
 template<> struct t2chunk_t<Rcpp::IntegerVector >{
   typedef IndexParser c_type;
@@ -388,14 +449,7 @@ template<> struct t2chunk_t<Rcpp::IntegerVector >{
 
 
 template<typename D>
-struct xtm_t;// {
-//   typedef	std::false_type retvec_type;
-//   typedef	std::false_type retmat_type;
-//   typedef	std::false_type reta_type;
-//   typedef	std::false_type buffvec_type;
-//   typedef	std::false_type buffmat_type;
-//   typedef	std::false_type buffa_type;
-// };
+struct xtm_t;
 
 template<>
 struct xtm_t<int>{

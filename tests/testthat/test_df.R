@@ -82,6 +82,41 @@ test_that("We can read and dataframe slices correctly",{
 })
 
 
+
+test_that("chunked sorting workflow works like an on-disk grouped-sort",{
+
+  p <- 10000
+  levels_a <- 23
+  sa <- integer()
+  while(length(unique(sa))<levels_a){
+    sa <- sort(sample(levels_a,p,replace=T))
+  }
+  sb <- sample(p,p,replace=F)
+  sc <- runif(p)
+  tf <- tempfile(fileext=".tsv.gz")
+  df <- tibble::tibble(a=sa,b=sb,c=sc)
+  rledf <- rle2offset(df$a)
+  readr::write_tsv(df,tf)
+  
+  otf <- tempfile(fileext=".h5")
+  delim2h5(tf,otf,h5_args=list(datapath="test"),delim="\t",col_types=readr::cols(
+  a = readr::col_integer(),
+  b = readr::col_integer(),
+  c = readr::col_double()
+))
+  expect_equal(read_df_h5(otf,"test"),df)
+  
+  purrr::pwalk(rledf,function(value,offset,datasize){
+    tdf <- read_df_h5(otf,"test",subset=seq(offset+1,length.out = datasize)) %>% dplyr::arrange(b)
+    expect_equal(tdf$a,rep(value,datasize))
+    write_df_h5(tdf,otf,datapath = "test",subset=seq(offset+1,length.out = datasize))
+  })
+  expect_equal(dplyr::arrange(df,a,b),read_df_h5(otf,"test"))
+})
+
+
+
+
 test_that("We can convert mtcars to hdf5",{
   tf <- tempfile()
   mtcf <- readr::readr_example("mtcars.csv")

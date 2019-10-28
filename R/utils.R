@@ -2,7 +2,7 @@
     pkgconfig::set_config("EigenH5::use_blosc" = has_blosc())
     pkgconfig::set_config("EigenH5::use_lzf" = has_lzf())
     start_blosc()
-    # start_singleton()
+
 }
 
 fix_paths <- function(...) {
@@ -13,6 +13,35 @@ fix_paths <- function(...) {
     return(ret)
 }
 
+
+
+
+#' Convert RLE-encoded vector to offset+size dataframe
+#'
+#' @param x either a vector of class `rle`, or a vector that can be converte to one via (`rle(x)`)
+#' @param na_replace value to replace NA (rle doesn't play well with NA)
+#'
+#' @return tibble with columns `value`,`offset` and `datasize`
+#' @export
+#'
+#' @examples
+#' x <- rev(rep(6:10, 1:5))
+#' x_na <- c(NA,NA,NA,rev(rep(6:10, 1:5)))
+#' x_n3 <- c(-3,-3,-3,rev(rep(6:10, 1:5)))
+#' print(rle2offset(rle(x)))
+#' stopifnot(
+#'   identical(rle2offset(rle(x)),rle2offset(x)),
+#'   identical(rle2offset(x_na,na_replace=-3),rle2offset(x_n3)))
+rle2offset <- function(x,na_replace = -1L){
+  if (!inherits(x,"rle")){
+    x[is.na(x)] <- na_replace
+    x <- rle(x)
+  }
+  x$values[x$values==na_replace] <- NA_integer_
+  tibble::tibble(value=x$values,
+                 offset=c(0,cumsum(x$lengths)[-length(x$lengths)]),
+                 datasize=x$lengths)
+}
 
 
 ls_h5 <- function(filename,groupname="/",full_names=FALSE,details=FALSE){

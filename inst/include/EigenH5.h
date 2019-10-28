@@ -13,6 +13,15 @@
 
 
 
+// constexprREV_ACTG <- stats::setNames(c("T", "G", "A", "C"), ACTG)
+
+
+// Snp make_Snp(unsigned char chrom, double pos,char ref, char alt){
+//   return Snp{bit_snp
+
+
+
+
 
 class Path{
 public:
@@ -341,7 +350,7 @@ inline HighFive::DataSet getDataSet (const Rcpp::List file_l, std::unique_ptr<Fi
 //#include <eigenh5/ChunkSelector.hpp>
 
 
-std::variant<std::pair<int,int>,Rcpp::IntegerVector> dispatch_subset(SEXP x);
+std::variant<std::pair<int,std::optional<int>>,Rcpp::IntegerVector> dispatch_subset(SEXP x);
 
 
 

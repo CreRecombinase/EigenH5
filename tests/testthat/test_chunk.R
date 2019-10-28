@@ -130,7 +130,6 @@ test_that("can read a matrix rowchunk to a list",{
 
 
 test_that("can read a (string) matrix rowchunk",{
-  library(EigenH5)
   gen_rstrings <- function(n,max_len=300){
     replicate(n,paste0(sample(letters,size=sample(1:max_len,1),replace=T),collapse = ""))
     
