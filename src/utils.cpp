@@ -19,12 +19,14 @@
 
 
 //[[Rcpp::export]]
-Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input,const int offset=0,const int na_val=NA_INTEGER){
+Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input,int offset=0,const std::string prefix="",const int na_val=NA_INTEGER){
 
   SEXP str_sxp(input);
   const size_t p =input.size();
   Rcpp::IntegerVector ret(p);
   auto pp = get_string_ptr(str_sxp);
+  offset = std::max(static_cast<size_t>(offset),prefix.size());
+  const bool use_prefix = prefix.size()>0;
   int tresult;
   std::transform(pp,pp+p,ret.begin(),[&](SEXP x){
                                        if(x==R_NaString)
@@ -39,6 +41,11 @@ Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input,const int offset=0,con
                                          // Rcpp::Rcerr<<"string offset greater than string length"<<std::endl;
                                          return na_val;
                                        }
+                                       if(use_prefix){
+                                         if(std::string_view(chp,offset)!=prefix)
+                                           return na_val;
+                                       }
+
 
 #if __has_include(<charconv>)
                                        if(auto [p, ec] = std::from_chars(beg, end, tresult);
@@ -108,7 +115,7 @@ void link_objects_h5(Rcpp::StringVector filename_from ,const std::string filenam
     const auto fn_from=CHAR(STRING_ELT(filename_from,i));
     Path dp(std::string(CHAR(STRING_ELT(datapath_from,i))));
 
-    if(dp.nodes.front()!='/'){
+    if(dp.string().front()!='/'){
       Rcpp::stop("datapath_from must be an absolute path(must begin with \'/\' ("+dp+" is not an absolute path)");
     }
     H5Lcreate_external(fn_from, dp.c_str(), to_file.getId(), dp_to, (hid_t)0, (hid_t)0);
@@ -261,7 +268,7 @@ Rcpp::StringVector ls_h5(const std::string filename,Rcpp::CharacterVector groupn
 
   //HDF5ErrMapper::ToException<GroupException>(
   grp = file.getGroup(g_path);
-  std::string group_path = full_names ? g_path.nodes : std::string();
+  std::string group_path = full_names ? g_path.string() : std::string();
   const size_t num_cols = grp.getNumberObjects();
   Rcpp::StringVector retvec(num_cols);
 
