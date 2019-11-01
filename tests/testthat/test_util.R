@@ -60,6 +60,30 @@ test_that("fast conversion works", {
         
 })
 
+test_that("fast conversion works with prefix check", {
+        int_d <- sample(as.character(1:100),100,replace=TRUE)
+        int_i <- as.integer(int_d)
+        
+        testthat::expect_equal(fast_str2ascii(letter_d),ascii_i)
+        testthat::expect_equal(fast_str2int(int_d),int_i)
+        
+        for(i in 1:10){
+                ppref <- paste0(rep("p",i),collapse="")
+                rpref <- paste0(rep("r",i),collapse="")
+                rppref <- sample(c(ppref,rpref),100,replace=TRUE)
+                cvec <- paste0(rppref,int_d)
+                ret <- fast_str2int(cvec,prefix=ppref)
+                expect_true(all(is.na(ret[rppref==rpref])))
+                expect_equal(int_i[rppref==ppref],ret[rppref==ppref])
+        }
+        
+        
+        
+})
+
+
+
+
 test_that("We can write a vector", {
         expect_true(EigenH5::write_vector_h5(numeric(3), tempfile(), "test"))
 })

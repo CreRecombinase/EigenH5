@@ -102,11 +102,12 @@ namespace HighFive {
 
   inline std::optional<size_t> DataSet::read_raw_chunk(std::vector<std::byte> &data_buff, const std::vector<size_t> &offsets) const {
     hsize_t chunk_nbytes;
-
     //    T ret_vec(read_chunk_nbytes);
     uint32_t    read_filter_mask = 0; //filter mask after direct read
     std::vector<hsize_t> h_offsets(offsets.size());
     std::copy(offsets.begin(),offsets.end(),h_offsets.begin());
+    haddr_t file_offset=0;
+    //    auto tret =H5Dget_chunk_info_by_coord(_hid,h_offsets.data(),&read_filter_mask,&file_offset,&chunk_nbytes);
 
     auto ret =H5Dget_chunk_storage_size(_hid, h_offsets.data(), &chunk_nbytes);
     auto buff_size = data_buff.size();
@@ -115,7 +116,6 @@ namespace HighFive {
       //      Rcpp::Rcerr<<"resizing from "<<data_buff.size()<<"to "<<newsize<<std::endl;
       data_buff.resize(newsize);
     }
-
     if ((H5Dread_chunk(_hid, H5P_DEFAULT, h_offsets.data(),
 		       &read_filter_mask, data_buff.data())) < 0) {
       HDF5ErrMapper::ToException<DataSetException>(

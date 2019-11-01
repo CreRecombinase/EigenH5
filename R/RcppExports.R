@@ -85,6 +85,10 @@ permutation_order <- function(options, dims) {
     .Call(`_EigenH5_permutation_order`, options, dims)
 }
 
+read_tibble_h5 <- function(filename, datapath, options) {
+    .Call(`_EigenH5_read_tibble_h5`, filename, datapath, options)
+}
+
 read_vector <- function(filename, datapath, options) {
     .Call(`_EigenH5_read_vector`, filename, datapath, options)
 }
@@ -117,8 +121,8 @@ create_dataset_h5 <- function(filename, datapath, data, options) {
     .Call(`_EigenH5_create_dataset_h5`, filename, datapath, data, options)
 }
 
-fast_str2int <- function(input, offset = 0L, na_val = NA_integer_) {
-    .Call(`_EigenH5_fast_str2int`, input, offset, na_val)
+fast_str2int <- function(input, offset = 0L, prefix = "", na_val = NA_integer_) {
+    .Call(`_EigenH5_fast_str2int`, input, offset, prefix, na_val)
 }
 
 fast_str2ascii <- function(input, offset = 0L) {

@@ -4,7 +4,7 @@
 \alias{rle2offset}
 \title{Convert RLE-encoded vector to offset+size dataframe}
 \usage{
-rle2offset(x, na_replace = -1)
+rle2offset(x, na_replace = -1L)
 }
 \arguments{
 \item{x}{either a vector of class `rle`, or a vector that can be converte to one via (`rle(x)`)}

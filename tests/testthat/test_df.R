@@ -39,13 +39,19 @@ test_that("We can read and write dataframes correctly",{
   tf <- tempfile()
   write_df_h5(td,tf,"test",filter="none")
   rtd <- read_df_h5(tf,"test")
+  crtd <- read_tibble_h5(tf,"test",list())
   expect_equal(td,rtd)
+  expect_equal(rtd,crtd)
+  
+  
   expect_equal(ls_h5(tf),"test")
   dn <- ls_h5(tf,"test")
   expect_equal(dn,c("a","b","c"))
   srtd <- read_df_h5(tf,"test",subset=3:5)
+  crtd <- read_tibble_h5(tf,"test",list(subset=as.integer(3:5)))
   
   expect_equal(std,srtd)
+  expect_equal(srtd,crtd,ignore_row_order=FALSE)
 })
 
 

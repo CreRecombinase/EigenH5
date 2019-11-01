@@ -305,7 +305,7 @@ namespace HighFive {
   inline bool NodeTraits<Derivate>::exist(const Path& group_path) const {
     // When there are slashes, first check everything is fine
     // so that subsequent errors are only due to missing intermediate groups
-    if (group_path.nodes.find('/') != std::string::npos) {
+    if (group_path.has_parent_path()) {
       _exist("/");  // Shall not throw under normal circumstances
       try {
 	SilenceHDF5 silencer;

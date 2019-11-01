@@ -1,4 +1,5 @@
 #pragma once
+#include <string_view>
 #define ZSTD_STATIC_LINKING_ONLY
 
 #include <cmath>
@@ -21,12 +22,27 @@
 
 
 
+#if __has_include(<filesystem>)
 
+#include <filesystem>
 
+using Path = std::filesystem::path;
+
+inline std::string operator+(const std::string a, const Path &b){
+  return(a+b.string());
+}
+
+inline std::string operator+(const Path &a, const std::string  &b){
+  return(a.string()+b);
+}
+
+#else
 class Path{
 public:
   std::string nodes;
-  Path(const std::string name):nodes(name){
+  Path(const Rcpp::String &name):nodes(name.get_cstring()){
+  }
+  Path(const std::string &name):nodes(name){
   }
   std::string parent_path() {
     if(nodes.size()==0){
@@ -49,6 +65,13 @@ public:
   const char *c_str() const {
     return(nodes.c_str());
   }
+  bool has_parent_path() const{
+    return nodes.find('/') != std::string::npos;
+  }
+  auto find(const char x){
+    return nodes.find(x);
+  }
+
   std::string filename() {
     if(nodes.size()==0){
       Rcpp::stop("path is empty!");
@@ -70,10 +93,13 @@ public:
 
     return (ret);
   }
+  std::string string() const{
+    return nodes;
+  }
   operator const std::string&() const { return(nodes); }
 };
 
-inline std::string operator+(const std::string a, const Path &b){
+inline std::string operator/(const std::string a, const Path &b){
   return(a+b.nodes);
 }
 
@@ -81,6 +107,8 @@ inline std::ostream &operator<<(std::ostream &os, const Path &dt) {
   os << dt.nodes;
   return os;
 }
+#endif
+
 
 #include "highfive/highfive.hpp"
 
@@ -119,7 +147,22 @@ public:
 #include "EigenH5_RcppExports.h"
 
 inline Path root_path(const std::string &input) {
-  return (input.front() == '/' ? input : "/" + input);
+  Path pt(input);
+
+  return pt.is_absolute() ? pt : "/" / pt;
+}
+
+inline Path root_path(const Rcpp::StringVector &input) {
+  if(input.size()>1){
+    Rcpp::Rcerr<<"input.size() >1, using first element"<<std::endl;
+  }
+
+  if(input.size()==0){
+    Rcpp::Rcerr<<"input is empty"<<std::endl;
+  }
+  Rcpp::String ps = input(0);
+  Path pt(ps.get_cstring());
+  return pt.is_absolute() ? pt : "/" / pt;
 }
 
 template <typename T>

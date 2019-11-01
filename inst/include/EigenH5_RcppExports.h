@@ -192,6 +192,27 @@ namespace EigenH5 {
         return Rcpp::as<Rcpp::List >(rcpp_result_gen);
     }
 
+    inline SEXP read_tibble_h5(std::string filename, Rcpp::StringVector datapath, Rcpp::List options) {
+        typedef SEXP(*Ptr_read_tibble_h5)(SEXP,SEXP,SEXP);
+        static Ptr_read_tibble_h5 p_read_tibble_h5 = NULL;
+        if (p_read_tibble_h5 == NULL) {
+            validateSignature("SEXP(*read_tibble_h5)(std::string,Rcpp::StringVector,Rcpp::List)");
+            p_read_tibble_h5 = (Ptr_read_tibble_h5)R_GetCCallable("EigenH5", "_EigenH5_read_tibble_h5");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_read_tibble_h5(Shield<SEXP>(Rcpp::wrap(filename)), Shield<SEXP>(Rcpp::wrap(datapath)), Shield<SEXP>(Rcpp::wrap(options)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<SEXP >(rcpp_result_gen);
+    }
+
     inline SEXP read_vector(std::string filename, std::string datapath, Rcpp::List options) {
         typedef SEXP(*Ptr_read_vector)(SEXP,SEXP,SEXP);
         static Ptr_read_vector p_read_vector = NULL;
@@ -360,17 +381,17 @@ namespace EigenH5 {
         return Rcpp::as<bool >(rcpp_result_gen);
     }
 
-    inline Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input, const int offset = 0, const int na_val = NA_INTEGER) {
-        typedef SEXP(*Ptr_fast_str2int)(SEXP,SEXP,SEXP);
+    inline Rcpp::IntegerVector fast_str2int(Rcpp::StringVector input, int offset = 0, const std::string prefix = "", const int na_val = NA_INTEGER) {
+        typedef SEXP(*Ptr_fast_str2int)(SEXP,SEXP,SEXP,SEXP);
         static Ptr_fast_str2int p_fast_str2int = NULL;
         if (p_fast_str2int == NULL) {
-            validateSignature("Rcpp::IntegerVector(*fast_str2int)(Rcpp::StringVector,const int,const int)");
+            validateSignature("Rcpp::IntegerVector(*fast_str2int)(Rcpp::StringVector,int,const std::string,const int)");
             p_fast_str2int = (Ptr_fast_str2int)R_GetCCallable("EigenH5", "_EigenH5_fast_str2int");
         }
         RObject rcpp_result_gen;
         {
             RNGScope RCPP_rngScope_gen;
-            rcpp_result_gen = p_fast_str2int(Shield<SEXP>(Rcpp::wrap(input)), Shield<SEXP>(Rcpp::wrap(offset)), Shield<SEXP>(Rcpp::wrap(na_val)));
+            rcpp_result_gen = p_fast_str2int(Shield<SEXP>(Rcpp::wrap(input)), Shield<SEXP>(Rcpp::wrap(offset)), Shield<SEXP>(Rcpp::wrap(prefix)), Shield<SEXP>(Rcpp::wrap(na_val)));
         }
         if (rcpp_result_gen.inherits("interrupted-error"))
             throw Rcpp::internal::InterruptedException();

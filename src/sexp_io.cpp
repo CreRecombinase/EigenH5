@@ -30,6 +30,31 @@ template<> struct r2cpp_t<STRSXP>{
 };
 
 
+typedef  std::integral_constant<SEXPTYPE, INTSXP> int_tv;
+typedef  std::integral_constant<SEXPTYPE, REALSXP> double_tv;
+typedef  std::integral_constant<SEXPTYPE, LGLSXP> bool_tv;
+typedef  std::integral_constant<SEXPTYPE, STRSXP> string_tv;
+typedef  std::integral_constant<SEXPTYPE,NILSXP> nil_tv;
+
+std::variant<int_tv,double_tv,bool_tv,string_tv> variant_v(SEXPTYPE i){
+  switch(i){
+  case INTSXP:
+    return int_tv();
+  case REALSXP:
+    return double_tv();
+  case STRSXP:
+    return string_tv();
+  case LGLSXP:
+    return bool_tv();
+  default:
+    Rcpp::stop("Can't read type");
+    return bool_tv();
+  }
+}
+
+
+
+
 SEXPTYPE h2r_T(const HighFive::DataType htype){
 
   using namespace HighFive;
@@ -435,6 +460,99 @@ std::vector<size_t> dataset_dims(std::string filename,
 //   return(.read_raw_chunkmchunk_idx));
 // }
 
+class Subcols{
+  std::optional<Rcpp::StringVector> sc;
+public:
+  Subcols():sc(std::nullopt){}
+  Subcols(  std::optional<Rcpp::StringVector> &&sc_):sc(sc_){}
+  bool contains(const std::string &inp)const {
+    if(!sc.has_value()){
+      return true;
+    }
+    return(std::find(sc->begin(),sc->end(),Rcpp::String(inp))!=std::end(*sc));
+  }
+};
+
+//[[Rcpp::export]]
+SEXP read_tibble_h5(std::string filename,Rcpp::StringVector datapath,Rcpp::List options){
+
+  auto dp=root_path(filename);
+
+  HighFive::File file(filename,HighFive::File::ReadOnly);
+  auto grp = file.getGroup(root_path(datapath));
+  size_t num_cols = grp.getNumberObjects();
+  Rcpp::IntegerVector idx_vec = Rcpp::seq(0,num_cols-1);
+
+  Subcols subcols(get_list_element<STRSXP>(options,"subcols"));
+  std::vector<std::pair<std::unique_ptr<HighFive::DataSet>,std::string>> scols;
+  std::transform(idx_vec.begin(),idx_vec.end(),std::back_inserter(scols),[&](const int idx){
+                                                                           Rcpp::RObject ret;
+                                                                           auto tpath = grp.getObjectName(idx);
+                                                                           auto ds = subcols.contains(tpath) ?std::make_unique<HighFive::DataSet>(grp.getDataSet(tpath)) : nullptr;
+                                                                           return make_pair(std::move(ds),tpath);
+                                                                         });
+
+  scols.erase(std::remove_if(scols.begin(),scols.end(),[](const auto&  data_el){
+                                                         return(data_el.first==nullptr);
+                                                       }),scols.end());
+
+
+  num_cols = scols.size();
+  Rcpp::StringVector name_vec = Rcpp::StringVector::import_transform(scols.cbegin(),scols.cend(),[](const auto &el){
+                                                                                                   return Rcpp::String(el.second);
+                                                                                                 });
+  std::optional<size_t> tdims = std::nullopt;
+  std::optional<size_t> osize = std::nullopt;
+  Rcpp::List ret = Rcpp::List::import_transform(scols.cbegin(),scols.cend(),[&](const auto &idx){
+                                                                              Rcpp::RObject ret;
+                                                                              auto dims = idx.first->getDataDimensions();
+                                                                              auto ds = *(idx.first.get());
+                                                                              tdims = tdims.value_or(dims[0]);
+                                                                              if(*tdims!=dims[0]){
+                                                                                Rcpp::Rcerr<<"tdims is: "<<*tdims<<" "<<idx.second<<" is: "<<dims[0]<<std::endl;
+                                                                                Rcpp::stop("all datasets must have the same dimension");
+                                                                              }
+                                                                              std::array<size_t,1> tarr={*tdims};
+                                                                              auto datasel = DatasetSelection<1>::ProcessList(options,tarr);
+                                                                              auto file_sel=datasel.makeSelection(ds);
+                                                                              auto my_t = typeof_h5_dset(ds);
+
+                                                                              switch (my_t){
+                                                                              case INTSXP: {
+                                                                                ret = read_elem_v_h5<INTSXP>(file_sel,datasel);
+                                                                                break;
+                                                                              }
+                                                                              case REALSXP: {
+                                                                                ret = read_elem_v_h5<REALSXP>(file_sel,datasel);
+                                                                                break;
+                                                                              }
+                                                                              case STRSXP: {
+                                                                                ret = read_elem_v_h5<STRSXP>(file_sel,datasel);
+                                                                                break;
+                                                                              }
+                                                                              default: {
+                                                                                warning(
+                                                                                        "Invalid SEXPTYPE %d.\n",
+                                                                                        my_t
+                                                                                        );
+                                                                                Rcpp::Rcerr<<idx.second.c_str()<<" has type that can't be read"<<std::endl;
+
+                                                                                Rcpp::stop("Can't read type");
+                                                                              }
+                                                                              }
+                                                                              osize = osize.value_or(::Rf_xlength(SEXP(ret)));
+                                                                              auto attr_v=list_R_attr(ds);
+                                                                              for(auto &attr :attr_v){
+                                                                                ret.attr(attr.substr(2))=read_attribute(ds,attr);
+                                                                              }
+                                                                              return ret;
+                                                                            });
+
+  ret.names()=name_vec;
+  ret.attr("class") = StringVector::create("tbl_df","tbl","data.frame");
+  ret.attr("row.names") = seq(1, *osize);
+  return ret;
+}
 
 
 
