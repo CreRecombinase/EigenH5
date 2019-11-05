@@ -78,6 +78,9 @@ std::pair<int,std::optional<int>> altrep_pair(SEXP x){
 }
 
 
+
+
+
 std::variant<std::pair<int,std::optional<int>> ,Rcpp::IntegerVector> dispatch_subset(SEXP x){
 
   auto my_t = TYPEOF(x);

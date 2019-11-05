@@ -18,6 +18,7 @@ namespace HighFive {
 
 template <typename Derivate>
 class NodeTraits;
+  class Filter;
 template <typename Derivate>
 class SliceTraits;
 class DataType;

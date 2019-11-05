@@ -8,6 +8,7 @@
 #include <Rinternals.h>
 
 
+
 context("We can read and write matrices using the DataQueue"){
 
 
@@ -177,33 +178,77 @@ context("We can read and write matrices using the DataQueue"){
 context("Subsetting works"){
 
   constexpr SubInterval inter(0,100);
+  constexpr SubInterval o_inter(10,100);
+  static_assert(inter==SubInterval::front_back(0,99));
   static_assert(inter.get_offset()==0,"offset works");
   static_assert(inter.get_size()==100,"size works");
+  static_assert(inter.get_back()==99,"size works");
   static_assert(inter.num_chunks(10)==10,"chunking works");
   static_assert(inter.num_chunks(11)==10,"ceiling division works");
   static_assert(inter.chunk_i(0,10)==SubInterval(0,10),"first chunk is first chunk");
+  static_assert(o_inter.chunk_i(0,10)==SubInterval(10,10),"first offset chunk is first offset chunk");
+  static_assert(o_inter.chunk_i(1,10)==SubInterval(20,10),"second offset chunk is first offset chunk");
   static_assert(inter.chunk_i(1,10)==SubInterval(10,10),"second chunk is second chunk");
   static_assert(inter.chunk_i(3,10)==SubInterval(30,10),"third chunk is third chunk");
-  static_assert(inter.chunk_i(1,10).sub_chunk(SubInterval(0,20))==SubInterval(0,10));
-  static_assert(inter.chunk_i(3,10).sub_chunk(SubInterval(0,35))==SubInterval(0,5));
+
+  static_assert(inter.new_offset(4).get_offset()==4);
+  static_assert(inter.new_offset(4).get_back()==99);
+
+  static_assert(inter.get_back()==99);
+  static_assert(inter.new_back(4)==SubInterval(0,5));
+
+  static_assert(inter.chunk_i(0,10).sub_chunk(SubInterval(5,20))==SubInterval(5,5));
+  static_assert(inter.chunk_i(1,10).sub_chunk(SubInterval(5,20))==SubInterval(0,10));
+  static_assert(inter.chunk_i(2,10).sub_chunk(SubInterval(5,20))==SubInterval(0,5));
   static_assert(inter.chunk_selection(SubInterval(3,10),10).get_offset()==0);
+
+  static_assert(SubInterval(3,10).closest_boundary_below(10)==0);
+  static_assert(SubInterval(3,10).num_chunks(10)==1);
+  static_assert(SubInterval(3,10).num_chunks_total(10)==2);
+  static_assert(SubInterval(3,10).closest_boundary_below(10)==0);
+  static_assert(SubInterval(3,10).closest_boundary_above(10)==19);
+
+  static_assert(inter.truncate_back(SubInterval(0,20))==SubInterval(0,20));
+
+  static_assert(inter.chunk_selection(SubInterval(3,10),10).get_offset()==0);
+  static_assert(inter.chunk_selection(SubInterval(3,10),10).get_offset()==0);
+  static_assert(inter.chunk_selection(SubInterval(3,10),10).get_back()==19);
+
   static_assert(inter.chunk_selection(SubInterval(3,10),10).get_size()==20);
   static_assert(inter.chunk_selection(SubInterval(0,10),10).get_size()==10);
   static_assert(inter.chunk_selection(SubInterval(11,10),10).get_size()==20);
   static_assert(inter.chunk_selection(SubInterval(11,10),10).get_offset()==10);
 
+  static_assert(inter.truncate_back(SubInterval(50,100)).get_size()==50);
+  static_assert(inter.truncate_back(SubInterval(50,100)).get_offset()==50);
+  static_assert(inter.truncate_back(SubInterval(50,50)).get_size()==50);
 
-  const ChunkParser cp(100,11,{3,10},false);
-  int i=0;
-  auto ip = cp.begin();
-  expect_true(ip->chunk_size()==8);
-  expect_true(ip->chunk_offset()==3);
-  expect_true(ip->disk_offset()==0);
-  expect_true(ip->disk_size()==11);
-  ip++;
-  expect_true(ip->chunk_size()==2);
-  expect_true(ip->chunk_offset()==0);
-  expect_true(ip->disk_offset()==11);
-  expect_true(ip->disk_size()==11);
+
+  // constexpr SubInterval big_inter(0,  2370249);
+  // static_assert(inter.chunk_selection(SubInterval(1127221,1243028),150000).get_offset()==2);
+  const int datasize =6000;
+  const int offset =2135;
+  const int selsize=2000;
+  const size_t chunksize = 1000;
+
+  Rcpp::IntegerVector inpv(selsize,0);
+  std::iota(inpv.begin(),inpv.end(),offset+1);
+  const IndexParser inp(datasize,chunksize,inpv);
+  const ChunkParser cp(datasize,chunksize,{offset,selsize},false);
+  expect_true(inp.total_size()==cp.total_size());
+  expect_true(inp.total_chunksize()==cp.total_chunksize());
+  expect_true(inp.n_chunks()==cp.n_chunks());
+  int itcc=0;
+  auto chunk_b = cp.begin();
+  for(auto ind_b :inp){
+    expect_true(ind_b.disk_offset()==chunk_b->disk_offset());
+    expect_true(ind_b.disk_size()==chunk_b->disk_size());
+    Rcpp::Rcerr<<itcc++<<std::endl;
+    Rcpp::Rcerr<<ind_b<<std::endl<<*chunk_b<<std::endl;
+    expect_true(ind_b.chunk_offset()==chunk_b->chunk_offset());
+    expect_true(ind_b.chunk_size()==chunk_b->chunk_size());
+    chunk_b++;
+  }
+
 
 }

@@ -257,13 +257,7 @@ public:
       auto rc = ZSTD_decompressDCtx(ctxt_d.get(),uncompressed, uc_size, compressed,cb_size.value());
       if(ZSTD_isError(rc)){
 	Rcpp::Rcerr<<ZSTD_getErrorName(rc)<<std::endl;
-	if(ZSTD_isFrame((void*) compressed, cb_size.value())){
-	  Rcpp::Rcerr<<"Frame is valid"<<std::endl;
-	}
-	else{
-	  Rcpp::Rcerr<<"Frame is not valid"<<std::endl;
-	}
-	auto ret2 = ZSTD_getFrameContentSize((void*) compressed,cb_size.value());
+        auto ret2 = ZSTD_getFrameContentSize((void*) compressed,cb_size.value());
 
 	if(ret2==0){
 	  Rcpp::Rcerr<<"Frame valid but empty"<<std::endl;
@@ -301,14 +295,11 @@ public:
     }
     return rc;
   }
-  
 };
   
 
 
 namespace HighFive {
-/// \brief Generic HDF5 property List
-///
 
   class Filter: public Object {
 
@@ -327,8 +318,9 @@ namespace HighFive {
     static std::vector<size_t> guess_chunk(const std::vector<size_t> data_shape);
     static Filter From(const DataSpace &dataspace,const hid_t filter_id,std::vector<unsigned int> cd_values={});
     hid_t getId() const;
-    std::vector<size_t> get_chunksizes()const;
+    const std::vector<size_t> &get_chunksizes()const;
     compressors getDecompressor() const;
+
     std::pair<std::string,std::vector<unsigned int> > get_filter_info() const;
   protected:
     std::vector<size_t> chunksizes;
@@ -344,9 +336,6 @@ namespace HighFive {
 
 
 namespace HighFive {
-
-
-
 
   const hid_t filter_gzip = 1;
   const hid_t filter_blosc = 32001;
@@ -515,7 +504,7 @@ namespace HighFive {
     }
   }
 
-  inline std::vector<size_t> Filter::get_chunksizes()const{
+  inline const std::vector<size_t> &Filter::get_chunksizes()const{
     return(chunksizes);
   }
 

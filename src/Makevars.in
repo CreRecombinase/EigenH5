@@ -1,4 +1,4 @@
 PKG_LIBS += @HDF5R_LIBS@
 #PKG_LIBS += $(shell ${R_HOME}/bin/Rscript -e "RcppParallel::RcppParallelLibs()")
-PKG_CPPFLAGS += -I../inst/include @HDF5R_CPPFLAGS@
+PKG_CPPFLAGS += -I../inst/include @HDF5R_CPPFLAGS@ -DDEBUGNE -DXXH_NAMESPACE=ZSTD_
 PKG_CFLAGS += @HDF5R_CFLAGS@

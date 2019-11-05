@@ -208,6 +208,20 @@ test_that("can read/write numeric vector", {
         rd <- read_vector_h5(filename = tempf, datapath="grp/dat")
         expect_equal(rd, tvec)
 })
+
+
+test_that("can read/write numeric vector using offset/datasize", {
+        library(EigenH5)
+        tvec <- runif(100)
+        tempf <- tempfile()
+        write_vector_h5(filename = tempf, datapath="grp/dat", tvec,chunksize=10)
+        expect_equal(dataset_chunks(tempf,"grp/dat"),10)
+        rd <- read_vector_h5v(filename = tempf,"grp/dat",i = 15L:100L)
+        expect_equal(rd, tvec[15:100])
+})
+
+
+
 test_that("can read/write integer vector", {
         tvec <- sample(1:100)
         tempf <- tempfile()

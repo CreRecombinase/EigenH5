@@ -1,7 +1,7 @@
 #pragma once
 #include <boost/icl/interval_set.hpp>
 #include "highfive/highfive.hpp"
-#include "boost/optional.hpp"
+#include "rcpp_helpers.hpp"
 #include <RcppEigen.h>
 #include <Rcpp.h>
 

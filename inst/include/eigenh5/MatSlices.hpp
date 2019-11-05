@@ -2,12 +2,12 @@
 #include <progress.hpp>
 #include <array>
 
-
+#include "path.hpp"
 #include "highfive/highfive.hpp"
 #include <memory>
 
 
-#define EIGEN_RUNTIME_NO_MALLOC
+#define EIGEN_RUNTIME_NO_MALLOC 1
 
 // template<typename T>
 // class DataHandle{
