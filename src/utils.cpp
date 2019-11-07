@@ -127,6 +127,7 @@ void link_objects_h5(Rcpp::StringVector filename_from ,const std::string filenam
     Path dp(std::string(CHAR(STRING_ELT(datapath_from,i))));
 
     if(!dp.is_absolute()){
+
       Rcpp::stop("datapath_from must be an absolute path(must begin with \'/\' ("+dp+" is not an absolute path)");
     }
     H5Lcreate_external(fn_from, dp.c_str(), to_file.getId(), dp_to, (hid_t)0, (hid_t)0);
