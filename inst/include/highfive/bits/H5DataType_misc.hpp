@@ -24,7 +24,6 @@ namespace HighFive {
     bool is_str = sup==H5T_STRING;
     //    H5Tclose(sup);
     if(is_str){
-
       return(H5Tget_size(_hid));
     }
     return 1;

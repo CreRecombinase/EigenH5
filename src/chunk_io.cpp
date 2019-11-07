@@ -1,12 +1,355 @@
-#include "EigenH5.h"
+#include "eigenh5/indexers.hpp"
+#include "path.hpp"
+#include "sexp_io.hpp"
+#include "utils.hpp"
 #include <variant>
-#include<eigenh5/indexers.hpp>
-//[[depends(RcppEigen)]]
-//[[Rcpp::plugins(cpp11)]]
-// [[Rcpp::depends(BH)]]
 
 
 
+//[[Rcpp::plugins(cpp17)]]
+
+#include <sys/types.h>
+#include <aio.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <iostream>
+#include <stdlib.h>
+#include "xtensor-r/rarray.hpp"
+#include "xtensor-r/rtensor.hpp"
+
+
+size_t get_source_size(const HighFive::DataSet &d){
+      return H5Tget_size(d.getDataType().getId());
+}
+
+std::vector<size_t> get_chunksizes(const HighFive::DataSet &d){
+  return d.getFilter().get_chunksizes();
+}
+
+
+size_t get_n_elem(const HighFive::DataSet &d){
+  return d.getDataType().n_elem();
+}
+
+
+
+template<typename T>
+struct t2chunk_t;
+
+template<> struct t2chunk_t<std::pair<int,std::optional<int>> >{
+  typedef ChunkParser c_type;
+};
+
+
+template<> struct t2chunk_t<Rcpp::IntegerVector >{
+  typedef IndexParser c_type;
+};
+
+
+template<typename D>
+struct xtm_t;
+
+template<>
+struct xtm_t<int>{
+  typedef	xt::rtensor<int,1> retvec_type;
+  typedef	xt::rtensor<int,2> retmat_type;
+  typedef	xt::rtensor<int,3> reta_type;
+  typedef	xt::xtensor<int,1,xt::layout_type::row_major> buffvec_type;
+  typedef	xt::xtensor<int,2,xt::layout_type::row_major> buffmat_type;
+  typedef	xt::xtensor<int,3,xt::layout_type::row_major> buffa_type;
+  typedef       Rcpp::IntegerVector rrvec_type;
+  typedef       Rcpp::IntegerMatrix rrmat_type;
+};
+
+template<>
+struct xtm_t<double>{
+  typedef	xt::rtensor<double,1> retvec_type;
+  typedef	xt::rtensor<double,2> retmat_type;
+  typedef	xt::rtensor<double,3> reta_type;
+  typedef	xt::xtensor<double,1,xt::layout_type::row_major> buffvec_type;
+  typedef	xt::xtensor<double,2,xt::layout_type::row_major> buffmat_type;
+  typedef	xt::xtensor<double,3,xt::layout_type::row_major> buffa_type;
+  typedef       Rcpp::NumericVector rrvec_type;
+  typedef       Rcpp::NumericMatrix rrmat_type;
+};
+
+
+template<>
+struct xtm_t<std::string>{
+  typedef	Rcpp::StringVector retvec_type;
+  typedef	Rcpp::StringMatrix retmat_type;
+  typedef	std::false_type reta_type;
+  typedef	xt::xtensor<char,2,xt::layout_type::row_major> buffvec_type;
+  typedef       xt::xtensor<char,3,xt::layout_type::row_major> buffmat_type;
+
+  typedef	std::false_type buffa_type;
+  typedef       Rcpp::StringVector rrvec_type;
+  typedef       Rcpp::StringMatrix rrmat_type;
+};
+
+
+
+template<>
+struct xtm_t<unsigned char>{
+  typedef	xt::rtensor<unsigned char,1> retvec_type;
+  typedef	xt::rtensor<unsigned char,2> retmat_type;
+  typedef	xt::rtensor<unsigned char,3> reta_type;
+  typedef	xt::xtensor<unsigned char,1,xt::layout_type::row_major> buffvec_type;
+  typedef	xt::xtensor<unsigned char,2,xt::layout_type::row_major> buffmat_type;
+  typedef	xt::xtensor<unsigned char,3,xt::layout_type::row_major> buffa_type;
+  typedef       Rcpp::RawVector rrvec_type;
+  typedef       Rcpp::RawMatrix rrmat_type;
+};
+
+
+
+
+template<typename D,typename DS=HighFive::DataSet>
+class DataSet_Context{
+
+public:
+  const DS& d;
+private:
+
+  using tensor_type=typename xtm_t<D>::buffmat_type;
+  const size_t elem_size;
+  const std::vector<size_t> dataset_chunksizes;
+  std::vector<std::byte> raw_chunk_buffer;
+
+public:
+  DataSet_Context(const HighFive::DataSet& d_):d(d_),elem_size(get_n_elem(d)),dataset_chunksizes(get_chunksizes(d)){
+    auto raw_size=std::accumulate(dataset_chunksizes.begin(),dataset_chunksizes.end(),sizeof(typename tensor_type::value_type)*elem_size,std::multiplies<size_t>());
+    raw_chunk_buffer.resize(raw_size);
+  }
+
+  template<class TA,class LC>
+  void write_dataset(const TA& tchunk_r, LC& lambda){
+    auto res = lambda(tchunk_r,raw_chunk_buffer.data(),raw_chunk_buffer.size(),elem_size);
+    d.write_raw_chunk(raw_chunk_buffer,{tchunk_r.disk_offset()},res);
+  }
+
+  template<class TA, class TB,class LC>
+  void write_dataset(const TA& tchunk_r, const TB& tchunk_c, LC& lambda){
+    auto res = lambda(tchunk_r,tchunk_c,raw_chunk_buffer.data(),raw_chunk_buffer.size(),elem_size);
+    d.write_raw_chunk(raw_chunk_buffer,{tchunk_r.disk_offset(),tchunk_c.disk_offset()},res);
+  }
+
+  template<class TA, class TB,class TC,class LC>
+  void write_dataset(const TA& tchunk_r, const TB& tchunk_c,const TC& tchunk_a,  LC& lambda){
+    auto res = lambda(tchunk_r,tchunk_c,tchunk_a,raw_chunk_buffer.data(),raw_chunk_buffer.size(),elem_size);
+    d.write_raw_chunk(raw_chunk_buffer,{tchunk_r.disk_offset(),tchunk_c.disk_offset(),tchunk_a.disk_offset()},res);
+  }
+
+
+  template<class TA,class LC>
+  void read_dataset(const TA& tchunk_r, LC& lambda){
+    auto res = d.read_raw_chunk(raw_chunk_buffer,{tchunk_r.disk_offset()});
+    lambda(tchunk_r,raw_chunk_buffer.data(),res,elem_size);
+  }
+
+  template<class TA, class TB,class LC>
+  void read_dataset(const TA& tchunk_r, const TB& tchunk_c, LC& lambda){
+    auto res = d.read_raw_chunk(raw_chunk_buffer,{tchunk_r.disk_offset(),tchunk_c.disk_offset()});
+    lambda(tchunk_r,tchunk_c,raw_chunk_buffer.data(),res,elem_size);
+  }
+
+  template<class TA, class TB,class TC,class LC>
+  void read_dataset(const TA& tchunk_r, const TB& tchunk_c,const TC& tchunk_a, LC& lambda){
+    auto res = d.read_raw_chunk(raw_chunk_buffer,{tchunk_r.disk_offset(),tchunk_c.disk_offset(),tchunk_a.disk_offset()});
+    lambda(tchunk_r,tchunk_c,tchunk_a,raw_chunk_buffer.data(),res,elem_size);
+  }
+
+
+  template<class RngA,class LC>
+  void iter_dataset_read(const RngA& RowChunksBegin,const RngA& RowChunksEnd,LC& lambda){
+    for(auto &tchunk_r = RowChunksBegin; tchunk_r!=RowChunksEnd; ++tchunk_r){
+      read_dataset(tchunk_r,lambda);
+    }
+  }
+
+  template<class RngA, class RngB,class LC>
+    void iter_dataset_read(const RngA& RowChunksBegin,const RngA& RowChunksEnd, const RngB& ColChunksBegin,const RngB& ColChunksEnd,LC& lambda){
+    for(auto &tchunk_r = RowChunksBegin; tchunk_r!=RowChunksEnd; ++tchunk_r){
+      for(auto &tchunk_c = ColChunksBegin; tchunk_c!=ColChunksEnd; ++tchunk_c){
+	read_dataset(tchunk_r,tchunk_c,lambda);
+      }
+    }
+  }
+
+  template<class RngA, class RngB,class RngC,class LC>
+  void iter_dataset_read(const RngA& RowChunksBegin,const RngA& RowChunksEnd, const RngB& ColChunksBegin,const RngB& ColChunksEnd,const RngC& AChunksBegin,const RngC& AChunksEnd,LC& lambda){
+    for(auto &tchunk_r = RowChunksBegin; tchunk_r!=RowChunksEnd; ++tchunk_r){
+      for(auto &tchunk_c = ColChunksBegin; tchunk_c!=ColChunksEnd; ++tchunk_c){
+	for(auto &tchunk_a = AChunksBegin; tchunk_a!=AChunksEnd; ++tchunk_a){
+	  read_dataset(tchunk_r,tchunk_c,tchunk_a,lambda);
+	}
+      }
+    }
+  }
+
+  template<class RngA,class LC>
+  void iter_dataset_write(const RngA& RowChunksBegin,const RngA& RowChunksEnd,LC& lambda){
+    for(auto &tchunk_r = RowChunksBegin; tchunk_r!=RowChunksEnd; ++tchunk_r){
+      write_dataset(tchunk_r,lambda);
+    }
+  }
+
+
+  template<class RngA, class RngB,class LC>
+  void iter_dataset_write(const RngA& RowChunksBegin,const RngA& RowChunksEnd, const RngB& ColChunksBegin,const RngB& ColChunksEnd,LC& lambda){
+    for(auto &tchunk_r = RowChunksBegin; tchunk_r!=RowChunksEnd; ++tchunk_r){
+      for(auto &tchunk_c = ColChunksBegin; tchunk_c!=ColChunksEnd; ++tchunk_c){
+	write_dataset(tchunk_r,tchunk_c,lambda);
+      }
+    }
+  }
+
+  template<class RngA, class RngB,class RngC,class LC>
+  void iter_dataset_write(const RngA& RowChunksBegin,const RngA& RowChunksEnd, const RngB& ColChunksBegin,const RngB& ColChunksEnd,const RngC& AChunksBegin,const RngC& AChunksEnd,LC& lambda){
+    for(auto &tchunk_r = RowChunksBegin; tchunk_r!=RowChunksEnd; ++tchunk_r){
+      for(auto &tchunk_c = ColChunksBegin; tchunk_c!=ColChunksEnd; ++tchunk_c){
+	for(auto &tchunk_a = AChunksBegin; tchunk_a!=AChunksEnd; ++tchunk_a){
+	  write_dataset(tchunk_r,tchunk_c,tchunk_a,lambda);
+	}
+      }
+    }
+  }
+
+};
+
+
+
+
+
+// class ChunkReader{
+//   using chunk_addr = std::tuple<haddr_t, hsize_t, uint32_t>;
+//   int fp;
+// public:
+//   ChunkReader():fp(0){}
+//   ChunkReader(const std::filesystem::path p):fp(open(p.c_str(),O_RDONLY,0)){}
+//   aiocb read_chunk(const chunk_addr &tup, tcb::span<std::byte> input) const{
+//     aiocb cb;
+//     cb.aio_nbytes = get_chunk_datasize(tup);
+//     cb.aio_offset = get_file_offset(tup);
+//     cb.aio_fildes = fp;
+//     cb.aio_buf = input.data();
+//     if(aio_read(&cb) == -1){
+//       Rcpp::Rcerr<<"Unable to create read_chunk request"<<std::endl;
+//       Rcpp::stop("Error in ChunkVec.read_chunk");
+//     }
+//     return cb;
+//   }
+//   constexpr haddr_t get_file_offset(const chunk_addr& chunk) const{
+//     return std::get<0>(chunk);
+//   }
+//   constexpr hsize_t get_chunk_datasize(const chunk_addr& chunk) const{
+//     return std::get<1>(chunk);
+//   }
+
+//   bool apply_filters(const chunk_addr& chunk) const{
+//     return std::bitset<32>(std::get<2>(chunk)).none();
+//   }
+// };
+
+// class Chunked_Range{
+//   using chunk_addr = std::tuple<haddr_t, hsize_t, uint32_t>;
+//   ChunkReader cv;
+//   size_t dataset_chunksize;
+//   size_t dataset_size;
+//   std::vector<chunk_addr> chunks;
+// public:
+//   Chunked_Range(const std::string filename, const HighFive::DataSet &ds):
+//     cv(Path(filename)){
+//   {
+//     auto dsF =
+//     dataset_chunksize(ds.getFilter().get_chunksizes()[0]),
+//     dataset_size(ds.getSpace().getDimensions()[0]),
+//     chunks(make_chunks(ds,dataset_chunksize,dataset_size)),
+//   }
+
+//   Chunked_Range(const std::string filename,std::string datapath){
+//     auto dp=root_path(datapath);
+
+//     HighFive::File file(filename,HighFive::File::ReadOnly);
+//     auto groupname = dp.parent_path();
+//     auto dataname = dp.filename();
+//     auto dset = file.getDataSet(dp);
+//     auto space = dset.getSpace();
+//     auto filt = dset.getFilter();
+//     dataset_chunksize = filt.get_chunksizes()[0];
+//     dataset_size = space.getDimensions()[0];
+//     chunks=make_chunks(dset,dataset_chunksize,dataset_size);
+//     cv=ChunkVec(filename);
+//   }
+//   void read_chunk(const int i, tcb::span<std::byte> full_data){
+//     auto sub_sp = full_data.subspan(i*dataset_chunksize,std::min(dataset_chunksize,dataset_size-(i*dataset_chunksize)));
+//     cv.read_chunk(chunks[i],sub_sp);
+//   }
+
+//   const chunk_addr& get_chunk(int offset) const {
+//     return chunks.at(offset/dataset_chunksize);
+//   }
+//   const size_t num_chunks() const {
+//     return(::num_chunks(dataset_size,dataset_chunksize));
+//   }
+//   const size_t data_size() const {
+//     return(dataset_size);
+//   }
+// private:
+//   static std::vector<chunk_addr> make_chunks(const HighFive::DataSet &ds,const size_t dataset_chunksize,const size_t dataset_size){
+//     std::vector<chunk_addr> retvec;
+//     const size_t nchunks=::num_chunks(dataset_size,dataset_chunksize);
+//     retvec.reserve(nchunks);
+//     std::vector<hsize_t> h_offsets={0};
+//     haddr_t file_offset=0;
+//     hsize_t chunk_nbyte;
+//     uint32_t    read_filter_mask = 0;
+//     const auto _hid=ds.getId();
+//     for(int i=0; i<nchunks; i++){
+//       h_offsets={i*dataset_chunksize};
+//     if(auto ret =H5Dget_chunk_info_by_coord(_hid,h_offsets.data(),&read_filter_mask,&file_offset,&chunk_nbyte) <0){
+//       Rcpp::Rcerr<<"in chunk"<<h_offsets[0]<<std::endl;
+//       Rcpp::stop("error getting chunk info");
+//     }
+//     retvec.emplace_back({file_offset,chunk_nbyte,read_filter_mask});
+//     }
+//     return retvec;
+//   }
+// }
+
+
+
+// Rcpp::IntegerVector read_vector_chunk_i(std::string filename, std::string datapath){
+
+
+//   Chunked_Range cr(filename,datapath);
+
+//   Rcpp::IntegerVector ret(cr.data_size());
+//   tcb::span<int> sp(&ret[0],cr.data_size());
+//   const size_t nc= cr.num_chunks();
+//   for(int i=0; i < nc; i++){
+//     cr.read_chunk(i,sp);
+//   }
+//   return(ret);
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// class DataSetReader {
+
+// template< typename C>
+// void VecChunkReader(const C chunk,
 
 
 
@@ -45,8 +388,6 @@ return tensor_type(shape_type{chunksize_});
       return(rtensor_type(static_cast<int>(total_data_size)));
     }
  }
-
-
   template<typename Z>
   rtensor_type read_vector(Z &decomp,const HighFive::DataSet& d){
     rtensor_type retvec=create_retvec();
@@ -54,21 +395,21 @@ return tensor_type(shape_type{chunksize_});
       auto res = d.read_raw_chunk(raw_chunk_buffer,{tchunk.disk_offset()});
       decomp.decompress(chunk_buffer.data(),chunk_buffer.size()*sizeof(typename tensor_type::value_type),raw_chunk_buffer.data(),res);
       if constexpr(!std::is_arithmetic_v<D>){
-	  const auto rsize = tchunk.chunk_size();
-	  xt::xtensor<char,1> tbuff(xt::xtensor<char,1>::shape_type{elem_size});
-	  std::string ts;
-	  for(int i=0;i< rsize; i++){
-		tbuff=xt::view(chunk_buffer,tchunk.chunk_i(i),xt::all());
-		ts=std::string(reinterpret_cast<char*>(tbuff.data()));
-		retvec(tchunk.mem_i(i))=ts;
-		std::fill(tbuff.begin(), tbuff.end(), 0);
-	      }
-	}else{
+        const auto rsize = tchunk.chunk_size();
+        xt::xtensor<char,1> tbuff(xt::xtensor<char,1>::shape_type{elem_size});
+        std::string ts;
+        for(int i=0;i< rsize; i++){
+          tbuff=xt::view(chunk_buffer,tchunk.chunk_i(i),xt::all());
+          ts=std::string(reinterpret_cast<char*>(tbuff.data()));
+          retvec(tchunk.mem_i(i))=ts;
+          std::fill(tbuff.begin(), tbuff.end(), 0);
+        }
+      }else{
 	if constexpr(std::is_same_v<T,chunk_chunker>){
 
-	      xt::view(retvec,tchunk.mem_slice())=
-		xt::view(chunk_buffer,tchunk.chunk_slice());
-	    }else{
+          xt::view(retvec,tchunk.mem_slice())=
+            xt::view(chunk_buffer,tchunk.chunk_slice());
+        }else{
 	  xt::dynamic_view(retvec,{tchunk.mem_slice()})=
 	    xt::dynamic_view(chunk_buffer,{tchunk.chunk_slice()});
 	}
@@ -156,11 +497,8 @@ return tensor_type({chunksize_rows_,chunksize_cols_});
     auto retmat=create_retmat();
     for(auto &tchunk_r:RowChunks){
       for(auto &tchunk_c:ColChunks){
-
-
 	auto res = d.read_raw_chunk(raw_chunk_buffer,{tchunk_r.disk_offset(),tchunk_c.disk_offset()});
 	decomp.decompress(chunk_buffer.data(),chunk_buffer.size()*sizeof(typename tensor_type::value_type),raw_chunk_buffer.data(),res);
-
 	if constexpr(!std::is_arithmetic_v<D>){
 	      const size_t rsize = tchunk_r.chunk_size();
 	      const size_t csize = tchunk_c.chunk_size();
@@ -340,7 +678,7 @@ public:
     using RT=typename t2chunk_t<T>::c_type;
     RT rows(Dim.dimsize[0],Dim.chunksize[0],rowdat);
     if constexpr(std::is_same_v<Q,std::string>){
-      auto elem_size = H5Tget_size(d.getDataType().getId());
+      auto elem_size = get_source_size(d);
       VecShuttle<Q,RT> mover(rows,elem_size);
       return(Rcpp::as<typename xtm_t<Q>::rrvec_type>(mover.template read_vector<Z>(decomp,d)));
     }else{
@@ -369,7 +707,7 @@ public:
     const RRT rows(Dim.dimsize[0],Dim.chunksize[0],rowdat);
     const CCT cols(Dim.dimsize[1],Dim.chunksize[1],coldat);
     if constexpr(std::is_same_v<Q,std::string>){
-    auto elem_size = H5Tget_size(d.getDataType().getId());
+      const auto elem_size = get_source_size(d);
     MatrixShuttle<Q,RRT,CCT> mover(rows,cols,elem_size);
     return(mover.template read_matrix<Z>(decomp,d));
     }else{
@@ -556,7 +894,7 @@ public:
     const RRT rows(Dim.dimsize[0],Dim.chunksize[0],rowdat,true);
     const CCT cols(Dim.dimsize[1],Dim.chunksize[1],coldat,true);
     if constexpr(std::is_same_v<Q,Rcpp::StringMatrix>){
-    auto elem_size = H5Tget_size(d.getDataType().getId());
+      const auto elem_size = get_source_size(d);
     MatrixShuttle<std::string,RRT,CCT> mover(rows,cols,elem_size);
     mover.template write_matrix<Z>(write,decomp,d);
     }else{
@@ -582,7 +920,8 @@ public:
     using RT=typename t2chunk_t<T>::c_type;
     RT rows(Dim.dimsize[0],Dim.chunksize[0],rowdat,true);
     if constexpr(std::is_same_v<Q,Rcpp::StringVector>){
-    auto elem_size = H5Tget_size(d.getDataType().getId());
+
+      const auto elem_size = get_source_size(d);
     VecShuttle<std::string,RT> mover(rows,elem_size);
     mover.template write_vector<Z>(write,decomp,d);
     }else{
@@ -636,6 +975,96 @@ void update_vector_v(Rcpp::RObject data,const std::string filename,  const std::
   if(data_a.isNull()){
     data.attr("dim")=R_NilValue;
   }
-    //
-    //    Rcpp::Rcout<<Rcpp::wrap(data.attr("dim"))<<data_a<<std::endl;
+
+}
+
+
+
+std::variant<std::pair<int,std::optional<int>>,Rcpp::IntegerVector> parse_subset_v(Rcpp::List x){
+
+  if(auto idx = get_list_element<INTSXP>(x,"subset",false)){
+    return(idx.value());
+  }
+  auto offset = get_list_scalar<int>(x,"offset").value_or(0);
+  return(std::make_pair(offset,get_list_scalar<int>(x,"datasize")));
+}
+
+
+class Subcols{
+  std::optional<Rcpp::StringVector> sc;
+public:
+  Subcols():sc(std::nullopt){}
+  Subcols(  std::optional<Rcpp::StringVector> &&sc_):sc(sc_){}
+  bool contains(const std::string &inp)const {
+    if(!sc.has_value()){
+      return true;
+    }
+    return(std::find(sc->begin(),sc->end(),Rcpp::String(inp))!=std::end(*sc));
+  }
+};
+
+
+
+
+//[[Rcpp::export]]
+SEXP read_tibble_h5(std::string filename,Rcpp::StringVector datapath,Rcpp::List options){
+
+  auto dp=root_path(filename);
+
+  HighFive::File file(filename,HighFive::File::ReadOnly);
+  auto grp = file.getGroup(root_path(datapath));
+  size_t num_cols = grp.getNumberObjects();
+  Rcpp::IntegerVector idx_vec = Rcpp::seq(0,num_cols-1);
+
+  Subcols subcols(get_list_element<STRSXP>(options,"subcols"));
+  std::vector<std::pair<std::unique_ptr<HighFive::DataSet>,std::string>> scols;
+  const auto drow=parse_subset_v(options);
+  std::transform(idx_vec.begin(),idx_vec.end(),std::back_inserter(scols),[&](const int idx){
+                                                                           Rcpp::RObject ret;
+                                                                           auto tpath = grp.getObjectName(idx);
+                                                                           auto ds = subcols.contains(tpath) ?std::make_unique<HighFive::DataSet>(grp.getDataSet(tpath)) : nullptr;
+                                                                           return make_pair(std::move(ds),tpath);
+                                                                         });
+
+  scols.erase(std::remove_if(scols.begin(),scols.end(),[](const auto&  data_el){
+                                                         return(data_el.first==nullptr);
+                                                       }),scols.end());
+
+
+  num_cols = scols.size();
+  using namespace Rcpp;
+  StringVector name_vec = StringVector::import_transform(scols.cbegin(),scols.cend(),[](const auto &el){
+                                                                                                   return String(el.second);
+                                                                                                 });
+  std::optional<size_t> tdims = std::nullopt;
+  std::optional<size_t> osize = std::nullopt;
+
+
+  List ret = List::import_transform(scols.cbegin(),scols.cend(),[&](const auto &idx){
+                                                                              RObject ret;
+                                                                              auto dims = idx.first->getDataDimensions();
+                                                                              auto ds = *(idx.first.get());
+                                                                              tdims = tdims.value_or(dims[0]);
+                                                                              if(*tdims!=dims[0]){
+                                                                                Rcerr<<"tdims is: "<<*tdims<<" "<<idx.second<<" is: "<<dims[0]<<std::endl;
+                                                                                stop("all datasets must have the same dimension");
+                                                                              }
+                                                                              std::array<size_t,1> tarr={*tdims};
+                                                                              DataSet_V<VecDim> dsv(ds);
+                                                                              auto data_t = dsv.data_type;
+                                                                              auto &decomp = dsv.decompressor;
+
+                                                                              ret=std::visit(VisitVectorRead(ds,dsv.Dim),data_t,decomp,drow);
+                                                                              osize = osize.value_or(::Rf_xlength(SEXP(ret)));
+                                                                              auto attr_v=list_R_attr(ds);
+                                                                              for(auto &attr :attr_v){
+                                                                                ret.attr(attr.substr(2))=read_attribute(ds,attr);
+                                                                              }
+                                                                              return ret;
+                                                                            });
+
+  ret.names()=name_vec;
+  ret.attr("class") = StringVector::create("tbl_df","tbl","data.frame");
+  ret.attr("row.names") = seq(1, *osize);
+  return ret;
 }

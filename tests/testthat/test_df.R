@@ -64,11 +64,12 @@ test_that("We can read and write dataframe subcols correctly",{
   write_df_h5(td,tf,"test")
   rtd <- read_df_h5(tf,"test",subcols=c("a","c"))
   expect_equal(dplyr::select(td,a,c),rtd)
-  # expect_equal(ls_h5(tf),"test")
-  # dn <- ls_h5(tf,"test")
-  # expect_equal(dn,c("a","b","c"))
-  # srtd <- read_df_h5(tf,"test",offset=2,chunksize = 3)
-  # expect_equal(td,rtd)
+  expect_equal(ls_h5(tf),"test")
+  dn <- ls_h5(tf,"test")
+   expect_equal(dn,c("a","b","c"))
+   srtd <- read_df_h5(tf,"test",offset=2,chunksize = 3)
+   tsrtd <- read_tibble_h5(tf,"test",list(offset=2,chunksize=3))
+   expect_equal(std,srtd,ignore_row_order=FALSE)
   # expect_equal(std,srtd)
 })
 
@@ -118,6 +119,59 @@ test_that("chunked sorting workflow works like an on-disk grouped-sort",{
     write_df_h5(tdf,otf,datapath = "test",subset=seq(offset+1,length.out = datasize))
   })
   expect_equal(dplyr::arrange(df,a,b),read_df_h5(otf,"test"))
+})
+
+
+
+test_that("we can read from big dataframes",{
+  
+  tf <- tempfile()
+  mtcf <- readr::readr_example("mtcars.csv")
+  mtc_df <- readr::read_delim(mtcf,delim=",")
+  rx <- replicate(n=200,delim2h5(input_file =mtcf ,output_file = tf,delim=",",col_names=TRUE,col_types=readr::spec(mtc_df),h5_args=list(datapath="mtcars",append=TRUE)))
+  
+  max_d <- nrow(mtc_df)*200
+  
+  fr_df <- dplyr::bind_rows(replicate(200,mtc_df,simplify=FALSE))
+  
+  gen_rslice <- function(offset,size){
+    seq(offset+1,length.out = size)
+  }
+  
+  r_rslice <- function(max_s){
+    offset <- sample(max_s,size=1)
+    size <- sample(max_s-offset,size=1)
+    return(tibble::tibble(offset=offset,size=size))
+  }
+  offset_df <- dplyr::bind_rows(replicate(50,r_rslice(max_d),simplify = FALSE))
+  
+alt_read_df_h5 <- function(f,datapath,offset,datasize){
+  inp_cols <- ls_h5(f,datapath,full_names = T)
+  inpc <- inp_cols[1]
+  tvec <- read_vector_v(f,inpc,offset:(offset+datasize))
+  tvec <- read_vector_v(f,inpc,seq(offset+1L,length.out = datasize))
+}
+
+  for(i in seq_len(nrow(offset_df))){
+    tdf <- read_df_h5(tf,"mtcars",offset=offset_df$offset[i],datasize=offset_df$size[i])
+
+    grs <- gen_rslice(offset_df$offset[i],offset_df$size[i])
+    ttdf <- read_df_h5(tf,"mtcars",subset=grs)
+    expect_lt(max(grs),max_d)
+    cdf <- dplyr::slice(fr_df,grs)
+    expect_equal(ttdf,cdf,ignore_row_order=FALSE)
+    stopifnot()
+  }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 })
 
 

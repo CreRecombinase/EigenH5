@@ -189,12 +189,12 @@ test_that("check for groups/datasets",{
   tempf <- tempfile()
   write_matrix_h5(tmat,tempf,"/grp/grp2/tmat")
   # expect_false(isDataSet(tempf,"grp/grp2/"))
-  expect_true(isGroup(tempf,"grp"))
-  expect_true(isGroup(tempf,"grp/grp2"))
-  expect_true(isGroup(tempf,"grp/grp2/"))
+  expect_true(isGroup_h5(tempf,"grp"))
+  expect_true(isGroup_h5(tempf,"grp/grp2"))
+  expect_true(isGroup_h5(tempf,"grp/grp2/"))
   
-  expect_true(isGroup(tempf,"/"))
-  expect_false(isGroup(tempf,"grp/grp2/tmat"))
+  expect_true(isGroup_h5(tempf,"/"))
+  expect_false(isGroup_h5(tempf,"grp/grp2/tmat"))
   expect_true(isDataSet(tempf,"grp/grp2/tmat"))
  
 })

@@ -64,7 +64,6 @@ test_that("fast conversion works with prefix check", {
         int_d <- sample(as.character(1:100),100,replace=TRUE)
         int_i <- as.integer(int_d)
         
-        testthat::expect_equal(fast_str2ascii(letter_d),ascii_i)
         testthat::expect_equal(fast_str2int(int_d),int_i)
         
         for(i in 1:10){
@@ -72,7 +71,7 @@ test_that("fast conversion works with prefix check", {
                 rpref <- paste0(rep("r",i),collapse="")
                 rppref <- sample(c(ppref,rpref),100,replace=TRUE)
                 cvec <- paste0(rppref,int_d)
-                ret <- fast_str2int(cvec,prefix=ppref)
+                ret <- fast_str2int(input = cvec,prefix=ppref)
                 expect_true(all(is.na(ret[rppref==rpref])))
                 expect_equal(int_i[rppref==ppref],ret[rppref==ppref])
         }
@@ -92,7 +91,7 @@ test_that("root group is created upon file creation", {
         tf <- tempfile()
         create_file_h5(tf)
         ls_h5(tf)
-        expect_true(isGroup(tf, "/"))
+        expect_true(isGroup_h5(tf, "/"))
 })
 
 

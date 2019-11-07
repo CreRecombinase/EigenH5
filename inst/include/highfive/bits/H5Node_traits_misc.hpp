@@ -61,7 +61,7 @@ namespace HighFive {
 			       dataset_name.c_str(), dtype._hid, space._hid,
 			       H5P_DEFAULT, filter.getId(), H5P_DEFAULT)) < 0) {
       HDF5ErrMapper::ToException<DataSetException>(
-						   std::string("Unable to create the dataset \"") + dataset_name +
+						   std::string("Unable to create the dataset \"") + dataset_name.string() +
 						   "\":");
     }
     set.setTranspose(false);
@@ -77,7 +77,7 @@ namespace HighFive {
     if ((set._hid = H5Dopen2(static_cast<const Derivate *>(this)->getId(),
                              dataset_name.c_str(), H5P_DEFAULT)) < 0) {
       HDF5ErrMapper::ToException<DataSetException>(
-          std::string("Unable to open the dataset \"") + dataset_name +
+                                                   std::string("Unable to open the dataset \"") + dataset_name.string() +
           "\":");
     }
     set.doTranspose = set.isTransposed();
@@ -106,7 +106,7 @@ namespace HighFive {
 				 group_name.c_str(), gcpl, H5P_DEFAULT,
 				 H5P_DEFAULT)) < 0) {
       HDF5ErrMapper::ToException<GroupException>(
-						 std::string("Unable to create the group ") + group_name + ":");
+						 std::string("Unable to create the group ") + group_name.string() + ":");
     }
     H5Pclose(gcpl);
     return (group);
@@ -120,7 +120,7 @@ namespace HighFive {
     if ((group._hid = H5Gopen2(static_cast<const Derivate *>(this)->getId(),
                                group_name.c_str(), H5P_DEFAULT)) < 0) {
       HDF5ErrMapper::ToException<GroupException>(
-						 std::string("Unable to open the group \"") + group_name +
+						 std::string("Unable to open the group \"") + group_name.string() +
 						 "\":");
     }
     return group;
@@ -142,14 +142,15 @@ namespace HighFive {
   inline bool NodeTraits<Derivate>::isGroup(const Path  & object_name) const{
 
     H5O_info_t tid;
-#if defined(H5_USE_110_API)
+#if defined(H5_USE_110_API) || defined(H5_USE_112_API_DEFAULT)
     auto ret = H5Oget_info_by_name2(static_cast<const Derivate *>(this)->getId(),object_name.c_str(),&tid,H5O_INFO_ALL,H5P_DEFAULT)<0;
 #else
+  
     auto ret = H5Oget_info_by_name(static_cast<const Derivate *>(this)->getId(), object_name.c_str(), &tid,H5P_DEFAULT) < 0;
 #endif
     if (ret) {
       HDF5ErrMapper::ToException<DataSetException>(
-						   std::string("Unable to open the object \"") + object_name +
+						   std::string("Unable to open the object \"") + object_name.string() +
 						   "\":");
     }
     // if ((tid.type == H5O_TYPE_GROUP) != (object_name.is_directory())) {
@@ -168,14 +169,15 @@ namespace HighFive {
   inline bool NodeTraits<Derivate>::isDataSet(const Path  & object_name) const{
 
     H5O_info_t tid;
-#if defined(H5_USE_110_API)
+    #if defined(H5_USE_110_API) || defined(H5_USE_112_API_DEFAULT)
+
     auto ret = H5Oget_info_by_name2(static_cast<const Derivate *>(this)->getId(),object_name.c_str(),&tid,H5O_INFO_ALL,H5P_DEFAULT)<0;
 #else
     auto ret = H5Oget_info_by_name(static_cast<const Derivate *>(this)->getId(), object_name.c_str(), &tid,H5P_DEFAULT) < 0;
 #endif
     if (ret) {
       HDF5ErrMapper::ToException<DataSetException>(
-						   std::string("Unable to open the object \"") + object_name +
+						   std::string("Unable to open the object \"") + object_name.string() +
 						   "\":");
     }
     // if ((tid.type == H5O_TYPE_GROUP) != (object_name.is_directory())) {
@@ -215,7 +217,7 @@ namespace HighFive {
       return (getGroup(object_name));
     }
     if (!isDataSet(object_name)) {
-      HDF5ErrMapper::ToException<ObjectException>(std::string("Object is not a Group or DataSet: ") + object_name);
+      HDF5ErrMapper::ToException<ObjectException>(std::string("Object is not a Group or DataSet: ") + object_name.string());
     }
     return (getDataSet(object_name));
   }

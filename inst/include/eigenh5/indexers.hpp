@@ -1,20 +1,15 @@
+#include <algorithm>
 #include <array>
-#include <Rcpp.h>
-#include <Rinternals.h>
+#include "xtensor-r/rarray.hpp"
 // [[Rcpp::interfaces(r, cpp)]]
 //[[Rcpp::plugins(cpp17)]]
 //#include <boost/variant/multivisitors.hpp>
-#include "highfive/H5DataSet.hpp"
-#include "xtensor-r/rarray.hpp"
-#include "xtensor-r/rtensor.hpp"
-#include "xtensor-r/rvectorize.hpp"
-#include "xtensor-r/rcontainer.hpp"
 #include <cstddef>
 #include <iterator>
 #include <xtensor/xarray.hpp>
 #include <xtensor/xdynamic_view.hpp>
 #include <xtensor/xview.hpp>
-#include <range/v3/all.hpp>
+#include <range/v3/view/all.hpp>
 #include <optional>
 
 class Interval{
@@ -25,6 +20,12 @@ public:
   const size_t get_offset() const{return offset;}
   const size_t get_size() const{return size;}
 };
+
+#ifdef DEBUGNE
+#define DNE
+#else
+#define DNE noexcept
+#endif
 
 
 class SubInterval{
@@ -76,24 +77,48 @@ public:
     }
 
   }
-  constexpr SubInterval chunk_selection(const SubInterval selection,const size_t chunksize) const noexcept {
-    const auto chunk_sel_start = selection.offset-selection.offset%chunksize;
-    const auto new_sel_size = std::min(SubInterval(chunk_sel_start,selection.size+(selection.offset-chunk_sel_start)).num_chunks(chunksize)*chunksize,size-chunk_sel_start);
-    return SubInterval(chunk_sel_start,new_sel_size);
+  constexpr SubInterval chunk_selection(const SubInterval selection,const size_t chunksize) const DNE {
+    const auto chunk_sel_start = selection.closest_boundary_below(chunksize);
+    const auto chunk_sel_stop = selection.closest_boundary_above(chunksize);
+    return truncate_back(front_back(chunk_sel_start,chunk_sel_stop));
   }
-  constexpr SubInterval chunk_i(const size_t i, const size_t chunksize) const noexcept{
-    return(SubInterval(i*chunksize,std::min(size-(i*chunksize),chunksize)));
+  constexpr static SubInterval front_back(const size_t front,const size_t back) DNE{
+    return(SubInterval(front,back-front+1));
   }
-  constexpr bool operator==(const SubInterval &y) const noexcept {
+  constexpr size_t closest_boundary_below(const size_t chunksize) const DNE{
+    return(offset-(offset%chunksize));
+  }
+  constexpr size_t closest_boundary_above(const size_t chunksize) const DNE{
+    return(chunksize*num_chunks_total(chunksize)-1);
+  }
+
+  constexpr SubInterval new_offset(const size_t offset_) const DNE{
+    const auto new_size = offset_ > offset ? size -(offset_-offset) : size + (offset-offset_);
+    return(SubInterval(offset_,new_size));
+  }
+  constexpr SubInterval new_back(const size_t back) const DNE{
+    const auto new_size = back-offset+1;
+    return(SubInterval(offset,new_size));
+  }
+  constexpr SubInterval truncate_back(const SubInterval &other) const DNE{
+    if(other.get_back()>get_back()){
+      return other.new_back(get_back());
+    }
+    return other;
+  }
+  constexpr SubInterval chunk_i(const size_t i, const size_t chunksize) const DNE{
+    return(SubInterval(offset+i*chunksize,std::min(size-(i*chunksize),chunksize)));
+  }
+  constexpr bool operator==(const SubInterval &y) const DNE {
     return(y.size==size && y.offset==offset);
   }
-  constexpr bool operator!=(const SubInterval &y) const noexcept {
+  constexpr bool operator!=(const SubInterval &y) const DNE {
     return(y.size!=size or y.offset !=offset);
   }
 
 
-  // x.sub_chunk(y) returns the SubInterval of x that corresponds to it's overlap with y
-  constexpr SubInterval sub_chunk(const SubInterval &y) const noexcept{
+  //! Returns the SubInterval of x that corresponds to overlap with y
+  constexpr SubInterval sub_chunk(const SubInterval &y) const DNE{
 
     // const auto sub_offset = y.offset;
     // const auto chunk_offset = size;
@@ -104,40 +129,52 @@ public:
       return SubInterval(0,y_end>=end ? size : y_end-offset+1);
     }
     if(y_end>end){
-      return SubInterval(y.offset-offset,end-(y.offset-offset)+1);
+      return SubInterval(y.offset-offset,size-(y.offset-offset));
     }
     return SubInterval(y.offset-offset, y.size);
   }
 
-  constexpr size_t get_offset() const noexcept{
+  constexpr size_t get_offset() const DNE{
     return offset;
   }
-  constexpr size_t get_size() const noexcept{
+  constexpr size_t get_size() const DNE{
     return size;
   }
-  constexpr size_t get_back() const noexcept{
+  constexpr size_t get_back() const DNE{
     return offset+size-1;
   }
-  constexpr size_t num_chunks(const size_t chunksize)const noexcept{
+  constexpr size_t num_chunks_total(const size_t chunksize)const DNE{
+    return 1 + ((size+offset - 1) / chunksize);
+  }
+  constexpr size_t num_chunks(const size_t chunksize)const DNE{
     return 1 + ((size - 1) / chunksize);
   }
   friend class chunk_chunker;
+  // friend std::ostream& operator<<(std::ostream& os, const SubInterval& dt);
+  friend std::ostream& operator<<(std::ostream& os, const SubInterval& dt){
+  os<<dt.get_offset()<<"-"<<dt.get_back();
+  return os;
+}
 
-
-  // static std::vector<SubInterval> make_chunked_selection( const SubInterval parent, const SubInterval selection,const size_t chunksize){
-
-
-
-
-
-  //   //    const size_t
-
-
-  // }
 
 };
 
 
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& dt){
+  if(dt.size()<=5){
+    std::for_each(dt.begin(),dt.end(),[&](int i){
+                                        os<<i<<",";
+                                      });
+    return os;
+  }
+
+  std::for_each(dt.begin(),dt.begin()+5,[&](int i){
+                                          os<<i<<",";
+                                        });
+  os<<"...";
+  return os;
+}
 
 
 class rep_chunk_indexer{
@@ -159,19 +196,22 @@ public:
 		  return(retv);
 		}(offset_size[1])){
   }
-  int push_back(const int index,const int i) noexcept
+  int push_back(const int index,const int i) DNE
   {
     chunk_indexes.push_back(index-offset_size[0]);
     out_indexes.push_back(i);
     return out_indexes.size();
   }
-  size_t disk_offset()const noexcept{
+  size_t chunk_offset() const DNE {
+    return(static_cast<size_t>(*std::min_element(chunk_indexes.begin(),chunk_indexes.end())));
+  }
+  size_t disk_offset()const DNE{
     return offset_size[0];
   }
-  size_t disk_size()const noexcept{
+  size_t disk_size()const DNE{
     return offset_size[1];
   }
-  size_t chunk_size()const noexcept{
+  size_t chunk_size()const DNE{
     return chunk_indexes.size();
   }
   auto chunk_slice() const{
@@ -182,13 +222,25 @@ public:
     return xt::keep(out_indexes);
   }
 
-  int chunk_i(size_t i)const noexcept{
+  int chunk_i(size_t i)const DNE{
     return chunk_indexes[i];
   }
-  int mem_i(size_t i)const noexcept{
+  int mem_i(size_t i)const DNE{
     return out_indexes[i];
   }
+  // friend std::ostream& operator<<(std::ostream& os, const rep_chunk_indexer& dt);
+  friend std::ostream& operator<<(std::ostream& os, const rep_chunk_indexer& dt){
+    auto chunk_p =std::minmax_element(dt.chunk_indexes.begin(),dt.chunk_indexes.end());
+    auto out_p =std::minmax_element(dt.out_indexes.begin(),dt.out_indexes.end());
+
+    os<<"rep_chunk_indexer: chunk_slice"<<*chunk_p.first<<"-"<<*chunk_p.second<<" mem_slice: "<<*out_p.first<<"-"<<*out_p.second;
+  return os;
+}
 };
+
+
+
+
 
 
 
@@ -273,26 +325,26 @@ public:
     }
   }
 
-  chunk_it begin() const noexcept{
+  chunk_it begin() const DNE{
     return(needed_chunks.cbegin());
   }
-  chunk_it end() const noexcept{
+  chunk_it end() const DNE{
     return(needed_chunks.cend());
   }
 
-  int total_size()const noexcept{
+  int total_size()const DNE{
     return p;
   }
-  int total_chunksize() const noexcept{ return chunksize; }
+  int total_chunksize() const DNE{ return chunksize; }
 
-  size_t max_read_chunksize() const noexcept{
+  size_t max_read_chunksize() const DNE{
     return max_chunksize;
   }
 
-  size_t n_chunks() const noexcept{
+  size_t n_chunks() const DNE{
     return chunks_used;
   }
-  bool sorted() const noexcept{
+  bool sorted() const DNE{
     return !is_unsorted;
   }
   auto n_c() const{
@@ -307,25 +359,25 @@ public:
 
 
 class chunk_chunker{
-  SubInterval global_interval;
-  SubInterval relative_interval;
+  SubInterval disk_interval;
+  SubInterval chunk_interval;
   //offset in source/dest memory
   //  const std::array<size_t,2> sub_offset_size; // offset/size within chunk
   size_t  dest_d_offset;
 public:
-  chunk_chunker(const SubInterval interval_,
+  constexpr chunk_chunker(const SubInterval interval_,
                 const SubInterval &chunk_,
 		const size_t dest_offset_)
-    : global_interval(interval_),
-      relative_interval(global_interval.sub_chunk(chunk_)),
+    : disk_interval(interval_),
+      chunk_interval(disk_interval.sub_chunk(chunk_)),
       dest_d_offset(dest_offset_){
   }
 
-  size_t chunk_size() const noexcept{
-    return(relative_interval.size);
+  size_t chunk_size() const DNE{
+    return(chunk_interval.size);
   }
-  size_t chunk_offset() const noexcept{
-    return(relative_interval.offset);
+  size_t chunk_offset() const DNE{
+    return(chunk_interval.offset);
   }
   auto chunk_slice() const{
     return(xt::range(chunk_offset(),chunk_offset()+chunk_size()));
@@ -334,30 +386,37 @@ public:
     return(xt::range(dest_offset(),dest_offset()+dest_size()));
   }
 
-  size_t disk_offset() const noexcept{
-    return global_interval.offset;
+  size_t disk_offset() const DNE{
+    return disk_interval.offset;
   }
 
-  size_t disk_size() const noexcept{
-    return global_interval.size;
+  size_t disk_size() const DNE{
+    return disk_interval.size;
   }
 
-  size_t dest_offset() const noexcept{
+  size_t dest_offset() const DNE{
     return dest_d_offset;
   }
 
-  size_t dest_size() const noexcept{
+  size_t dest_size() const DNE{
     return chunk_size();
   }
 
-  int chunk_i(size_t i)const noexcept{
-    return relative_interval.offset+i;
+  int chunk_i(size_t i)const DNE{
+    return chunk_interval.offset+i;
   }
 
-  int mem_i(size_t i)const noexcept{
+  int mem_i(size_t i)const DNE{
     return dest_d_offset+i;
   }
+  friend std::ostream& operator<<(std::ostream& os, const chunk_chunker& dt)
+{
+  os << "chunk_chunker: "<<"chunk_slice: "<<dt.chunk_interval<<" mem_slice: "<<SubInterval(dt.dest_offset(),dt.dest_size())<<" dest_d_offset: "<<dt.dest_d_offset;
+  return os;
+}
+  // friend std::ostream& operator<<(std::ostream& os, const chunk_chunker& dt);
 };
+
 
 
 
@@ -390,9 +449,11 @@ public:
     }
 
     chunks_used = chunk_selection.num_chunks(chunksize);
+
     needed_chunks.reserve(chunks_used);
     int	out_o=0;
     for(int i=0; i<chunks_used; i++){
+
       auto &new_chunker = needed_chunks.emplace_back(chunk_selection.chunk_i(i,chunksize),
                                                     selection,
                                                     out_o);
@@ -432,192 +493,4 @@ public:
   auto n_c() const{
     return(ranges::view::all(needed_chunks));
   }
-};
-
-
-template<typename T>
-struct t2chunk_t;
-
-template<> struct t2chunk_t<std::pair<int,std::optional<int>> >{
-  typedef ChunkParser c_type;
-};
-
-
-template<> struct t2chunk_t<Rcpp::IntegerVector >{
-  typedef IndexParser c_type;
-};
-
-
-template<typename D>
-struct xtm_t;
-
-template<>
-struct xtm_t<int>{
-  typedef	xt::rtensor<int,1> retvec_type;
-  typedef	xt::rtensor<int,2> retmat_type;
-  typedef	xt::rtensor<int,3> reta_type;
-  typedef	xt::xtensor<int,1,xt::layout_type::row_major> buffvec_type;
-  typedef	xt::xtensor<int,2,xt::layout_type::row_major> buffmat_type;
-  typedef	xt::xtensor<int,3,xt::layout_type::row_major> buffa_type;
-  typedef       Rcpp::IntegerVector rrvec_type;
-  typedef       Rcpp::IntegerMatrix rrmat_type;
-};
-
-template<>
-struct xtm_t<double>{
-  typedef	xt::rtensor<double,1> retvec_type;
-  typedef	xt::rtensor<double,2> retmat_type;
-  typedef	xt::rtensor<double,3> reta_type;
-  typedef	xt::xtensor<double,1,xt::layout_type::row_major> buffvec_type;
-  typedef	xt::xtensor<double,2,xt::layout_type::row_major> buffmat_type;
-  typedef	xt::xtensor<double,3,xt::layout_type::row_major> buffa_type;
-  typedef       Rcpp::NumericVector rrvec_type;
-  typedef       Rcpp::NumericMatrix rrmat_type;
-};
-
-
-template<>
-struct xtm_t<std::string>{
-  typedef	Rcpp::StringVector retvec_type;
-  typedef	Rcpp::StringMatrix retmat_type;
-  typedef	std::false_type reta_type;
-  typedef	xt::xtensor<char,2,xt::layout_type::row_major> buffvec_type;
-  typedef       xt::xtensor<char,3,xt::layout_type::row_major> buffmat_type;
-
-  typedef	std::false_type buffa_type;
-  typedef       Rcpp::StringVector rrvec_type;
-  typedef       Rcpp::StringMatrix rrmat_type;
-};
-
-
-
-template<>
-struct xtm_t<unsigned char>{
-  typedef	xt::rtensor<unsigned char,1> retvec_type;
-  typedef	xt::rtensor<unsigned char,2> retmat_type;
-  typedef	xt::rtensor<unsigned char,3> reta_type;
-  typedef	xt::xtensor<unsigned char,1,xt::layout_type::row_major> buffvec_type;
-  typedef	xt::xtensor<unsigned char,2,xt::layout_type::row_major> buffmat_type;
-  typedef	xt::xtensor<unsigned char,3,xt::layout_type::row_major> buffa_type;
-  typedef       Rcpp::RawVector rrvec_type;
-  typedef       Rcpp::RawMatrix rrmat_type;
-};
-
-
-
-
-
-template<typename D>
-class DataSet_Context{
-
-public:
-  const HighFive::DataSet& d;
-private:
-
-  using tensor_type=typename xtm_t<D>::buffmat_type;
-  const size_t elem_size;
-  const std::vector<size_t> dataset_chunksizes;
-  std::vector<std::byte> raw_chunk_buffer;
-public:
-  DataSet_Context(const HighFive::DataSet& d_):d(d_),elem_size(d.getDataType().n_elem()),dataset_chunksizes(d.getFilter().get_chunksizes()){
-    auto raw_size=std::accumulate(dataset_chunksizes.begin(),dataset_chunksizes.end(),sizeof(typename tensor_type::value_type)*elem_size,std::multiplies<size_t>());
-    raw_chunk_buffer.resize(raw_size);
-  }
-
-  template<class TA,class LC>
-  void write_dataset(const TA& tchunk_r, LC& lambda){
-    auto res = lambda(tchunk_r,raw_chunk_buffer.data(),raw_chunk_buffer.size(),elem_size);
-    d.write_raw_chunk(raw_chunk_buffer,{tchunk_r.disk_offset()},res);
-  }
-
-  template<class TA, class TB,class LC>
-  void write_dataset(const TA& tchunk_r, const TB& tchunk_c, LC& lambda){
-    auto res = lambda(tchunk_r,tchunk_c,raw_chunk_buffer.data(),raw_chunk_buffer.size(),elem_size);
-    d.write_raw_chunk(raw_chunk_buffer,{tchunk_r.disk_offset(),tchunk_c.disk_offset()},res);
-  }
-
-  template<class TA, class TB,class TC,class LC>
-  void write_dataset(const TA& tchunk_r, const TB& tchunk_c,const TC& tchunk_a,  LC& lambda){
-    auto res = lambda(tchunk_r,tchunk_c,tchunk_a,raw_chunk_buffer.data(),raw_chunk_buffer.size(),elem_size);
-    d.write_raw_chunk(raw_chunk_buffer,{tchunk_r.disk_offset(),tchunk_c.disk_offset(),tchunk_a.disk_offset()},res);
-  }
-
-
-  template<class TA,class LC>
-  void read_dataset(const TA& tchunk_r, LC& lambda){
-    auto res = d.read_raw_chunk(raw_chunk_buffer,{tchunk_r.disk_offset()});
-    lambda(tchunk_r,raw_chunk_buffer.data(),res,elem_size);
-  }
-
-  template<class TA, class TB,class LC>
-  void read_dataset(const TA& tchunk_r, const TB& tchunk_c, LC& lambda){
-    auto res = d.read_raw_chunk(raw_chunk_buffer,{tchunk_r.disk_offset(),tchunk_c.disk_offset()});
-    lambda(tchunk_r,tchunk_c,raw_chunk_buffer.data(),res,elem_size);
-
-  }
-
-  template<class TA, class TB,class TC,class LC>
-  void read_dataset(const TA& tchunk_r, const TB& tchunk_c,const TC& tchunk_a, LC& lambda){
-    auto res = d.read_raw_chunk(raw_chunk_buffer,{tchunk_r.disk_offset(),tchunk_c.disk_offset(),tchunk_a.disk_offset()});
-    lambda(tchunk_r,tchunk_c,tchunk_a,raw_chunk_buffer.data(),res,elem_size);
-  }
-
-
-  template<class RngA,class LC>
-  void iter_dataset_read(const RngA& RowChunksBegin,const RngA& RowChunksEnd,LC& lambda){
-    for(auto &tchunk_r = RowChunksBegin; tchunk_r!=RowChunksEnd; ++tchunk_r){
-      read_dataset(tchunk_r,lambda);
-    }
-  }
-
-  template<class RngA, class RngB,class LC>
-    void iter_dataset_read(const RngA& RowChunksBegin,const RngA& RowChunksEnd, const RngB& ColChunksBegin,const RngB& ColChunksEnd,LC& lambda){
-    for(auto &tchunk_r = RowChunksBegin; tchunk_r!=RowChunksEnd; ++tchunk_r){
-      for(auto &tchunk_c = ColChunksBegin; tchunk_c!=ColChunksEnd; ++tchunk_c){
-	read_dataset(tchunk_r,tchunk_c,lambda);
-      }
-    }
-  }
-
-
-
-  template<class RngA, class RngB,class RngC,class LC>
-  void iter_dataset_read(const RngA& RowChunksBegin,const RngA& RowChunksEnd, const RngB& ColChunksBegin,const RngB& ColChunksEnd,const RngC& AChunksBegin,const RngC& AChunksEnd,LC& lambda){
-    for(auto &tchunk_r = RowChunksBegin; tchunk_r!=RowChunksEnd; ++tchunk_r){
-      for(auto &tchunk_c = ColChunksBegin; tchunk_c!=ColChunksEnd; ++tchunk_c){
-	for(auto &tchunk_a = AChunksBegin; tchunk_a!=AChunksEnd; ++tchunk_a){
-	  read_dataset(tchunk_r,tchunk_c,tchunk_a,lambda);
-	}
-      }
-    }
-  }
-
-  template<class RngA,class LC>
-  void iter_dataset_write(const RngA& RowChunksBegin,const RngA& RowChunksEnd,LC& lambda){
-    for(auto &tchunk_r = RowChunksBegin; tchunk_r!=RowChunksEnd; ++tchunk_r){
-      write_dataset(tchunk_r,lambda);
-    }
-  }
-
-
-  template<class RngA, class RngB,class LC>
-  void iter_dataset_write(const RngA& RowChunksBegin,const RngA& RowChunksEnd, const RngB& ColChunksBegin,const RngB& ColChunksEnd,LC& lambda){
-    for(auto &tchunk_r = RowChunksBegin; tchunk_r!=RowChunksEnd; ++tchunk_r){
-      for(auto &tchunk_c = ColChunksBegin; tchunk_c!=ColChunksEnd; ++tchunk_c){
-	write_dataset(tchunk_r,tchunk_c,lambda);
-      }
-    }
-  }
-
-  template<class RngA, class RngB,class RngC,class LC>
-  void iter_dataset_write(const RngA& RowChunksBegin,const RngA& RowChunksEnd, const RngB& ColChunksBegin,const RngB& ColChunksEnd,const RngC& AChunksBegin,const RngC& AChunksEnd,LC& lambda){
-    for(auto &tchunk_r = RowChunksBegin; tchunk_r!=RowChunksEnd; ++tchunk_r){
-      for(auto &tchunk_c = ColChunksBegin; tchunk_c!=ColChunksEnd; ++tchunk_c){
-	for(auto &tchunk_a = AChunksBegin; tchunk_a!=AChunksEnd; ++tchunk_a){
-	  write_dataset(tchunk_r,tchunk_c,tchunk_a,lambda);
-	}
-      }
-    }
-  }
-
 };

@@ -14,6 +14,11 @@
 #include <H5Fpublic.h>
 #include <cstdlib>
 
+
+using Path = std::filesystem::path;
+Path expand (Path in);
+
+
 namespace HighFive {
 
 namespace {
@@ -53,14 +58,14 @@ inline int convert_open_flag(int openFlags) {
 
 
 inline File::File(const std::string& filename, int openFlags,
-                  const FileDriver& driver):_filename(filename)
+                  const FileDriver& driver):_filename(expand(filename))
       {
 
 
 
 
     struct stat buffer;
-    const bool file_exists = stat(_filename.c_str(), &buffer) == 0 ;
+    const bool file_exists = std::filesystem::exists(_filename);
 
     if(file_exists){
         if(!(openFlags & File::Truncate)){
@@ -85,13 +90,13 @@ inline File::File(const std::string& filename, int openFlags,
                               fcpl,
 			      driver.getId())) < 0) {
             HDF5ErrMapper::ToException<FileException>(
-                std::string("Unable to create file " + _filename));
+                                                      std::string("Unable to create file " + _filename.string()));
         }
     } else {
         if ((_hid = H5Fopen(_filename.c_str(), openFlags, driver.getId())) <
             0) {
             HDF5ErrMapper::ToException<FileException>(
-                std::string("Unable to open file " + _filename));
+                std::string("Unable to open file " + _filename.string()));
         }
     }
 }
@@ -109,14 +114,14 @@ inline File::File(const std::string& filename, int openFlags,
   }
 
 
-inline const std::string& File::getName() const {
+inline const std::string File::getName() const {
     return _filename;
 }
 
 inline void File::flush()const  {
     if (H5Fflush(_hid, H5F_SCOPE_GLOBAL) < 0) {
         HDF5ErrMapper::ToException<FileException>(
-            std::string("Unable to flush file " + _filename));
+            std::string("Unable to flush file " + _filename.string()));
     }
 }
 }

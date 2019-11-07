@@ -24,6 +24,7 @@
 #include "../H5DataSet.hpp"
 #include "../H5DataSpace.hpp"
 #include "../H5DataType.hpp"
+#include "../H5Filter.hpp"
 
 #include "H5Slice_traits_misc.hpp"
 #include "H5Utils.hpp"
@@ -107,9 +108,14 @@ namespace HighFive {
     std::vector<hsize_t> h_offsets(offsets.size());
     std::copy(offsets.begin(),offsets.end(),h_offsets.begin());
     haddr_t file_offset=0;
-    //    auto tret =H5Dget_chunk_info_by_coord(_hid,h_offsets.data(),&read_filter_mask,&file_offset,&chunk_nbytes);
+    if(auto ret =H5Dget_chunk_info_by_coord(_hid,
+                                            h_offsets.data(),
+                                            &read_filter_mask,
+                                            &file_offset,&chunk_nbytes) <0){
+      HDF5ErrMapper::ToException<DataSetException>("Unable to get chunk info");
+    }
 
-    auto ret =H5Dget_chunk_storage_size(_hid, h_offsets.data(), &chunk_nbytes);
+
     auto buff_size = data_buff.size();
     if(chunk_nbytes>buff_size){
       size_t newsize=chunk_nbytes;

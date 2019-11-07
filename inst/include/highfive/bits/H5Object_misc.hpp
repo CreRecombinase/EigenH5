@@ -56,7 +56,11 @@ inline hid_t Object::getId() const { return _hid; }
 
 inline haddr_t Object::getAddr() const{
    H5O_info_t tid;
-   if(H5Oget_info(_hid,&tid)<0){
+#if defined(H5_USE_112_API_DEFAULT)
+   if(H5Oget_info(_hid,&tid,H5O_INFO_BASIC)<0){
+#else
+     if(H5Oget_info(_hid,&tid)<0){  
+#endif
      throw ObjectException("Unable to obtain object info");
    }else{
      return(tid.addr);

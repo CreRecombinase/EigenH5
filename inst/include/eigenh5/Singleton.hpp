@@ -20,6 +20,22 @@
 //   return(gr->file_w(filename));
 // }
 
+template<class T> struct always_false : std::false_type {};
+
+template<bool isReadOnly>
+class FileManager{
+  std::unordered_map<std::string,HighFive::File >  file_map;
+  std::unordered_map<std::string,int>  flag_map;
+public:
+  FileManager(){};
+  FileManager(const Rcpp::StringVector filenames);
+  HighFive::File get_file(const std::string &f);
+  void file_k(const std::string filename);
+  std::unordered_map<std::string,HighFive::File >::const_iterator  get_files() const;
+  void print()const;
+};
+
+
 template<bool isReadOnly>
 inline std::unordered_map<std::string,HighFive::File >::const_iterator  FileManager<isReadOnly>::get_files() const{
   return(file_map.begin());
