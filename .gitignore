@@ -13,4 +13,6 @@ GRTAGS
 /src/Makevars
 /.lintr
 *.idx
+/config.log
+/config.status
 /compile_commands.json

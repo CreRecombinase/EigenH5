@@ -2,28 +2,22 @@
 #include <Rcpp.h>
 
 
-#if __has_include(<filesystem>)
+#if __has_include(<filesystem>) && !defined(NOFILEPATH)
 
 #include <filesystem>
 
 using Path = std::filesystem::path;
 
-inline std::string operator+(const std::string a, const Path &b){
-  return(a+b.string());
-}
-
-inline std::string operator+(const Path &a, const std::string  &b){
-  return(a.string()+b);
-}
-
-
 #else
+ #include <sys/stat.h>
 class Path{
 public:
   std::string nodes;
   Path(const Rcpp::String &name):nodes(name.get_cstring()){
   }
   Path(const std::string &name):nodes(name){
+  }
+  Path(const char* name):nodes(name){
   }
   std::string parent_path() {
     if(nodes.size()==0){
@@ -84,15 +78,29 @@ public:
 };
 
 inline std::string operator/(const std::string a, const Path &b){
-  return(a+b.nodes);
+  return(a+b.string());
 }
 
 inline std::ostream &operator<<(std::ostream &os, const Path &dt) {
-  os << dt.nodes;
+  os << dt.string();
   return os;
 }
 
+inline bool exists(const Path &p){
+  struct stat   buffer;   
+  return (stat (p.c_str(), &buffer) == 0);
+}
+
 #endif
+
+
+inline std::string operator+(const std::string a, const Path &b){
+  return(a+b.string());
+}
+
+inline std::string operator+(const Path &a, const std::string  &b){
+  return(a.string()+b);
+}
 
 inline Path expand (Path in) {
   if (in.string().size () < 1) return in;
@@ -116,7 +124,7 @@ inline Path expand (Path in) {
 inline Path root_path(const std::string &input) {
   Path pt=expand(Path(input));
 
-  return pt.is_absolute() ? pt : "/" / pt;
+  return pt.is_absolute() ? pt : Path("/" + pt.string());
 }
 
 inline Path root_path(const Rcpp::StringVector &input) {

@@ -13,17 +13,7 @@
 #include <boost/optional.hpp>
 #include "../H5Filter.hpp"
 
-#if __has_include(<filesystem>)
-
-#include <filesystem>
-
-using Path = std::filesystem::path;
-
-
-#else
-class Path;
-#endif
-
+#include "path.hpp"
 
 
 namespace HighFive {

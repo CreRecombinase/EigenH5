@@ -14,10 +14,7 @@
 #include <H5Fpublic.h>
 #include <cstdlib>
 
-
-using Path = std::filesystem::path;
-Path expand (Path in);
-
+#include "path.hpp"
 
 namespace HighFive {
 
@@ -65,7 +62,7 @@ inline File::File(const std::string& filename, int openFlags,
 
 
     struct stat buffer;
-    const bool file_exists = std::filesystem::exists(_filename);
+    const bool file_exists = exists(_filename);
 
     if(file_exists){
         if(!(openFlags & File::Truncate)){
