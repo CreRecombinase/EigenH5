@@ -126,13 +126,29 @@ test_that("chunked sorting workflow works like an on-disk grouped-sort",{
 test_that("we can read from big dataframes",{
   
   tf <- tempfile()
+    smc <- readr::cols(
+  mpg = readr::col_double(),
+  cyl = readr::col_double(),
+  disp = readr::col_double(),
+  hp = readr::col_double(),
+  drat = readr::col_double(),
+  wt = readr::col_double(),
+  qsec = readr::col_double(),
+  vs = readr::col_double(),
+  am = readr::col_double(),
+  gear = readr::col_double(),
+  carb = readr::col_double()
+)
   mtcf <- readr::readr_example("mtcars.csv")
-  mtc_df <- readr::read_delim(mtcf,delim=",")
-  rx <- replicate(n=200,delim2h5(input_file =mtcf ,output_file = tf,delim=",",col_names=TRUE,col_types=readr::spec(mtc_df),h5_args=list(datapath="mtcars",append=TRUE)))
+  mtc_df <- readr::read_delim(mtcf,delim=",",col_types = smc)
+
+  rx <- replicate(n=20,delim2h5(input_files =mtcf ,output_file = tf,delim=",",col_names=TRUE,col_types=smc,h5_args=list(datapath="mtcars",append=TRUE)))
+  delim2h5(input_files =rep(mtcf,20),output_file = tf,delim=",",col_names=TRUE,col_types=readr::spec(mtc_df),h5_args=list(datapath="mtcars2",append=TRUE),id_col = "index")
+  idxd <- read_vector_h5(tf,"mtcars2/index")  
+  max_d <- nrow(mtc_df)*20
+  expect_equal(idxd,1L:as.integer(max_d))
   
-  max_d <- nrow(mtc_df)*200
-  
-  fr_df <- dplyr::bind_rows(replicate(200,mtc_df,simplify=FALSE))
+  fr_df <- dplyr::bind_rows(replicate(20,mtc_df,simplify=FALSE))
   
   gen_rslice <- function(offset,size){
     seq(offset+1,length.out = size)
@@ -162,15 +178,6 @@ alt_read_df_h5 <- function(f,datapath,offset,datasize){
     expect_equal(ttdf,cdf,ignore_row_order=FALSE)
     stopifnot()
   }
-  
-  
-  
-  
-  
-  
-  
-  
-  
   
 })
 

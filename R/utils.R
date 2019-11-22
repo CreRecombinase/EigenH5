@@ -264,8 +264,8 @@ create_mat_l <- function(dff){
 
 #' Convert to HDF5 with a custom callback
 #'
-#' @param input_file
-#' @param output_file
+#' @param input_file one or more files able to be read by `readr::read_delim`
+#' @param output_file output HDF5 file
 #' @param h5_args ... args for write_df_h5 unpacked and passed to `callback_fun`
 #' @param callback_fun function with signature matching function(df,filename,datapath,...) (defaults to `write_df_h5`)
 #' @param ...
@@ -279,11 +279,12 @@ create_mat_l <- function(dff){
 #' delim2h5(readr::readr_example("mtcars.csv"),temp_h5,delim="/")
 #' new_data  <- read_df_h5(temp_h5)
 
-delim2h5 <- function(input_file, output_file, h5_args = list(datapath = "/"), callback_fun = write_df_h5, id_col = NULL, ...){
+delim2h5 <- function(input_files, output_file, h5_args = list(datapath = "/"), callback_fun = write_df_h5, id_col = NULL, ...){
     h5_args[["append"]] <- TRUE
     callback_args <- formalArgs(callback_fun)
+    stopifnot(all(fs::file_exists(input_files)))
     stopifnot(all.equal(callback_args, formalArgs(write_df_h5)))
-
+    global_offset <- 0L
     h5_args[["append"]] <- TRUE
     if (is.null(id_col) ||  isFALSE(id_col)) {
 
@@ -295,7 +296,8 @@ delim2h5 <- function(input_file, output_file, h5_args = list(datapath = "/"), ca
 
             stopifnot(length(id_col) == 1)
             wf <- function(x, pos) {
-                pos_seq <- seq(from = pos, length.out = nrow(x))
+                pos_seq <- as.integer(seq.int(from = as.integer(pos)+global_offset, length.out = as.integer(nrow(x))))
+                
                 rlang::exec(callback_fun,
                             df = dplyr::mutate(x, {{id_col}} := pos_seq),
                             filename = output_file, !!!h5_args)
@@ -304,7 +306,7 @@ delim2h5 <- function(input_file, output_file, h5_args = list(datapath = "/"), ca
         }else {
             stopifnot(isTRUE(id_col))
             wf <- function(x, pos) {
-                pos_seq <- seq(from = pos, length.out = nrow(x))
+                pos_seq <- as.integer(seq(from = pos+global_offset, length.out = nrow(x)))
                 rlang::exec(callback_fun,
                             df = dplyr::mutate(x, id_col = pos_seq),
                             filename = output_file, !!!h5_args)
@@ -313,6 +315,9 @@ delim2h5 <- function(input_file, output_file, h5_args = list(datapath = "/"), ca
         }
     }
 
-
-  readr::read_delim_chunked(file = input_file, callback = readr::SideEffectChunkCallback$new(wf), ...)
+    for(f in input_files){
+      readr::read_delim_chunked(file = f, callback = readr::SideEffectChunkCallback$new(wf), ...)
+      all_ds <- ls_h5(output_file,h5_args$datapath,full_names = T)
+      global_offset <- as.integer(dim_h5(output_file,all_ds[1])[1])
+    }
 }
