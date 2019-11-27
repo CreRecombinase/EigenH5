@@ -14,8 +14,6 @@ fix_paths <- function(...) {
 }
 
 
-
-
 #' Convert RLE-encoded vector to offset+size dataframe
 #'
 #' @param x either a vector of class `rle`, or a vector that can be converte to one via (`rle(x)`)
