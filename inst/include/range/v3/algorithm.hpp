@@ -14,14 +14,12 @@
 #ifndef RANGES_V3_ALGORITHM_HPP
 #define RANGES_V3_ALGORITHM_HPP
 
-#include <range/v3/detail/config.hpp>
-RANGES_DISABLE_WARNINGS
-
 #include <range/v3/algorithm/adjacent_find.hpp>
 #include <range/v3/algorithm/adjacent_remove_if.hpp>
 #include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/algorithm/binary_search.hpp>
+#include <range/v3/algorithm/contains.hpp>
 #include <range/v3/algorithm/copy.hpp>
 #include <range/v3/algorithm/copy_backward.hpp>
 #include <range/v3/algorithm/copy_if.hpp>
@@ -94,6 +92,7 @@ RANGES_DISABLE_WARNINGS
 #include <range/v3/algorithm/unique_copy.hpp>
 #include <range/v3/algorithm/unstable_remove_if.hpp>
 #include <range/v3/algorithm/upper_bound.hpp>
+#include <range/v3/detail/config.hpp>
 
 // BUGBUG
 #include <range/v3/algorithm/aux_/equal_range_n.hpp>
@@ -102,7 +101,5 @@ RANGES_DISABLE_WARNINGS
 #include <range/v3/algorithm/aux_/merge_n_with_buffer.hpp>
 #include <range/v3/algorithm/aux_/sort_n_with_buffer.hpp>
 #include <range/v3/algorithm/aux_/upper_bound_n.hpp>
-
-RANGES_RE_ENABLE_WARNINGS
 
 #endif

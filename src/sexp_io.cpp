@@ -20,8 +20,9 @@ template<> struct r2cpp_t<INTSXP>{
 template<> struct r2cpp_t<REALSXP>{
   typedef double type;
 };
-template<> struct r2cpp_t<LGLSXP>{
-  typedef bool type;
+template <> struct r2cpp_t<LGLSXP> { typedef bool type; };
+template<> struct r2cpp_t<RAWSXP>{
+  typedef Rbyte type;
 };
 template<> struct r2cpp_t<CHARSXP>{
   typedef std::string type;
@@ -34,11 +35,14 @@ template<> struct r2cpp_t<STRSXP>{
 typedef  std::integral_constant<SEXPTYPE, INTSXP> int_tv;
 typedef  std::integral_constant<SEXPTYPE, REALSXP> double_tv;
 typedef  std::integral_constant<SEXPTYPE, LGLSXP> bool_tv;
-typedef  std::integral_constant<SEXPTYPE, STRSXP> string_tv;
+typedef std::integral_constant<SEXPTYPE, STRSXP> string_tv;
+typedef std::integral_constant<SEXPTYPE, RAWSXP> raw_tv;
 typedef  std::integral_constant<SEXPTYPE,NILSXP> nil_tv;
 
-std::variant<int_tv,double_tv,bool_tv,string_tv> variant_v(SEXPTYPE i){
+std::variant<int_tv,double_tv,bool_tv,string_tv,raw_tv> variant_v(SEXPTYPE i){
   switch(i){
+  case RAWSXP:
+    return raw_tv();
   case INTSXP:
     return int_tv();
   case REALSXP:
@@ -59,6 +63,9 @@ std::variant<int_tv,double_tv,bool_tv,string_tv> variant_v(SEXPTYPE i){
 SEXPTYPE h2r_T(const HighFive::DataType htype){
 
   using namespace HighFive;
+
+  if(htype==HighFive::AtomicType<unsigned char>{})
+    return RAWSXP;
   if(htype.same_class(AtomicType<int>()))
     return(INTSXP);
   if(htype.same_class(AtomicType<float>()))
@@ -67,8 +74,8 @@ SEXPTYPE h2r_T(const HighFive::DataType htype){
     return(LGLSXP);
   if(htype.same_class(AtomicType<std::string>()))
     return(STRSXP);
-
   Rcpp::Rcerr<<"Couldn't find matching datatype"<<std::endl;
+  Rcpp::stop("no matching datatype");
   return(NILSXP);
 }
 
@@ -76,6 +83,8 @@ SEXPTYPE h2r_T(const HighFive::DataType htype){
 Rcpp::StringVector h2s_T(const HighFive::DataType htype){
 
   using namespace HighFive;
+  if(htype==HighFive::AtomicType<unsigned char>{})
+    return("raw");
   if(htype.same_class(AtomicType<int>()))
     return("integer");
   if(htype.same_class(AtomicType<float>()))
@@ -212,6 +221,13 @@ SEXP read_attribute(const HighFive::DataSet &der,const std::string attribute_nam
     return(Rcpp::wrap(retv));
     break;
   }
+  case RAWSXP: {
+    std::vector<unsigned char> retv(attr_dims.front());
+    attr.read(retv);
+    Rcpp::RawVector ret=Rcpp::wrap(retv);
+    return(ret);
+    break;
+  }
   case STRSXP: {
     std::vector<std::string> retv(attr_dims.front());
     attr.read(retv);
@@ -252,6 +268,13 @@ SEXP read_attribute(const HighFive::Group &der,const std::string attribute_name)
     return(Rcpp::wrap(retv));
     break;
   }
+  case RAWSXP: {
+    std::vector<unsigned char> retv(attr_dims.front());
+    attr.read(retv);
+    Rcpp::RawVector ret=Rcpp::wrap(retv);
+    return(ret);
+    break;
+  }
   case STRSXP: {
     std::vector<std::string> retv(attr_dims.front());
     attr.read(retv);
@@ -287,6 +310,16 @@ void write_attribute(Derivate &der,const std::string attribute_name,const Rcpp::
       t_attr->write(tdat);
     }else{
       auto attr =	der.createAttribute(attribute_name, DataSpace::From(tdat),HighFive::AtomicType<int>());
+      attr.write(tdat);
+    }
+    break;
+  }
+  case RAWSXP: {
+    std::vector<Rbyte> tdat = Rcpp::as<std::vector<Rbyte> >(data);
+    if(auto t_attr = der.openAttribute(attribute_name)){
+      t_attr->write(tdat);
+    }else{
+      auto attr =	der.createAttribute(attribute_name, DataSpace::From(tdat),HighFive::AtomicType<unsigned char>());
       attr.write(tdat);
     }
     break;
@@ -403,6 +436,9 @@ HighFive::DataSet create_dataset(HighFive::Group &group,
   case INTSXP: {
     return(group.createDataSet(dataname, space, HighFive::AtomicType<int>(), filter));
   }
+  case RAWSXP: {
+    return(group.createDataSet(dataname, space, HighFive::AtomicType<unsigned char>(), filter));
+  }
   case REALSXP: {
     return(group.createDataSet(dataname, space, HighFive::AtomicType<double>(), filter));
   }
@@ -443,27 +479,6 @@ std::vector<size_t> dataset_dims(std::string filename,
 }
 
 
-// Rcpp::RawVector	read_raw_chunk(std::string filename,
-// 			       std::string datapath,
-// 			       Rcpp::IntegerVector chunk_idx){
-
-//   auto dp=root_path(datapath);
-
-//   HighFive::File file(filename,HighFive::File::ReadOnly);
-//   auto ds=  file.getDataSet(dp);
-//   auto chunk_dims = ds.getFilter().get_chunksizes();
-//   std::vector<hsize_t> mchunk_idx(chunk_dims.size());
-//   for(int i=0; i<chunk_idx.size();i++){
-//     mchunk_idx[i]=chunk_idx*chunk_dims[i];
-//   }
-//   Rcpp::RawVector(
-//   void*	td=
-//   return(.read_raw_chunkmchunk_idx));
-// }
-
-
-
-
 //[[Rcpp::export]]
 SEXP read_vector(std::string filename,
 		 std::string datapath,
@@ -493,9 +508,12 @@ SEXP read_vector(std::string filename,
     ret = read_elem_v_h5<REALSXP>(file_sel,datasel);
     break;
   }
+  case RAWSXP: {
+    ret = read_elem_v_h5<RAWSXP>(file_sel,datasel);
+    break;
+  }
   case STRSXP: {
     ret = read_elem_v_h5<STRSXP>(file_sel,datasel);
-
     break;
   }
   default: {
@@ -547,6 +565,11 @@ SEXP read_matrix(std::string filename,
     return(ret);
     break;
   }
+  case RAWSXP: {
+    auto ret = read_elem_m_h5<RAWSXP>(file_sel,datasel);
+    return(ret);
+    break;
+  }
   case REALSXP: {
     auto ret = read_elem_m_h5<REALSXP>(file_sel,datasel);
 
@@ -592,6 +615,12 @@ bool update_matrix(RObject data,
     case INTSXP: {
       Rcpp::Matrix<INTSXP> wmat(data);
       write_elem_m_h5<INTSXP>(file_sel,datasel,wmat);
+      write_success=true;
+      break;
+    }
+    case RAWSXP: {
+      Rcpp::Matrix<RAWSXP> wmat(data);
+      write_elem_m_h5<RAWSXP>(file_sel,datasel,wmat);
       write_success=true;
       break;
     }
@@ -672,6 +701,12 @@ bool update_vector(RObject data,
     case REALSXP: {
       Rcpp::Vector<REALSXP> wvec(data);
       write_elem_v_h5<REALSXP>(file_sel,datasel,wvec);
+      write_success=true;
+      break;
+    }
+    case RAWSXP: {
+      Rcpp::Vector<RAWSXP> wvec(data);
+      write_elem_v_h5<RAWSXP>(file_sel,datasel,wvec);
       write_success=true;
       break;
     }
@@ -880,7 +915,9 @@ bool create_dataset_h5(const std::string &filename,
      auto attrn = data.attributeNames();
      for( auto &attr : attrn){
        if(attr != "dim"){
-         write_attribute(dsr,attr,data);
+         Rcpp::RObject att_dat = data.attr(attr);
+         if(att_dat.sexp_type() != VECSXP)
+           write_attribute(dsr,"R:"+attr,att_dat);
        }
      }
      create_success=true;
@@ -889,7 +926,9 @@ bool create_dataset_h5(const std::string &filename,
      auto attrn = data.attributeNames();
      for( auto &attr : attrn){
        if(attr != "dim"){
-         write_attribute(dsr,"R:"+attr,data.attr(attr));
+         Rcpp::RObject att_dat = data.attr(attr);
+         if(att_dat.sexp_type() != VECSXP)
+           write_attribute(dsr,"R:"+attr,att_dat);
        }
      }
    }

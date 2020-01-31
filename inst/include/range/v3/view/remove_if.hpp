@@ -34,7 +34,7 @@
 #include <range/v3/view/adaptor.hpp>
 #include <range/v3/view/view.hpp>
 
-RANGES_DISABLE_WARNINGS
+#include <range/v3/detail/disable_warnings.hpp>
 
 namespace ranges
 {
@@ -167,23 +167,28 @@ namespace ranges
             }
         };
 
-        struct remove_if_fn : remove_if_base_fn
+        struct remove_if_bind_fn
         {
-            using remove_if_base_fn::operator();
-
             template<typename Pred>
-            constexpr auto operator()(Pred pred) const
+            constexpr auto operator()(Pred pred) const // TODO: underconstrained
             {
                 return make_view_closure(bind_back(remove_if_base_fn{}, std::move(pred)));
             }
             template<typename Pred, typename Proj>
             constexpr auto CPP_fun(operator())(Pred && pred,
                                                Proj proj)(const //
-                                                          requires(!range<Pred>))
+                                                          requires(!range<Pred>)) // TODO: underconstrained
             {
                 return make_view_closure(bind_back(
                     remove_if_base_fn{}, static_cast<Pred &&>(pred), std::move(proj)));
             }
+        };
+
+        struct RANGES_EMPTY_BASES remove_if_fn
+          : remove_if_base_fn, remove_if_bind_fn
+        {
+            using remove_if_base_fn::operator();
+            using remove_if_bind_fn::operator();
         };
 
         /// \relates remove_if_fn
@@ -193,9 +198,9 @@ namespace ranges
     /// @}
 } // namespace ranges
 
-RANGES_RE_ENABLE_WARNINGS
-
 #include <range/v3/detail/satisfy_boost_range.hpp>
 RANGES_SATISFY_BOOST_RANGE(::ranges::remove_if_view)
+
+#include <range/v3/detail/reenable_warnings.hpp>
 
 #endif

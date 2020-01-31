@@ -92,15 +92,17 @@ Rcpp::IntegerVector fast_str2ascii(Rcpp::StringVector input,int offset=0){
 
 std::vector<std::string> list_R_attr(const HighFive::DataSet &dset){
   auto attr_n = dset.listAttributeNames();
-  attr_n.erase(std::remove_if(attr_n.begin(),attr_n.end(),[](const std::string& str){
-                                                            if(str.size()<=3)
-                                                              return true;
-                                                            if(str[0]!='R')
-                                                              return true;
-                                                            if(str[1]!=':')
-                                                              return true;
-                                                            return false;
-                                                          }));
+  if(attr_n.size()>0){
+    attr_n.erase(std::remove_if(attr_n.begin(),attr_n.end(),[](const std::string& str){
+      if(str.size()<=3)
+        return true;
+      if(str[0]!='R')
+        return true;
+      if(str[1]!=':')
+        return true;
+      return false;
+    }));
+  }
   return attr_n;
 }
 
@@ -315,7 +317,7 @@ Rcpp::StringVector typeof_h5(const std::string filename,
 
 
 //[[Rcpp::export]]
-Rcpp::List info_h5(const Rcpp::StringVector filename, Rcpp::StringVector datapaths){
+Rcpp::List info_h5(const Rcpp::StringVector filename, Rcpp::StringVector datapaths,const bool attr=false){
   using namespace Rcpp;
   const auto file = HighFive::File(as<std::string>(filename[0]),HighFive::File::ReadOnly);
 
@@ -326,6 +328,7 @@ Rcpp::List info_h5(const Rcpp::StringVector filename, Rcpp::StringVector datapat
   StringVector types(num_datasets);
   IntegerVector disk_size(num_datasets);
   List filter_l(num_datasets);
+  List attr_l(num_datasets);
 
   //  std::unordered_set<size_t> ds_sizes;
   for(int i=0; i<num_datasets;i++){
@@ -337,6 +340,18 @@ Rcpp::List info_h5(const Rcpp::StringVector filename, Rcpp::StringVector datapat
       types[i]=h2s_T(dset->getDataType())[0];
       disk_size[i] = static_cast<int>(dset->getStorageSize());
       filter_l[i]=wrap_pair(dset->getFilter().get_filter_info(),"name","options");
+      if(attr){
+        auto attrs=list_R_attr(*dset);
+        Rcpp::List rl = Rcpp::List::import_transform(attrs.begin(),attrs.end(),[&](const std::string &x) -> SEXP
+                                                                     {
+                                                                       return read_attribute(*dset,x);
+                                                                     });
+        rl.names()=Rcpp::StringVector::import_transform(attrs.begin(),attrs.end(),[](const std::string& x){
+                                                                                    auto cs = x.c_str();
+                                                                                    return cs+2;
+                                                                                  });
+        attr_l[i]=rl;
+      }
     }else{
       dim_l[i]=IntegerVector::create(NA_INTEGER);
       types[i]="group";
@@ -344,14 +359,26 @@ Rcpp::List info_h5(const Rcpp::StringVector filename, Rcpp::StringVector datapat
       filter_l[i]=NA_INTEGER;
     }
   }
-  auto m_ret_l = List::create(_["name"]=datapaths,
-                          _["type"]=types,
-                          _["storage_size"]=disk_size,
-                          _["dims"]=dim_l,
-                          _["filter"]=filter_l);
-  m_ret_l.attr("class") = StringVector::create("tbl_df","tbl","data.frame");
-  m_ret_l.attr("row.names") = seq(1, num_datasets);
-  return m_ret_l;
+  if(attr){
+    auto m_ret_l = List::create(_["name"]=datapaths,
+                                _["type"]=types,
+                                _["storage_size"]=disk_size,
+                                _["dims"]=dim_l,
+                                _["filter"]=filter_l,
+                                _["attributes"]=attr_l);
+    m_ret_l.attr("class") = StringVector::create("tbl_df","tbl","data.frame");
+    m_ret_l.attr("row.names") = seq(1, num_datasets);
+    return m_ret_l;
+  }else{
+    auto m_ret_l = List::create(_["name"]=datapaths,
+                                _["type"]=types,
+                                _["storage_size"]=disk_size,
+                                _["dims"]=dim_l,
+                                _["filter"]=filter_l);
+    m_ret_l.attr("class") = StringVector::create("tbl_df","tbl","data.frame");
+    m_ret_l.attr("row.names") = seq(1, num_datasets);
+    return m_ret_l;
+  }
 }
 
 

@@ -612,14 +612,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // info_h5
-Rcpp::List info_h5(const Rcpp::StringVector filename, Rcpp::StringVector datapaths);
-RcppExport SEXP _EigenH5_info_h5(SEXP filenameSEXP, SEXP datapathsSEXP) {
+Rcpp::List info_h5(const Rcpp::StringVector filename, Rcpp::StringVector datapaths, const bool attr);
+RcppExport SEXP _EigenH5_info_h5(SEXP filenameSEXP, SEXP datapathsSEXP, SEXP attrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const Rcpp::StringVector >::type filename(filenameSEXP);
     Rcpp::traits::input_parameter< Rcpp::StringVector >::type datapaths(datapathsSEXP);
-    rcpp_result_gen = Rcpp::wrap(info_h5(filename, datapaths));
+    Rcpp::traits::input_parameter< const bool >::type attr(attrSEXP);
+    rcpp_result_gen = Rcpp::wrap(info_h5(filename, datapaths, attr));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -727,7 +728,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_EigenH5_isGroup_h5", (DL_FUNC) &_EigenH5_isGroup_h5, 2},
     {"_EigenH5_ls_h5", (DL_FUNC) &_EigenH5_ls_h5, 3},
     {"_EigenH5_typeof_h5", (DL_FUNC) &_EigenH5_typeof_h5, 2},
-    {"_EigenH5_info_h5", (DL_FUNC) &_EigenH5_info_h5, 2},
+    {"_EigenH5_info_h5", (DL_FUNC) &_EigenH5_info_h5, 3},
     {"_EigenH5_file_acc_ct", (DL_FUNC) &_EigenH5_file_acc_ct, 1},
     {"_EigenH5_dim_h5", (DL_FUNC) &_EigenH5_dim_h5, 2},
     {"_EigenH5_concat_mats", (DL_FUNC) &_EigenH5_concat_mats, 4},

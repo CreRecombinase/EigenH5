@@ -20,8 +20,11 @@
 
 #include <range/v3/range_fwd.hpp>
 
+#include <range/v3/range/access.hpp>
 #include <range/v3/range/concepts.hpp>
 #include <range/v3/utility/static_const.hpp>
+
+#include <range/v3/detail/disable_warnings.hpp>
 
 namespace ranges
 {
@@ -43,7 +46,7 @@ namespace ranges
     {
         CPP_template(class R, class U)( //
             requires range<R>)          //
-            using maybe_dangling_ = if_then_t<forwarding_range_<R>, U, dangling>;
+            using maybe_dangling_ = if_then_t<detail::_safe_range<R>, U, dangling>;
     }
     /// \endcond
 
@@ -76,5 +79,7 @@ namespace ranges
         using ranges::safe_iterator_t;
     } // namespace cpp20
 } // namespace ranges
+
+#include <range/v3/detail/reenable_warnings.hpp>
 
 #endif

@@ -206,13 +206,20 @@ test_that("can read a matrix that's actually chunked",{
 test_that("can write a matrix chunkwise",{
 
     tmat <- matrix(1:2700,90,30)
+    # rownames(tmat) <- paste0("r",1:90)
+    # colnames(tmat) <- paste0("c",1:30)
+    # 
     tf <- tempfile()
     write_matrix_h5v(tmat,tf,"test",chunksizes=c(10L,3L))  
     
-    trm <- read_matrix_h5(tf,"test")
+    trm <- read_matrix_h5v(tf,"test")
     expect_equal(trm,tmat)
-    check_mat <- read_matrix_h5v(tf,"test",1:90,1:30)
+    check_mat <- read_matrix_h5v(tf,"test",j=1:30)
     expect_equal(tmat,check_mat)
+    
+    
+    check_mat <- read_matrix_h5v(tf,"test",j=1L:15L)
+    expect_equal(tmat[,1:15],check_mat)
 
   
   

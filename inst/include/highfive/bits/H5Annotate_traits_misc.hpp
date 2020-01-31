@@ -88,18 +88,20 @@ template <typename Derivate>
 inline std::vector<std::string>
 AnnotateTraits<Derivate>::listAttributeNames() const {
 
-    std::vector<std::string> names;
-    details::HighFiveIterateData<std::string> iterateData(names);
+  std::vector<std::string> names(0);
+  details::HighFiveIterateData<std::string> iterateData(names);
 
     size_t num_objs = getNumberAttributes();
-    names.reserve(num_objs);
+    if(num_objs>0){
+      names.reserve(num_objs);
 
-    if (H5Aiterate2(static_cast<const Derivate*>(this)->getId(), H5_INDEX_NAME,
+      if (H5Aiterate2(static_cast<const Derivate*>(this)->getId(), H5_INDEX_NAME,
                     H5_ITER_INC, NULL,
                     &details::internal_high_five_iterate<H5A_info_t,std::string>,
                     static_cast<void*>(&iterateData)) < 0) {
         HDF5ErrMapper::ToException<AttributeException>(
             std::string("Unable to list attributes in group"));
+      }
     }
 
     return names;

@@ -9,8 +9,8 @@
 //
 // Project home: https://github.com/ericniebler/range-v3
 //
-#ifndef RANGES_V3_UTLITY_ADDRESSOF_HPP
-#define RANGES_V3_UTLITY_ADDRESSOF_HPP
+#ifndef RANGES_V3_UTILITY_ADDRESSOF_HPP
+#define RANGES_V3_UTILITY_ADDRESSOF_HPP
 
 #include <memory>
 #include <type_traits>
@@ -20,6 +20,8 @@
 #include <range/v3/range_fwd.hpp>
 
 #include <range/v3/detail/config.hpp>
+
+#include <range/v3/detail/disable_warnings.hpp>
 
 namespace ranges
 {
@@ -69,5 +71,7 @@ namespace ranges
     } // namespace detail
     /// \endcond
 } // namespace ranges
+
+#include <range/v3/detail/reenable_warnings.hpp>
 
 #endif

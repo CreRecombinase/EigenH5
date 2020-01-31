@@ -5,7 +5,7 @@
 \title{Convert to HDF5 with a custom callback}
 \usage{
 delim2h5(
-  input_file,
+  input_files,
   output_file,
   h5_args = list(datapath = "/"),
   callback_fun = write_df_h5,
@@ -14,11 +14,15 @@ delim2h5(
 )
 }
 \arguments{
+\item{output_file}{output HDF5 file}
+
 \item{h5_args}{... args for write_df_h5 unpacked and passed to `callback_fun`}
 
 \item{callback_fun}{function with signature matching function(df,filename,datapath,...) (defaults to `write_df_h5`)}
 
 \item{...}{}
+
+\item{input_file}{one or more files able to be read by `readr::read_delim`}
 }
 \value{
 

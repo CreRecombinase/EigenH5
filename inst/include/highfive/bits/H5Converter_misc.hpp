@@ -460,6 +460,7 @@ namespace HighFive {
 	: _space(space) {
         (void)vec;
         v_size = (H5Tget_size(dt.getId())) / sizeof(char);
+       // is_variable=
       }
       // create a C vector adapted to HDF5
       // fill last element with NULL to identify end

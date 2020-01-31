@@ -173,10 +173,10 @@ alt_read_df_h5 <- function(f,datapath,offset,datasize){
 
     grs <- gen_rslice(offset_df$offset[i],offset_df$size[i])
     ttdf <- read_df_h5(tf,"mtcars",subset=grs)
-    expect_lt(max(grs),max_d)
+    
+    expect_lte(max(grs),max_d)
     cdf <- dplyr::slice(fr_df,grs)
-    expect_equal(ttdf,cdf,ignore_row_order=FALSE)
-    stopifnot()
+    expect_equal(ttdf[,sort(colnames(ttdf))],cdf[,sort(colnames(cdf))],ignore_row_order=FALSE)
   }
   
 })
@@ -188,8 +188,8 @@ test_that("We can convert mtcars to hdf5",{
   tf <- tempfile()
   mtcf <- readr::readr_example("mtcars.csv")
   x <- delim2h5(input_file =mtcf ,output_file = tf,delim=",",h5_args=list(datapath="mtcars"))
-  check_df <- readr::read_delim(mtcf,delim=",")
-  tdf <- read_df_h5(tf,datapath = "mtcars")
+  check_df <- readr::read_delim(mtcf,delim=",") %>% tibble::as_tibble()
+  tdf <- read_df_h5(tf,datapath = "mtcars",subcols=colnames(check_df))
   testthat::expect_equal(check_df,tdf)
   delim2h5(input_file =mtcf ,output_file = tf,delim=",",h5_args=list(datapath="mtcars_id"),id_col = TRUE,chunk_size=5)
   tdf_id <- read_df_h5(tf,datapath = "mtcars_id")

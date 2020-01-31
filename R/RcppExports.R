@@ -153,8 +153,8 @@ typeof_h5 <- function(filename, datapath) {
     .Call(`_EigenH5_typeof_h5`, filename, datapath)
 }
 
-info_h5 <- function(filename, datapaths) {
-    .Call(`_EigenH5_info_h5`, filename, datapaths)
+info_h5 <- function(filename, datapaths, attr = FALSE) {
+    .Call(`_EigenH5_info_h5`, filename, datapaths, attr)
 }
 
 file_acc_ct <- function(filename) {

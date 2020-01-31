@@ -34,6 +34,8 @@
 #include <range/v3/view/subrange.hpp>
 #include <range/v3/view/view.hpp>
 
+#include <range/v3/detail/disable_warnings.hpp>
+
 namespace ranges
 {
     /// \addtogroup group-views
@@ -143,7 +145,7 @@ namespace ranges
             static auto impl_(Rng && rng, range_difference_t<Rng> n,
                               random_access_range_tag)
                 -> CPP_ret(subrange<iterator_t<Rng>, sentinel_t<Rng>>)( //
-                    requires forwarding_range_<Rng> && sized_range<Rng>)
+                    requires safe_range<Rng> && sized_range<Rng>)
             {
                 return {begin(rng) + ranges::min(n, distance(rng)), end(rng)};
             }
@@ -189,6 +191,7 @@ namespace ranges
     /// @}
 } // namespace ranges
 
+#include <range/v3/detail/reenable_warnings.hpp>
 #include <range/v3/detail/satisfy_boost_range.hpp>
 RANGES_SATISFY_BOOST_RANGE(::ranges::drop_view)
 

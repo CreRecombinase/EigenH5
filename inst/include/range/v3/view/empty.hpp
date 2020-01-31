@@ -18,34 +18,14 @@
 
 #include <range/v3/view/interface.hpp>
 
+#include <range/v3/detail/disable_warnings.hpp>
+
 namespace ranges
 {
     /// \addtogroup group-views
     /// @{
-
-    /// \cond
-    namespace detail
-    {
-        struct empty_view_base
-        {
-            template<typename T>
-            friend constexpr T * begin(empty_view<T>) noexcept
-            {
-                return nullptr;
-            }
-            template<typename T>
-            friend constexpr T * end(empty_view<T>) noexcept
-            {
-                return nullptr;
-            }
-        };
-    } // namespace detail
-    /// \endcond
-
     template<typename T>
-    struct empty_view
-      : view_interface<empty_view<T>, (cardinality)0>
-      , private detail::empty_view_base
+    struct empty_view : view_interface<empty_view<T>, (cardinality)0>
     {
         static_assert(std::is_object<T>::value,
                       "The template parameter to empty_view must be an object type.");
@@ -75,6 +55,9 @@ namespace ranges
         }
     };
 
+    template<typename T>
+    RANGES_INLINE_VAR constexpr bool enable_safe_range<empty_view<T>> = true;
+
     namespace views
     {
         template<typename T>
@@ -95,6 +78,7 @@ namespace ranges
     /// @}
 } // namespace ranges
 
+#include <range/v3/detail/reenable_warnings.hpp>
 #include <range/v3/detail/satisfy_boost_range.hpp>
 RANGES_SATISFY_BOOST_RANGE(::ranges::empty_view)
 

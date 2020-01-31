@@ -30,7 +30,8 @@
 #include <range/v3/utility/static_const.hpp>
 #include <range/v3/view/delimit.hpp>
 #include <range/v3/view/facade.hpp>
-#include <range/v3/view/take_exactly.hpp>
+
+#include <range/v3/detail/disable_warnings.hpp>
 
 RANGES_DIAGNOSTIC_PUSH
 RANGES_DIAGNOSTIC_IGNORE_UNSIGNED_MATH
@@ -76,45 +77,39 @@ namespace ranges
             with_difference_type_<iter_difference_t<I>>>::difference_type;
 
         // clang-format off
-        CPP_def
-        (
-            template(typename I)
-            concept decrementable_,
-                requires (I i)
-                (
-                    --i,
-                    i--,
-                    concepts::requires_<same_as<I&, decltype(--i)>>,
-                    concepts::requires_<same_as<I, decltype(i--)>>
-                ) &&
-                incrementable<I>
-        );
+        template<typename I>
+        CPP_concept_bool decrementable_ =
+            incrementable<I> &&
+            CPP_requires ((I) i) //
+            (
+                --i,
+                i--,
+                concepts::requires_<same_as<I&, decltype(--i)>>,
+                concepts::requires_<same_as<I, decltype(i--)>>
+            );
 
-        CPP_def
-        (
-            template(typename I)
-            concept advanceable_,
-                requires (I i, I const j, iota_difference_t<I> const n)
-                (
-                    j - j,
-                    i += n,
-                    i -= n,
-                    static_cast<I>(j - n),
-                    static_cast<I>(j + n),
-                    static_cast<I>(n + j),
-                    // NOT TO SPEC:
-                    // Unsigned integers are advanceable, but subtracting them results in
-                    // an unsigned integral, which is not the same as the difference type,
-                    // which is signed.
-                    concepts::requires_<convertible_to<decltype(j - j), iota_difference_t<I>>>,
-                    concepts::requires_<same_as<I&, decltype(i += n)>>,
-                    concepts::requires_<same_as<I&, decltype(i -= n)>> //,
-                    // concepts::requires_<convertible_to<decltype(i - n), I>>,
-                    // concepts::requires_<convertible_to<decltype(i + n), I>>,
-                    // concepts::requires_<convertible_to<decltype(n + i), I>>
-                ) &&
-                decrementable_<I> && totally_ordered<I>
-        );
+        template<typename I>
+        CPP_concept_bool advanceable_ =
+            decrementable_<I> && totally_ordered<I> &&
+            CPP_requires_ ((I) i, (I const) j, (iota_difference_t<CPP_type(I)> const) n) //
+            (
+                j - j,
+                i += n,
+                i -= n,
+                static_cast<I>(j - n),
+                static_cast<I>(j + n),
+                static_cast<I>(n + j),
+                // NOT TO SPEC:
+                // Unsigned integers are advanceable, but subtracting them results in
+                // an unsigned integral, which is not the same as the difference type,
+                // which is signed.
+                concepts::requires_<convertible_to<decltype(j - j), iota_difference_t<CPP_type(I)>>>,
+                concepts::requires_<same_as<I&, decltype(i += n)>>,
+                concepts::requires_<same_as<I&, decltype(i -= n)>> //,
+                // concepts::requires_<convertible_to<decltype(i - n), I>>,
+                // concepts::requires_<convertible_to<decltype(i + n), I>>,
+                // concepts::requires_<convertible_to<decltype(n + i), I>>
+            );
         // clang-format on
 
         template<typename I>
@@ -165,38 +160,6 @@ namespace ranges
     } // namespace detail
     /// \endcond
 
-    /// \cond
-    namespace iota_view_detail
-    {
-        struct adl_hook
-        {};
-
-        // Extension: iota_view models forwarding-range, as suggested by
-        // https://github.com/ericniebler/stl2/issues/575
-        template<class From, class To>
-        constexpr auto begin(iota_view<From, To> r)
-        {
-            return r.begin();
-        }
-        template<class From, class To>
-        constexpr auto end(iota_view<From, To> r)
-        {
-            return r.end();
-        }
-
-        template<class From, class To>
-        constexpr auto begin(closed_iota_view<From, To> r)
-        {
-            return r.begin();
-        }
-        template<class From, class To>
-        constexpr auto end(closed_iota_view<From, To> r)
-        {
-            return r.end();
-        }
-    } // namespace iota_view_detail
-    /// \endcond
-
     /// \addtogroup group-views
     /// @{
 
@@ -204,7 +167,6 @@ namespace ranges
     template<typename From, typename To /* = From */>
     struct RANGES_EMPTY_BASES closed_iota_view
       : view_facade<closed_iota_view<From, To>, finite>
-      , private iota_view_detail::adl_hook
     {
     private:
         friend range_access;
@@ -326,6 +288,9 @@ namespace ranges
         }
     };
 
+    template<typename From, typename To>
+    RANGES_INLINE_VAR constexpr bool enable_safe_range<closed_iota_view<From, To>> = true;
+
 #if RANGES_CXX_DEDUCTION_GUIDES >= RANGES_CXX_DEDUCTION_GUIDES_17
     CPP_template(typename From, typename To)( //
         requires weakly_incrementable<From> && semiregular<To> &&
@@ -343,7 +308,6 @@ namespace ranges
                         : std::is_integral<From>::value && std::is_integral<To>::value
                               ? finite
                               : unknown>
-      , private iota_view_detail::adl_hook
     {
     private:
         friend range_access;
@@ -462,6 +426,9 @@ namespace ranges
         }
     };
 
+    template<typename From, typename To>
+    RANGES_INLINE_VAR constexpr bool enable_safe_range<iota_view<From, To>> = true;
+
 #if RANGES_CXX_DEDUCTION_GUIDES >= RANGES_CXX_DEDUCTION_GUIDES_17
     CPP_template(typename From, typename To)( //
         requires weakly_incrementable<From> && semiregular<To> &&
@@ -565,5 +532,7 @@ RANGES_SATISFY_BOOST_RANGE(::ranges::closed_iota_view)
 RANGES_SATISFY_BOOST_RANGE(::ranges::iota_view)
 
 RANGES_DIAGNOSTIC_POP
+
+#include <range/v3/detail/reenable_warnings.hpp>
 
 #endif

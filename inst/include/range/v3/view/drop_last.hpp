@@ -32,6 +32,8 @@
 #include <range/v3/view/interface.hpp>
 #include <range/v3/view/view.hpp>
 
+#include <range/v3/detail/disable_warnings.hpp>
+
 namespace ranges
 {
     /// \addtogroup group-views
@@ -89,10 +91,9 @@ namespace ranges
             {
                 // keep range bound
                 // Sized Bidi O(N)
-                return (random_access_range<Rng> && view_<Rng> && sized_range<Rng> &&
-                        view_<Rng>) ||
+                return (random_access_range<Rng> && view_<Rng> && sized_range<Rng>) ||
                                (bidirectional_range<Rng> && view_<Rng> &&
-                                common_range<Rng> && view_<Rng>)    //
+                                common_range<Rng>)
                            ? mode_enum::bidi                        //
                            : sized_range<Rng> && view_<Rng>         //
                                  ? mode_enum::sized                 //
@@ -129,8 +130,8 @@ namespace ranges
                            : range_cardinality<Rng>::value> // finite at best
     {
         CPP_assert(
-            (random_access_range<Rng> && view_<Rng> && sized_range<Rng> && view_<Rng>) ||
-            (bidirectional_range<Rng> && view_<Rng> && common_range<Rng> && view_<Rng>));
+            (random_access_range<Rng> && view_<Rng> && sized_range<Rng>) ||
+            (bidirectional_range<Rng> && view_<Rng> && common_range<Rng>));
 
     private:
         friend range_access;
@@ -359,6 +360,7 @@ namespace ranges
     /// @}
 } // namespace ranges
 
+#include <range/v3/detail/reenable_warnings.hpp>
 #include <range/v3/detail/satisfy_boost_range.hpp>
 RANGES_SATISFY_BOOST_RANGE(::ranges::drop_last_view)
 

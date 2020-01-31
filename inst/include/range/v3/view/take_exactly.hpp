@@ -32,6 +32,8 @@
 #include <range/v3/view/subrange.hpp>
 #include <range/v3/view/view.hpp>
 
+#include <range/v3/detail/disable_warnings.hpp>
+
 namespace ranges
 {
     /// \cond
@@ -153,7 +155,7 @@ namespace ranges
             static constexpr auto impl_(Rng && rng, range_difference_t<Rng> n,
                                         random_access_range_tag)
                 -> CPP_ret(subrange<iterator_t<Rng>>)( //
-                    requires forwarding_range_<Rng>)
+                    requires safe_range<Rng>)
             {
                 return {begin(rng), next(begin(rng), n)};
             }
@@ -188,6 +190,7 @@ namespace ranges
     /// @}
 } // namespace ranges
 
+#include <range/v3/detail/reenable_warnings.hpp>
 #include <range/v3/detail/satisfy_boost_range.hpp>
 RANGES_SATISFY_BOOST_RANGE(::ranges::detail::take_exactly_view_)
 

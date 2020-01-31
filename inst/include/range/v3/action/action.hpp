@@ -29,6 +29,8 @@
 #include <range/v3/utility/move.hpp>
 #include <range/v3/utility/static_const.hpp>
 
+#include <range/v3/detail/disable_warnings.hpp>
+
 namespace ranges
 {
     /// \addtogroup group-actions
@@ -42,17 +44,42 @@ namespace ranges
         }
     };
 
-    /// \sa make_view_fn
+    /// \sa make_action_closure_fn
     RANGES_INLINE_VARIABLE(make_action_closure_fn, make_action_closure)
+
+    /// \cond
+    namespace detail
+    {
+        struct action_closure_base_
+        {};
+    }
+    /// \endcond
+
+    template<typename ActionFn, typename Rng>
+    CPP_concept_fragment(invocable_action_closure_, (ActionFn, Rng),
+        !derived_from<invoke_result_t<ActionFn, Rng>, detail::action_closure_base_>
+    );
+    template<typename ActionFn, typename Rng>
+    CPP_concept_bool invocable_action_closure =
+        invocable<ActionFn, Rng> &&
+        CPP_fragment(ranges::invocable_action_closure_, ActionFn, Rng);
+
+    namespace defer
+    {
+        template<typename ActionFn, typename Rng>
+        CPP_concept invocable_action_closure =
+            CPP_defer(ranges::invocable_action_closure, ActionFn, Rng);
+    }
 
     namespace actions
     {
         struct RANGES_STRUCT_WITH_ADL_BARRIER(action_closure_base)
+          : detail::action_closure_base_
         {
             // Piping requires things are passed by value.
-            CPP_template(typename Rng, typename ActionFn)(                        //
-                requires(!defer::is_true<std::is_lvalue_reference<Rng>::value> && //
-                         defer::range<Rng> && defer::invocable<ActionFn, Rng &>)) //
+            CPP_template(typename Rng, typename ActionFn)(                             //
+                requires(!defer::is_true<std::is_lvalue_reference<Rng>::value>) &&     //
+                defer::range<Rng> && defer::invocable_action_closure<ActionFn, Rng &>) //
                 friend constexpr auto
                 operator|(Rng && rng, action_closure<ActionFn> act)
             {
@@ -212,5 +239,7 @@ namespace ranges
         true;
     /// @}
 } // namespace ranges
+
+#include <range/v3/detail/reenable_warnings.hpp>
 
 #endif

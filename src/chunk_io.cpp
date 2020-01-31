@@ -61,6 +61,7 @@ struct xtm_t<int>{
   typedef       Rcpp::IntegerMatrix rrmat_type;
 };
 
+
 template<>
 struct xtm_t<double>{
   typedef	xt::rtensor<double,1> retvec_type;
@@ -110,12 +111,10 @@ class DataSet_Context{
 public:
   const DS& d;
 private:
-
   using tensor_type=typename xtm_t<D>::buffmat_type;
   const size_t elem_size;
   const std::vector<size_t> dataset_chunksizes;
   std::vector<std::byte> raw_chunk_buffer;
-
 public:
   DataSet_Context(const HighFive::DataSet& d_):d(d_),elem_size(get_n_elem(d)),dataset_chunksizes(get_chunksizes(d)){
     auto raw_size=std::accumulate(dataset_chunksizes.begin(),dataset_chunksizes.end(),sizeof(typename tensor_type::value_type)*elem_size,std::multiplies<size_t>());
@@ -528,13 +527,12 @@ return tensor_type({chunksize_rows_,chunksize_cols_});
   }
   template<typename Z>
   void write_matrix(const rtensor_type& retmat,Z &decomp,const HighFive::DataSet& d){
-
     int rc=0;
     int cc=0;
     for(auto &tchunk_r:RowChunks){
       cc=0;
       for(auto &tchunk_c:ColChunks){
-	if constexpr(!std::is_arithmetic_v<D>){
+	if constexpr(!std::is_arithmetic_v<D> and !std::is_same_v<D,unsigned char>){
 	    xt::xtensor<char,1> tbuff(xt::xtensor<char,1>::shape_type{elem_size});
 	    std::string ts;
 	    const size_t rsize = tchunk_r.chunk_size();
@@ -556,7 +554,7 @@ return tensor_type({chunksize_rows_,chunksize_cols_});
 
 	      }
 	    }
-	  }else{
+        }else{
 	  if constexpr(std::is_same_v<TB,chunk_chunker> && std::is_same_v<TA,chunk_chunker>){
 	      xt::view(chunk_buffer,tchunk_r.chunk_slice(),tchunk_c.chunk_slice())=
 		xt::view(retmat,tchunk_r.mem_slice(),tchunk_c.mem_slice());
@@ -582,8 +580,6 @@ public:
   const std::array<size_t,1> chunksize;
   VecDim(std::vector<size_t> dim_d,std::vector<size_t> dim_c):dimsize(std::array<size_t,1>{dim_d[0]}),
 							      chunksize(std::array<size_t,1>{dim_c[0]}){}
-  // VecDim(std::array<size_t,1> dimsize_,std::array<size_t,1> chunksize_):dimsize(dimsize_),
-  // 									chunksize(chunksize_){}
 };
 
 class MatDim{
@@ -600,7 +596,7 @@ class DataSet_V{
 
 public:
   const T Dim;
-  std::variant<int,double,std::string> data_type;
+  std::variant<int,double,Rbyte,std::string> data_type;
   std::variant<NoCompressor,LzfCompressor,BloscCompressor,GzipCompressor,ZstdCompressor> decompressor;
   std::vector<std::string> R_attrs;
 
@@ -618,6 +614,10 @@ public:
     }
     case REALSXP: {
       data_type=double();
+      break;
+    }
+    case RAWSXP: {
+      data_type=Rbyte();
       break;
     }
     case STRSXP: {
@@ -639,7 +639,7 @@ class DataSet_VNS{
 
 public:
   const T Dim;
-  std::variant<int,double> data_type;
+  std::variant<int,double,unsigned char> data_type;
   std::variant<NoCompressor,LzfCompressor,BloscCompressor,GzipCompressor,ZstdCompressor> decompressor;
 
 
@@ -650,6 +650,10 @@ public:
     switch(ret_t){
     case INTSXP: {
       data_type=int();
+      break;
+    }
+    case RAWSXP: {
+      data_type=Rbyte();
       break;
     }
     case REALSXP: {
@@ -835,7 +839,7 @@ SEXP read_vector_v(const std::string filename,  const std::string datapath, SEXP
   return(ret);
 }
 
-std::variant<xt::rtensor<int,2>,xt::rtensor<double,2>,Rcpp::StringMatrix> xtensor_mat(Rcpp::RObject data){
+std::variant<xt::rtensor<int,2>,xt::rtensor<unsigned char,2>,xt::rtensor<double,2>,Rcpp::StringMatrix> xtensor_mat(Rcpp::RObject data){
   auto my_t = data.sexp_type();
   switch (my_t){
   case INTSXP: {
@@ -843,6 +847,9 @@ std::variant<xt::rtensor<int,2>,xt::rtensor<double,2>,Rcpp::StringMatrix> xtenso
   }
   case REALSXP: {
     return(Rcpp::as<xt::rtensor<double,2>>(data));
+  }
+  case RAWSXP: {
+    return(Rcpp::as<xt::rtensor<unsigned char,2>>(data));
   }
   case STRSXP:{
     return(Rcpp::as<Rcpp::StringMatrix>(data));
@@ -857,7 +864,7 @@ std::variant<xt::rtensor<int,2>,xt::rtensor<double,2>,Rcpp::StringMatrix> xtenso
 
 
 
-std::variant<xt::rtensor<int,1>,xt::rtensor<double,1>,Rcpp::StringVector> xtensor_vec(Rcpp::RObject data){
+std::variant<xt::rtensor<int,1>,xt::rtensor<double,1>,xt::rtensor<unsigned char,1>,Rcpp::StringVector> xtensor_vec(Rcpp::RObject data){
   auto my_t = data.sexp_type();
   switch (my_t){
   case INTSXP: {
@@ -865,6 +872,9 @@ std::variant<xt::rtensor<int,1>,xt::rtensor<double,1>,Rcpp::StringVector> xtenso
   }
   case REALSXP: {
     return(Rcpp::as<xt::rtensor<double,1>>(data));
+  }
+  case RAWSXP: {
+    return(Rcpp::as<xt::rtensor<unsigned char,1>>(data));
   }
   case STRSXP: {
     return Rcpp::as<Rcpp::StringVector>(data);
@@ -995,11 +1005,15 @@ class Subcols{
 public:
   Subcols():sc(std::nullopt){}
   Subcols(  std::optional<Rcpp::StringVector> &&sc_):sc(sc_){}
-  bool contains(const std::string &inp)const {
+  std::optional<int> contains(const std::string &inp,const int index)const {
     if(!sc.has_value()){
-      return true;
+      return index;
     }
-    return(std::find(sc->begin(),sc->end(),Rcpp::String(inp))!=std::end(*sc));
+    auto fsc = std::find(sc->begin(),sc->end(),Rcpp::String(inp));
+    if(fsc==std::end(*sc)){
+      return std::nullopt;
+    }
+    return(static_cast<int>(std::distance(sc->begin(),fsc)));
   }
 };
 
@@ -1017,43 +1031,46 @@ SEXP read_tibble_h5(std::string filename,Rcpp::StringVector datapath,Rcpp::List 
   Rcpp::IntegerVector idx_vec = Rcpp::seq(0,num_cols-1);
 
   Subcols subcols(get_list_element<STRSXP>(options,"subcols"));
-  std::vector<std::pair<std::unique_ptr<HighFive::DataSet>,std::string>> scols;
+  std::vector<std::tuple<int,std::unique_ptr<HighFive::DataSet>,std::string>> scols;
   const auto drow=parse_subset_v(options);
-  std::transform(idx_vec.begin(),idx_vec.end(),std::back_inserter(scols),[&](const int idx){
+  std::transform(idx_vec.begin(),idx_vec.end(),std::back_inserter(scols),[&](const int idx) -> std::tuple<int,std::unique_ptr<HighFive::DataSet>,std::string> {
                                                                            Rcpp::RObject ret;
                                                                            auto tpath = grp.getObjectName(idx);
-                                                                           auto ds = subcols.contains(tpath) ?std::make_unique<HighFive::DataSet>(grp.getDataSet(tpath)) : nullptr;
-                                                                           return make_pair(std::move(ds),tpath);
-                                                                         });
+                                                                           if(auto ds =  subcols.contains(tpath,idx))
+                                                                             return std::make_tuple(*ds,std::make_unique<HighFive::DataSet>(grp.getDataSet(tpath)),tpath);
+                                                                           return std::make_tuple(idx,nullptr,tpath);
+    });
 
   scols.erase(std::remove_if(scols.begin(),scols.end(),[](const auto&  data_el){
-                                                         return(data_el.first==nullptr);
+                                                         return(std::get<1>(data_el)==nullptr);
                                                        }),scols.end());
+  std::sort(scols.begin(),scols.end(),[](const auto& elem_a, const auto &elem_b){
+                                        return std::get<0>(elem_a) < std::get<0>(elem_b);
+                                      });
 
 
   num_cols = scols.size();
   using namespace Rcpp;
   StringVector name_vec = StringVector::import_transform(scols.cbegin(),scols.cend(),[](const auto &el){
-                                                                                                   return String(el.second);
-                                                                                                 });
+                                                                                       return String(std::get<2>(el));
+                                                                                     });
   std::optional<size_t> tdims = std::nullopt;
   std::optional<size_t> osize = std::nullopt;
 
 
   List ret = List::import_transform(scols.cbegin(),scols.cend(),[&](const auto &idx){
                                                                               RObject ret;
-                                                                              auto dims = idx.first->getDataDimensions();
-                                                                              auto ds = *(idx.first.get());
+                                                                              auto dims = std::get<1>(idx)->getDataDimensions();
+                                                                              auto ds = *(std::get<1>(idx).get());
                                                                               tdims = tdims.value_or(dims[0]);
                                                                               if(*tdims!=dims[0]){
-                                                                                Rcerr<<"tdims is: "<<*tdims<<" "<<idx.second<<" is: "<<dims[0]<<std::endl;
+                                                                                Rcerr<<"tdims is: "<<*tdims<<" "<<std::get<2>(idx)<<" is: "<<dims[0]<<std::endl;
                                                                                 stop("all datasets must have the same dimension");
                                                                               }
                                                                               std::array<size_t,1> tarr={*tdims};
                                                                               DataSet_V<VecDim> dsv(ds);
                                                                               auto data_t = dsv.data_type;
                                                                               auto &decomp = dsv.decompressor;
-
                                                                               ret=std::visit(VisitVectorRead(ds,dsv.Dim),data_t,decomp,drow);
                                                                               osize = osize.value_or(::Rf_xlength(SEXP(ret)));
                                                                               auto attr_v=list_R_attr(ds);
@@ -1061,7 +1078,7 @@ SEXP read_tibble_h5(std::string filename,Rcpp::StringVector datapath,Rcpp::List 
                                                                                 ret.attr(attr.substr(2))=read_attribute(ds,attr);
                                                                               }
                                                                               return ret;
-                                                                            });
+                                                                });
 
   ret.names()=name_vec;
   ret.attr("class") = StringVector::create("tbl_df","tbl","data.frame");

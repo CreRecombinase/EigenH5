@@ -28,6 +28,8 @@
 #include <range/v3/view/remove_if.hpp>
 #include <range/v3/view/view.hpp>
 
+#include <range/v3/detail/disable_warnings.hpp>
+
 namespace ranges
 {
     /// \addtogroup group-views
@@ -72,23 +74,28 @@ namespace ranges
             }
         };
 
-        struct remove_fn : remove_base_fn
+        struct remove_bind_fn
         {
-            using remove_base_fn::operator();
-
             template<typename Value>
-            constexpr auto operator()(Value value) const
+            constexpr auto operator()(Value value) const // TODO: underconstrained
             {
                 return make_view_closure(bind_back(remove_base_fn{}, std::move(value)));
             }
             template<typename Value, typename Proj>
             constexpr auto CPP_fun(operator())(Value && value,
                                                Proj proj)(const //
-                                                          requires(!range<Value>))
+                                                          requires(!range<Value>)) // TODO: underconstrained
             {
                 return make_view_closure(bind_back(
                     remove_base_fn{}, static_cast<Value &&>(value), std::move(proj)));
             }
+        };
+
+        struct RANGES_EMPTY_BASES remove_fn
+          : remove_base_fn, remove_bind_fn
+        {
+            using remove_base_fn::operator();
+            using remove_bind_fn::operator();
         };
 
         /// \relates remove_fn
@@ -97,5 +104,7 @@ namespace ranges
     } // namespace views
     /// @}
 } // namespace ranges
+
+#include <range/v3/detail/reenable_warnings.hpp>
 
 #endif // RANGES_V3_VIEW_REMOVE_HPP

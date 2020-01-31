@@ -28,6 +28,8 @@
 #include <range/v3/range/traits.hpp>
 #include <range/v3/utility/static_const.hpp>
 
+#include <range/v3/detail/disable_warnings.hpp>
+
 namespace ranges
 {
     /// \addtogroup group-views
@@ -46,19 +48,39 @@ namespace ranges
             )
             // clang-format on
         };
+
+        struct view_closure_base_
+        {};
     } // namespace detail
       /// \endcond
 
     // clang-format off
-    CPP_def
-    (
-        template(typename Rng)
-        concept simple_view_,
-            view_<Rng> &&
-            range<Rng const> &&
-            same_as<iterator_t<Rng>, iterator_t<Rng const>> &&
-            same_as<sentinel_t<Rng>, sentinel_t<Rng const>>
+    template<typename Rng>
+    CPP_concept_fragment(simple_view_frag_, (Rng),
+        same_as<iterator_t<Rng>, iterator_t<Rng const>> &&
+        same_as<sentinel_t<Rng>, sentinel_t<Rng const>>
     );
+    template<typename Rng>
+    CPP_concept_bool simple_view_ =
+        view_<Rng> &&
+        range<Rng const> &&
+        CPP_fragment(ranges::simple_view_frag_, Rng);
+
+    template<typename ViewFn, typename Rng>
+    CPP_concept_fragment(invocable_view_closure_, (ViewFn, Rng),
+        !derived_from<invoke_result_t<ViewFn, Rng>, detail::view_closure_base_>
+    );
+    template<typename ViewFn, typename Rng>
+    CPP_concept_bool invocable_view_closure =
+        invocable<ViewFn, Rng> &&
+        CPP_fragment(ranges::invocable_view_closure_, ViewFn, Rng);
+
+    namespace defer
+    {
+        template<typename ViewFn, typename Rng>
+        CPP_concept invocable_view_closure =
+            CPP_defer(ranges::invocable_view_closure, ViewFn, Rng);
+    }
     // clang-format on
 
     template<typename Rng>
@@ -77,16 +99,19 @@ namespace ranges
     };
 
     /// \ingroup group-views
-    /// \sa make_view_fn
+    /// \sa make_view_closure_fn
     RANGES_INLINE_VARIABLE(make_view_closure_fn, make_view_closure)
 
     namespace views
     {
         struct RANGES_STRUCT_WITH_ADL_BARRIER(view_closure_base)
+          : detail::view_closure_base_
         {
-            // Piping requires viewable_ranges.
-            CPP_template(typename Rng, typename ViewFn)(                              //
-                requires defer::viewable_range<Rng> && defer::invocable<ViewFn, Rng>) //
+            // Piping requires viewable_ranges. Pipeing a value into a closure
+            // should not yield another closure.
+            CPP_template(typename Rng, typename ViewFn)(        //
+                requires defer::viewable_range<Rng> &&          //
+                    defer::invocable_view_closure<ViewFn, Rng>) //
                 friend constexpr auto
                 operator|(Rng && rng, view_closure<ViewFn> vw)
             {
@@ -256,5 +281,7 @@ namespace ranges
     RANGES_INLINE_VAR constexpr bool is_pipeable_v<views::view_closure<ViewFn>> = true;
     /// @}
 } // namespace ranges
+
+#include <range/v3/detail/reenable_warnings.hpp>
 
 #endif

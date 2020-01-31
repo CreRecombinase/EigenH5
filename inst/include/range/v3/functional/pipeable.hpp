@@ -21,6 +21,8 @@
 #include <range/v3/functional/concepts.hpp>
 #include <range/v3/utility/static_const.hpp>
 
+#include <range/v3/detail/disable_warnings.hpp>
+
 namespace ranges
 {
     /// \addtogroup group-functional
@@ -39,8 +41,6 @@ namespace ranges
                                                                            T);
     template<typename T>
     using is_pipeable = meta::bool_<is_pipeable_v<T>>;
-
-    struct pipeable_base;
 
     struct make_pipeable_fn
     {
@@ -122,5 +122,7 @@ namespace ranges
 
     /// @}
 } // namespace ranges
+
+#include <range/v3/detail/reenable_warnings.hpp>
 
 #endif

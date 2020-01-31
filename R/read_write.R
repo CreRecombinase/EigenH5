@@ -4,7 +4,7 @@ read_df_h5 <- function(filename, datapath = "/", ...){
     stopifnot(file.exists(filename))
     return(read_tibble_h5(filename,datapath,list(...)))
     dsets <- ls_h5(filename, groupname = datapath)
-    argl <- list(...)
+    argl <- rlang::list2(...)
     if(!hasArg(subcols)){
         argl[["subcols"]] <- dsets
                                         # subcols <- dsets

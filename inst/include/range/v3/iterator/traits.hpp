@@ -26,6 +26,8 @@
 #include <range/v3/iterator/access.hpp> // for iter_move, iter_swap
 #include <range/v3/utility/common_type.hpp>
 
+#include <range/v3/detail/disable_warnings.hpp>
+
 namespace ranges
 {
     /// \addtogroup group-iterator
@@ -70,11 +72,12 @@ namespace ranges
     template<typename T>
     using iter_difference_t =
         typename detail::if_then_t<detail::is_std_iterator_traits_specialized_v<T>,
-                                   std::iterator_traits<T>,
-                                   incrementable_traits<T>>::difference_type;
+                                   std::iterator_traits<uncvref_t<T>>,
+                                   incrementable_traits<uncvref_t<T>>>::difference_type;
 #else
     template<typename T>
-    using iter_difference_t = typename incrementable_traits<T>::difference_type;
+    using iter_difference_t =
+        typename incrementable_traits<uncvref_t<T>>::difference_type;
 #endif
 
     // Defined in <range/v3/iterator/access.hpp>
@@ -168,5 +171,7 @@ namespace ranges
     } // namespace cpp20
     /// @}
 } // namespace ranges
+
+#include <range/v3/detail/reenable_warnings.hpp>
 
 #endif // RANGES_V3_ITERATOR_TRAITS_HPP

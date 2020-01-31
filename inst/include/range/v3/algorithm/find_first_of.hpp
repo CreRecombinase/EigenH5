@@ -4,9 +4,9 @@
 //  Copyright Eric Niebler 2014-present
 //
 //  Use, modification and distribution is subject to the
-//  Boost Software License, Version 0.0. (See accompanying
-//  file LICENSE_0_0.txt or copy at
-//  http://www.boost.org/LICENSE_0_0.txt)
+//  Boost Software License, Version 1.0. (See accompanying
+//  file LICENSE_1_0.txt or copy at
+//  http://www.boost.org/LICENSE_1_0.txt)
 //
 // Project home: https://github.com/ericniebler/range-v3
 //
@@ -27,6 +27,8 @@
 #include <range/v3/range/dangling.hpp>
 #include <range/v3/range/traits.hpp>
 #include <range/v3/utility/static_const.hpp>
+
+#include <range/v3/detail/disable_warnings.hpp>
 
 namespace ranges
 {
@@ -98,4 +100,6 @@ namespace ranges
     /// @}
 } // namespace ranges
 
-#endif // include guard
+#include <range/v3/detail/reenable_warnings.hpp>
+
+#endif

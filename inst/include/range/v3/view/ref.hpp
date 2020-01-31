@@ -25,51 +25,20 @@
 #include <range/v3/view/interface.hpp>
 #include <range/v3/view/view.hpp>
 
-RANGES_DISABLE_WARNINGS
+#include <range/v3/detail/disable_warnings.hpp>
 
 namespace ranges
 {
     template<typename Rng>
     struct ref_view;
 
-    /// \cond
-    namespace _ref_view_
-    {
-        struct adl_hook
-        {};
-
-        template<typename Rng>
-        constexpr iterator_t<Rng> begin(ref_view<Rng> && rng) noexcept(
-            noexcept(rng.begin()))
-        {
-            return rng.begin();
-        }
-        template<typename Rng>
-        constexpr iterator_t<Rng> begin(ref_view<Rng> const && rng) noexcept(
-            noexcept(rng.begin()))
-        {
-            return rng.begin();
-        }
-        template<typename Rng>
-        constexpr sentinel_t<Rng> end(ref_view<Rng> && rng) noexcept(noexcept(rng.end()))
-        {
-            return rng.end();
-        }
-        template<typename Rng>
-        constexpr sentinel_t<Rng> end(ref_view<Rng> const && rng) noexcept(
-            noexcept(rng.end()))
-        {
-            return rng.end();
-        }
-    } // namespace _ref_view_
-    /// \endcond
+    template<typename Rng>
+    RANGES_INLINE_VAR constexpr bool enable_safe_range<ref_view<Rng>> = true;
 
     /// \addtogroup group-views
     /// @{
     template<typename Rng>
-    struct ref_view
-      : view_interface<ref_view<Rng>, range_cardinality<Rng>::value>
-      , private _ref_view_::adl_hook
+    struct ref_view : view_interface<ref_view<Rng>, range_cardinality<Rng>::value>
     {
     private:
         CPP_assert(range<Rng>);
@@ -145,9 +114,9 @@ namespace ranges
     }
 } // namespace ranges
 
-RANGES_RE_ENABLE_WARNINGS
-
 #include <range/v3/detail/satisfy_boost_range.hpp>
 RANGES_SATISFY_BOOST_RANGE(::ranges::ref_view)
+
+#include <range/v3/detail/reenable_warnings.hpp>
 
 #endif

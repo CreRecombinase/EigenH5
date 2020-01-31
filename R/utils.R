@@ -277,7 +277,11 @@ create_mat_l <- function(dff){
 #' delim2h5(readr::readr_example("mtcars.csv"),temp_h5,delim="/")
 #' new_data  <- read_df_h5(temp_h5)
 
-delim2h5 <- function(input_files, output_file, h5_args = list(datapath = "/"), callback_fun = write_df_h5, id_col = NULL, ...){
+delim2h5 <- function(input_files,
+                     output_file,
+                     h5_args = list(datapath = "/"),
+                     callback_fun = write_df_h5,
+                     id_col = NULL, ...){
     h5_args[["append"]] <- TRUE
     callback_args <- formalArgs(callback_fun)
     stopifnot(all(fs::file_exists(input_files)))

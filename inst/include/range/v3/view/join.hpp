@@ -34,6 +34,8 @@
 #include <range/v3/view/single.hpp>
 #include <range/v3/view/view.hpp>
 
+#include <range/v3/detail/disable_warnings.hpp>
+
 namespace ranges
 {
     /// \cond
@@ -111,22 +113,16 @@ namespace ranges
                       store_inner_<range_reference_t<Rng>>, pass_thru_inner_>;
 
         // clang-format off
-        CPP_def
-        (
-            template(typename I)
-            concept has_member_arrow_,
-                requires (I i)
-                (
-                    i.operator->()
-                )
-        );
+        template<typename I>
+        CPP_concept_bool has_member_arrow_ =
+            CPP_requires ((I) i) //
+            (
+                i.operator->()
+            );
 
-        CPP_def
-        (
-            template(typename I)
-            concept has_arrow_,
-                input_iterator<I> && (std::is_pointer<I>::value || has_member_arrow_<I>)
-        );
+        template<typename I>
+        CPP_concept_bool has_arrow_ =
+            input_iterator<I> && (std::is_pointer<I>::value || has_member_arrow_<I>);
         // clang-format on
     } // namespace detail
     /// \endcond
@@ -142,7 +138,8 @@ namespace ranges
     {
         CPP_assert(input_range<Rng> && view_<Rng>);
         CPP_assert(input_range<range_reference_t<Rng>>);
-        CPP_assert(viewable_range<range_reference_t<Rng>>);
+        CPP_assert(std::is_reference<range_reference_t<Rng>>::value ||
+                   view_<range_reference_t<Rng>>);
 
         join_view() = default;
         explicit join_view(Rng rng)
@@ -380,7 +377,8 @@ namespace ranges
     private:
         friend range_access;
         using Outer = views::all_t<Rng>;
-        using Inner = views::all_t<range_reference_t<Outer>>;
+        // Intentionally promote xvalues to lvalues here:
+        using Inner = views::all_t<range_reference_t<Outer> &>;
 
         Outer outer_{};
         Inner inner_{};
@@ -400,7 +398,9 @@ namespace ranges
                     {
                         if(ranges::get<0>(cur_) != ranges::end(rng_->val_))
                             break;
-                        rng_->inner_ = views::all(*outer_it_);
+                        // Intentionally promote xvalues to lvalues here:
+                        auto && tmp = *outer_it_;
+                        rng_->inner_ = views::all(tmp);
                         ranges::emplace<1>(cur_, ranges::begin(rng_->inner_));
                     }
                     else
@@ -428,7 +428,9 @@ namespace ranges
             {
                 if(outer_it_ != ranges::end(rng->outer_))
                 {
-                    rng->inner_ = views::all(*outer_it_);
+                    // Intentionally promote xvalues to lvalues here:
+                    auto && tmp = *outer_it_;
+                    rng->inner_ = views::all(tmp);
                     ranges::emplace<1>(cur_, ranges::begin(rng->inner_));
                     satisfy();
                 }
@@ -484,33 +486,36 @@ namespace ranges
         // Don't forget to update views::for_each whenever this set
         // of concepts changes
         // clang-format off
-        CPP_def
-        (
-            template(typename Rng)
-            concept joinable_range,
-                viewable_range<Rng> && input_range<Rng> &&
-                input_range<range_reference_t<Rng>> &&
-                viewable_range<range_reference_t<Rng>>
+        template<typename Rng>
+        CPP_concept_fragment(joinable_range_, (Rng),
+            input_range<range_reference_t<Rng>> &&
+            (std::is_reference<range_reference_t<Rng>>::value ||
+                view_<range_reference_t<Rng>>)
         );
+        template<typename Rng>
+        CPP_concept_bool joinable_range =
+            viewable_range<Rng> && input_range<Rng> &&
+            CPP_fragment(views::joinable_range_, Rng);
 
-        CPP_def
-        (
-            template(typename Rng, typename ValRng)
-            concept joinable_with_range,
-                joinable_range<Rng> &&
-                viewable_range<ValRng> && forward_range<ValRng> &&
-                common_with<range_value_t<ValRng>, range_value_t<range_reference_t<Rng>>> &&
-                semiregular<
-                    common_type_t<
-                        range_value_t<ValRng>,
-                        range_value_t<range_reference_t<Rng>>>> &&
-                common_reference_with<
-                    range_reference_t<ValRng>,
-                    range_reference_t<range_reference_t<Rng>>> &&
-                common_reference_with<
-                    range_rvalue_reference_t<ValRng>,
-                    range_rvalue_reference_t<range_reference_t<Rng>>>
+        template<typename Rng, typename ValRng>
+        CPP_concept_fragment(joinable_with_range_, (Rng, ValRng),
+            common_with<range_value_t<ValRng>, range_value_t<range_reference_t<Rng>>> &&
+            semiregular<
+                common_type_t<
+                    range_value_t<ValRng>,
+                    range_value_t<range_reference_t<Rng>>>> &&
+            common_reference_with<
+                range_reference_t<ValRng>,
+                range_reference_t<range_reference_t<Rng>>> &&
+            common_reference_with<
+                range_rvalue_reference_t<ValRng>,
+                range_rvalue_reference_t<range_reference_t<Rng>>>
         );
+        template<typename Rng, typename ValRng>
+        CPP_concept_bool joinable_with_range =
+            joinable_range<Rng> &&
+            viewable_range<ValRng> && forward_range<ValRng> &&
+            CPP_fragment(views::joinable_with_range_, Rng, ValRng);
         // clang-format on
         /// \endcond
 
@@ -526,10 +531,10 @@ namespace ranges
 
         struct join_base_fn : cpp20_join_fn
         {
-            /// implementation detail
+        private:
             template<typename Rng>
             using inner_value_t = range_value_t<range_reference_t<Rng>>;
-
+        public:
             using cpp20_join_fn::operator();
 
             template<typename Rng>
@@ -550,13 +555,11 @@ namespace ranges
             }
         };
 
-        struct join_fn : join_base_fn
+        struct join_bind_fn
         {
-            using join_base_fn::operator();
-
             template<typename T>
             constexpr auto CPP_fun(operator())(T && t)(const //
-                                                       requires(!joinable_range<T>))
+                                                       requires(!joinable_range<T>)) // TODO: underconstrained
             {
                 return make_view_closure(bind_back(join_base_fn{}, static_cast<T &&>(t)));
             }
@@ -568,9 +571,9 @@ namespace ranges
 
                 template<typename Rng>
                 auto operator()(Rng && rng) const
-                    -> invoke_result_t<join_fn, Rng, T (&)[N]>
+                    -> invoke_result_t<join_base_fn, Rng, T (&)[N]>
                 {
-                    return join_fn{}(static_cast<Rng &&>(rng), val_);
+                    return join_base_fn{}(static_cast<Rng &&>(rng), val_);
                 }
             };
 
@@ -585,11 +588,18 @@ namespace ranges
             {
                 return make_view_closure(
                     [&val](
-                        auto && rng) -> invoke_result_t<join_fn, decltype(rng), T(&)[N]> {
-                        return join_fn{}(static_cast<decltype(rng)>(rng), val);
+                        auto && rng) -> invoke_result_t<join_base_fn, decltype(rng), T(&)[N]> {
+                        return join_base_fn{}(static_cast<decltype(rng)>(rng), val);
                     });
             }
 #endif // RANGES_WORKAROUND_MSVC_OLD_LAMBDA
+        };
+
+        struct RANGES_EMPTY_BASES join_fn
+          : join_base_fn, join_bind_fn
+        {
+            using join_base_fn::operator();
+            using join_bind_fn::operator();
         };
 
         /// \relates join_fn
@@ -625,6 +635,8 @@ namespace ranges
             using join_view = ranges::join_view<Rng>;
     } // namespace cpp20
 } // namespace ranges
+
+#include <range/v3/detail/reenable_warnings.hpp>
 
 #include <range/v3/detail/satisfy_boost_range.hpp>
 RANGES_SATISFY_BOOST_RANGE(::ranges::join_view)

@@ -35,6 +35,8 @@
 #include <range/v3/view/take_while.hpp>
 #include <range/v3/view/view.hpp>
 
+#include <range/v3/detail/disable_warnings.hpp>
+
 namespace ranges
 {
     // TODO group_by could support Input ranges by keeping mutable state in
@@ -64,6 +66,16 @@ namespace ranges
             iterator_t<CRng> cur_;
             sentinel_t<CRng> last_;
             semiregular_box_ref_or_val_t<Fun, IsConst> fun_;
+
+            struct mixin : basic_mixin<cursor>
+            {
+                mixin() = default;
+                using basic_mixin<cursor>::basic_mixin;
+                iterator_t<CRng> base() const
+                {
+                    return this->get().cur_;
+                }
+            };
 
             struct pred
             {
@@ -108,8 +120,9 @@ namespace ranges
 
         public:
             cursor() = default;
-            CPP_template(bool Other)( //
-                requires IsConst && (!Other)) cursor(cursor<Other> that)
+            CPP_template(bool Other)(         //
+                requires IsConst && (!Other)) //
+                cursor(cursor<Other> that)
               : cur_(std::move(that.cur_))
               , last_(std::move(last_))
               , fun_(std::move(that.fun_))
@@ -134,10 +147,15 @@ namespace ranges
           : rng_(std::move(rng))
           , fun_(std::move(fun))
         {}
+        Rng base() const
+        {
+            return rng_;
+        }
     };
 
 #if RANGES_CXX_DEDUCTION_GUIDES >= RANGES_CXX_DEDUCTION_GUIDES_17
-    CPP_template(typename Rng, typename Fun)(requires copy_constructible<Fun>)
+    CPP_template(typename Rng, typename Fun)( //
+        requires copy_constructible<Fun>)     //
         group_by_view(Rng &&, Fun)
             ->group_by_view<views::all_t<Rng>, Fun>;
 #endif
@@ -174,6 +192,7 @@ namespace ranges
     /// @}
 } // namespace ranges
 
+#include <range/v3/detail/reenable_warnings.hpp>
 #include <range/v3/detail/satisfy_boost_range.hpp>
 RANGES_SATISFY_BOOST_RANGE(::ranges::group_by_view)
 
