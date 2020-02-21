@@ -5,3 +5,4 @@
 compile_commands.json
 .cquery
 .ccls
+^\.github/workflows/R-CMD-check\.yaml$

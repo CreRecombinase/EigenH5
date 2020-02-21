@@ -96,6 +96,11 @@ if test "$hdf5_version_sufficient" = "yes"; then
 	[ge],
 	[1.10.5],
 	[HDF5_VERSION_USE="1_10_5"])
+  AX_COMPARE_VERSION(
+	[$HDF5_VERSION],
+	[ge],
+	[1.12.0],
+	[HDF5_VERSION_USE="1_12_0"])
 fi
 
 AC_SUBST(HDF5_VERSION_USE)

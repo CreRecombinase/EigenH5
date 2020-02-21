@@ -2,6 +2,7 @@
 # EigenH5
 
 <!-- badges: start -->
+[![R build status](https://github.com/CreRecombinase/EigenH5/workflows/R-CMD-check/badge.svg)](https://github.com/CreRecombinase/EigenH5)
 <!-- badges: end -->
 
 The goal of EigenH5 is to make working with HDF5 files from R a little easier by:
