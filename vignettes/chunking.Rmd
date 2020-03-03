@@ -35,7 +35,7 @@ We'll be assuming that we intend to read subsets of SNPs for all individuals, an
 We'll create two SNP matrices, one SNPs first, and one samples first.
 
 
-```{r}
+```{r,eval=FALSE}
 library(EigenH5)
 tf <- tempfile()
 CHUNK_MAX = 1024*1024
@@ -125,7 +125,7 @@ for(i in 1:length(chunkl)){
 
 
 ```
-```{r}
+```{r,eval=FALSE}
 summary_time <- data_frame(t_t_read=map_dbl(t_tlr,~.x[3]),
                            t_t_write=map_dbl(t_tlw,~.x[3]),
                            t_n_read=map_dbl(t_nlr,~.x[3]),
@@ -141,7 +141,7 @@ tidy_time %>% ggplot(aes(x=transposed,y=time,col=SNP_first))+geom_point()+geom_j
 ```
 
 
-```{r}
+```{r,eval=FALSE}
 filter(tidy_time,!transposed,read_write=="read") %>% rename(runtime=time) %>% ggplot(aes(x=SNP_first,y=runtime,col=SNP_first))+geom_point()+facet_wrap(~read_write)
 
 ```
@@ -150,7 +150,7 @@ filter(tidy_time,!transposed,read_write=="read") %>% rename(runtime=time) %>% gg
 #What about chunksize?
 
 
-```{r}
+```{r,eval=FALSE}
 library(EigenH5)
 tf <- tempfile()
 
@@ -194,7 +194,7 @@ rwf <- function(filename,groupname,dataname,data_dims,data_matrix,disk_chunk_siz
 df_res <- bind_rows(dfl)
 ```
 
-```{r}
+```{r,eval=FALSE}
 ggplot(df_res,aes(x=disk_chunk_size/p,y=time))+geom_point()+facet_wrap(~expr)+scale_x_log10()
 ```
 
