@@ -922,7 +922,7 @@ bool create_dataset_h5(const std::string &filename,
      }
      create_success=true;
    }else{
-     auto dsr = create_dataset(group.value(),dp.filename(),data,space,filt,min_string_size);
+     auto dsr = create_dataset(*group,dp.filename(),data,space,filt,min_string_size);
      auto attrn = data.attributeNames();
      for( auto &attr : attrn){
        if(attr != "dim"){

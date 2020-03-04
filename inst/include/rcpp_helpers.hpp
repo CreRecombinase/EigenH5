@@ -91,10 +91,10 @@ inline std::vector<std::optional<Rcpp::IntegerVector> > parse_subset_list(const 
   std::vector<rvec_o> retvec(num_dims,std::nullopt);
   if(num_dims==1){
     if(auto subset_rv =get_list_element<INTSXP>(list,"subset")){
-      retvec[0] = subset_rv.value();
+      retvec[0] = *subset_rv;
     }else{
       if(auto subsetf_rv =get_list_element<INTSXP>(list,"filtervec")){
-        retvec[0] = subsetf_rv.value();
+        retvec[0] = *subsetf_rv;
       }
     }
     return(retvec);
@@ -108,10 +108,10 @@ inline std::vector<std::optional<Rcpp::IntegerVector> > parse_subset_list(const 
     }
   }
   if(subset_ro){
-    retvec[0] = subset_ro.value();
+    retvec[0] = *subset_ro;
   }
   if(subset_co){
-    retvec[num_dims==1 ? 0 : 1] = subset_co.value();
+    retvec[num_dims==1 ? 0 : 1] = *subset_co;
   }
   return(retvec);
 }

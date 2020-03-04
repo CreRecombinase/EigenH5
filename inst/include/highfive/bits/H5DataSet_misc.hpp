@@ -143,7 +143,7 @@ namespace HighFive {
     std::copy(offsets.begin(),offsets.end(),h_offsets.begin());
     if(buff_size){
       if(H5Dwrite_chunk(_hid, H5P_DEFAULT, filter_mask,
-			h_offsets.data(), buff_size.value(), data_buff.data())<0){
+			h_offsets.data(), *buff_size, data_buff.data())<0){
 	      HDF5ErrMapper::ToException<DataSetException>(
 							   "Unable to write direct chunk");
       }

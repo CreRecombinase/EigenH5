@@ -38,16 +38,16 @@ context("optionals"){
 			   _["d"]=tdat_d);
   test_that("We can get scalars back for 4 POD types"){
     auto op_a= get_list_scalar<bool>(tlist,"a");
-    expect_true(op_a.value()==true);
+    expect_true(*op_a==true);
 
     auto op_b= get_list_scalar<std::string>(tlist,"b");
-    expect_true(op_b.value()=="hi");
+    expect_true(*op_b=="hi");
 
     auto op_c= get_list_scalar<int>(tlist,"c");
-    expect_true(op_c.value()==3);
+    expect_true(*op_c==3);
 
     auto op_d= get_list_scalar<double>(tlist,"d");
-    expect_true(op_d.value()==3.5);
+    expect_true(*op_d==3.5);
   }
 }
 

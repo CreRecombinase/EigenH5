@@ -993,7 +993,7 @@ void update_vector_v(Rcpp::RObject data,const std::string filename,  const std::
 std::variant<std::pair<int,std::optional<int>>,Rcpp::IntegerVector> parse_subset_v(Rcpp::List x){
 
   if(auto idx = get_list_element<INTSXP>(x,"subset",false)){
-    return(idx.value());
+    return(*idx);
   }
   auto offset = get_list_scalar<int>(x,"offset").value_or(0);
   return(std::make_pair(offset,get_list_scalar<int>(x,"datasize")));
