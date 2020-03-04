@@ -12,7 +12,6 @@
 #include <numeric>
 #include <optional>
 #include <variant>
-#include <Eigen/Core>
 
 
 #ifdef USE_BLOSC
@@ -61,7 +60,7 @@ public:
       auto ret = uncompress(reinterpret_cast<unsigned char*>(uncompressed),
 			    &tcb_size,
 			    reinterpret_cast<const unsigned char*>(compressed),
-			    cb_size.value());
+			    *cb_size);
       // ret = uncompress((Bytef *)read_dst_buf, (uLongf *)&buf_size, pt_readbuf, (uLong)read_chunk_nbytes);
 
       if(Z_BUF_ERROR == ret) {
@@ -111,7 +110,7 @@ public:
 #else
 
     if(cb_size){
-      auto ret = lzf_decompress(compressed,cb_size.value(),uncompressed,uc_size);
+      auto ret = lzf_decompress(compressed,*cb_size,uncompressed,uc_size);
       if(!ret){
 	if(errno == E2BIG){
 	  Rcpp::stop("lzf too small");
@@ -254,10 +253,10 @@ public:
   //  std::optional<size_t> compress(void* compressed,size_t cb_size,const void* uncompressed,size_t uc_size){
   void decompress(void* uncompressed,size_t uc_size,const void* compressed,std::optional<size_t> cb_size){
     if(cb_size){
-      auto rc = ZSTD_decompressDCtx(ctxt_d.get(),uncompressed, uc_size, compressed,cb_size.value());
+      auto rc = ZSTD_decompressDCtx(ctxt_d.get(),uncompressed, uc_size, compressed,*cb_size);
       if(ZSTD_isError(rc)){
 	Rcpp::Rcerr<<ZSTD_getErrorName(rc)<<std::endl;
-        auto ret2 = ZSTD_getFrameContentSize((void*) compressed,cb_size.value());
+        auto ret2 = ZSTD_getFrameContentSize((void*) compressed,*cb_size);
 
 	if(ret2==0){
 	  Rcpp::Rcerr<<"Frame valid but empty"<<std::endl;

@@ -17,3 +17,4 @@ Suggests: testthat,
     rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 7.0.2
+Biarch: TRUE
