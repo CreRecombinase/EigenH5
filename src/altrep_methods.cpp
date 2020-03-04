@@ -1,6 +1,7 @@
 // [[Rcpp::depends(BH)]]
 #include <cstdbool>
 #include <variant>
+#include <optional>
 #include <Rcpp.h>
 #include <Rinternals.h>
 #include <Rversion.h>
