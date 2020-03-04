@@ -52,8 +52,11 @@ if (rhdf5) {
     if(length(HDF5R_CPPFLAGS)==0)
         HDF5R_CPPFLAGS <- " "
 }
+HDF5R_CPPFLAGS <- paste0(HDF5R_CPPFLAGS, " -D_LIBCPP_DISABLE_AVAILABILITY")
 
-define(HDF5R_CPPFLAGS = HDF5R_CPPFLAGS,
-       HDF5R_LIBS = HDF5R_LIBS,
-       HDF5R_CFLAGS = " ")
+define(
+        HDF5R_CPPFLAGS = HDF5R_CPPFLAGS,
+        HDF5R_LIBS = HDF5R_LIBS,
+        HDF5R_CFLAGS = " "
+)
 #configure_file("src/Makevars.in")
