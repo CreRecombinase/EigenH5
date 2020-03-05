@@ -101,6 +101,8 @@ configure_file <- function(
     enumerate(config, function(key, val) {
         needle <- paste(lhs, key, rhs, sep = "")
         replacement <- val
+        if(length(replacement)!=1)
+            cat("key: ", key, "\n val: ", val, "\n needle: ", needle, "\n replacement: ", replacement, "\n")
         contents <<- gsub(needle, replacement, contents, fixed = TRUE)
     })
 

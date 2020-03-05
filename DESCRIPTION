@@ -1,7 +1,7 @@
 Package: EigenH5
 Type: Package
 Title: Read and write R objects using HDF5
-Version: 2.0.5
+Version: 2.0.6
 Date: 2017-08-03
 Author: Nicholas Knoblauch
 Maintainer: Nicholas Knoblauch <nwknoblauch@gmail.com>

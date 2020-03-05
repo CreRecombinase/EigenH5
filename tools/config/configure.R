@@ -34,7 +34,6 @@ if (rhdf5) {
     h_files <- dir(h_include)
     stopifnot("hdf5_hl.h" %in% h_files)
     R_cc <- read_r_config("CC")$CC
-    ac <- read_r_config("--all")
     rgcc_v <- system(paste0(R_cc, " --version"), intern = TRUE)
     hgcc_v <- system(paste0(h5cc, " --version"), intern = TRUE)
     if (!all.equal(rgcc_v, hgcc_v)) {
@@ -65,9 +64,7 @@ if (grepl("macOS", sessionInfo()$running)) {
 }
 
 
-define(
-        HDF5R_CPPFLAGS = HDF5R_CPPFLAGS,
-        HDF5R_LIBS = HDF5R_LIBS,
-        HDF5R_CFLAGS = " "
-)
-configure_file("src/Makevars.in")
+define(HDF5R_CPPFLAGS = HDF5R_CPPFLAGS,
+       HDF5R_LIBS = HDF5R_LIBS,
+       HDF5R_CFLAGS = " ")
+configure_file(source = "src/Makevars.in", verbose = TRUE)
