@@ -59,4 +59,4 @@ define(
         HDF5R_LIBS = HDF5R_LIBS,
         HDF5R_CFLAGS = " "
 )
-#configure_file("src/Makevars.in")
+configure_file("src/Makevars.in")

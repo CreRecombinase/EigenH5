@@ -613,7 +613,7 @@ if (!interactive()) {
     if (file.exists(path)) source_file(path)
 
     # perform automatic configuration
-    configure_auto(type = type)
+    #configure_auto(type = type)
 
     # report end of execution
     fmt <- "** finished %s for package '%s'"
