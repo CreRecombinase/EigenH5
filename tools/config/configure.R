@@ -13,7 +13,7 @@ if (rhdf5) {
         HDF5R_LIBS <- capture.output(Rhdf5lib::pkgconfig("PKG_C_HL_LIBS"))
 }else{
     h5cc <- suppressWarnings(system2("which", "h5cc", stdout = TRUE, stderr = FALSE))
-    if (h5cc == "") {
+    if (length(h5cc)==0) {
             stop(
                     "could not find an HDF5 installation.",
                     "(tried both h5cc and Rhdf5lib).",
@@ -27,6 +27,12 @@ if (rhdf5) {
             )
     }
     h5cc_args <- system2(h5cc, "-show", stdout = TRUE)
+    h5cc_config <-  system2(h5cc, "-showconfig", stdout = TRUE)
+    base_i <- gsub("\\s+Installation\\spoint:\\s+([^\\s]+)\\s*","\\1",h5cc_config[grepl("Installation point", h5cc_config)])
+    h_include <-paste0(normalizePath(base_i),"/include")
+    stopifnot(dir.exists(h_include))
+    h_files <- dir(h_include)
+    stopifnot("hdf5_hl.h" %in% h_files)
     R_cc <- read_r_config("CC")$CC
     ac <- read_r_config("--all")
     rgcc_v <- system(paste0(R_cc, " --version"), intern = TRUE)
@@ -51,8 +57,13 @@ if (rhdf5) {
     HDF5R_CPPFLAGS <- h5cc_arg_v[grepl("^-I", h5cc_arg_v)]
     if(length(HDF5R_CPPFLAGS)==0)
         HDF5R_CPPFLAGS <- " "
+    HDF5R_CPPFLAGS <- paste0("-I", h_include, " ", HDF5R_CPPFLAGS)
 }
-HDF5R_CPPFLAGS <- paste0(HDF5R_CPPFLAGS, " -D_LIBCPP_DISABLE_AVAILABILITY")
+
+if (grepl("macOS", sessionInfo()$running)) {
+        HDF5R_CPPFLAGS <- paste0(HDF5R_CPPFLAGS, " -D_LIBCPP_DISABLE_AVAILABILITY")
+}
+
 
 define(
         HDF5R_CPPFLAGS = HDF5R_CPPFLAGS,
